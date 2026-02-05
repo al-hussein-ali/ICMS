@@ -1,0 +1,71 @@
+﻿using ICMS.Domain.Exceptions;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using static System.Runtime.InteropServices.JavaScript.JSType;
+
+namespace ICMS.Domain.Entites
+{
+    public class ImmunizationRecord : BaseEntity<Guid>
+    {
+        public int IndividualId { get; private set; }
+        public int DoseId { get; private set; }
+        public int? FieldVisitId { get; private set; }
+        public DateOnly VaccinationDate { get; private set; }
+        public string TakenIn { get; private set; } = string.Empty;
+        public string? Notes { get; private set; }
+
+        public VaccinatedIndividual? VaccinatedIndividual { get; private set; }
+
+        public Dose? Dose { get; private set; }
+
+        public FieldVisit? FieldVisit { get; private set; }
+
+
+        private ImmunizationRecord()
+        {
+        }
+
+        public static ImmunizationRecord Create(int individualId, int doseId, DateOnly vaccinationDate, string takenIn, int? fieldVisitId = null, string? notes = null)
+        {
+            if (individualId <= 0) throw new DomainException("Invalid individual id");
+            if (doseId <= 0) throw new DomainException("Invalid dose id");
+            if (string.IsNullOrWhiteSpace(takenIn)) throw new DomainException("TakenIn is required");
+
+            return new ImmunizationRecord { IndividualId = individualId, DoseId = doseId, FieldVisitId = fieldVisitId, VaccinationDate = vaccinationDate, TakenIn = takenIn, Notes = notes };
+        }
+
+        public void AssignVaccinatedIndividual(VaccinatedIndividual vi)
+        {
+            if (vi == null) throw new DomainException("Vaccinated individual is required");
+            if (VaccinatedIndividual != null) throw new DomainException("Vaccinated individual already assigned");
+            if (vi.Id != 0 && vi.Id != IndividualId) throw new DomainException("Individual id mismatch");
+
+            VaccinatedIndividual = vi;
+            IndividualId = vi.Id;
+        }
+
+        public void AssignDose(Dose dose)
+        {
+            if (dose == null) throw new DomainException("Dose is required");
+            if (Dose != null) throw new DomainException("Dose already assigned");
+            if (dose.Id != 0 && dose.Id != DoseId) throw new DomainException("Dose id mismatch");
+
+            Dose = dose;
+            DoseId = dose.Id;
+        }
+
+        public void AssignFieldVisit(FieldVisit fv)
+        {
+            if (fv == null) throw new DomainException("FieldVisit is required");
+            if (FieldVisit != null) throw new DomainException("FieldVisit already assigned");
+            if (fv.Id != 0 && fv.Id != FieldVisitId) throw new DomainException("FieldVisit id mismatch");
+
+            FieldVisit = fv;
+            FieldVisitId = fv.Id;
+        }
+
+    }
+}
