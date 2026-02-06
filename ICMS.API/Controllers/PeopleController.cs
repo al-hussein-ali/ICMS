@@ -1,4 +1,5 @@
-﻿using ICMS.Application.DTOs.Pagination;
+﻿using FluentValidation;
+using ICMS.Application.DTOs.Pagination;
 using ICMS.Application.DTOs.Person;
 using ICMS.Application.Interfaces.Services;
 using ICMS.Domain.ValueObjects;
@@ -38,6 +39,7 @@ namespace ICMS.API.Controllers
         [HttpPost]
         public async Task<PersonReadDto> AddAsync(PersonCreateDto dto)
         {
+            
             var newPerson = await personService.AddAsync(dto);
 
             return newPerson;

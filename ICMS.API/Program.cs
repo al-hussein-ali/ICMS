@@ -1,4 +1,5 @@
 using FluentValidation;
+using ICMS.API.Handlers;
 using ICMS.Application.Validators;
 using ICMS.Infrastructure.Extensions;
 using Microsoft.Extensions.Options;
@@ -16,13 +17,18 @@ builder.Services.AddInfrastructure(builder.Configuration.GetConnectionString("De
 
 builder.Services.AddControllers();
 
-builder.Services.AddValidatorsFromAssemblyContaining<AssemblyMarker>(includeInternalTypes:true); // fluent validation registration
+
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+builder.Services.AddProblemDetails();
+
+builder.Services.AddValidatorsFromAssemblyContaining<PaginationValidator>(includeInternalTypes:true); // fluent validation registration
 
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
 var app = builder.Build();
 
+app.UseExceptionHandler();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
@@ -38,6 +44,7 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UseAuthorization();
+
 
 app.MapControllers();
 

@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace ICMS.Domain.Exceptions
 {
-    public class RecordNotFoundException : DomainException
+    public class NotFoundException : DomainException
     {
-        public RecordNotFoundException(string message) : base(message)
+        public NotFoundException(string message) : base(message)
         {   
         }
     }

@@ -13,7 +13,7 @@ namespace ICMS.Application.Interfaces.Services
 
     public interface IPersonService
     {
-        PagedResult<PersonReadDto> GetAll(PaginationParams paginationParams, CancellationToken ct = default);
+        Task<PagedResult<PersonReadDto>> GetAll(PaginationParams paginationParams, CancellationToken ct = default);
 
         Task<PersonReadDto?> GetByIdAsync(int id, CancellationToken ct = default);
 

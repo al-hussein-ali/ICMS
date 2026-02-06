@@ -3,5 +3,5 @@ using ICMS.Domain.Enums;
 
 namespace ICMS.Application.DTOs.Person
 {
-    public record PersonReadDto(int Id, string FirstName, string SecondName, string? ThirdName, string LastName, Gender Gender, DateOnly DateOfBirth, string PhoneNumber);
+    public record PersonReadDto(int Id, string FirstName, string SecondName, string? ThirdName, string LastName, string Gender, DateOnly DateOfBirth, string PhoneNumber);
 }

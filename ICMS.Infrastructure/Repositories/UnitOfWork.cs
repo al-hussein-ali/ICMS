@@ -92,7 +92,6 @@ namespace ICMS.Infrastructure.Repositories
         {
             if (_context.Database.CurrentTransaction != null)
             {
-                // Already inside a transaction → just execute
                 await action().ConfigureAwait(false);
                 return;
             }

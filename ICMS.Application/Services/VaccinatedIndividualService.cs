@@ -50,7 +50,7 @@ public class VaccinatedIndividualService : IVaccinatedIndividualService
         var existingVaccinatedIndividual = await _unitOfWork.VaccinatedIndividualRepository.GetByIdAsync(id, ct);
 
         if (existingVaccinatedIndividual == null)
-            throw new RecordNotFoundException("This record was not found!");
+            throw new NotFoundException("This record was not found!");
 
         existingVaccinatedIndividual.UpdateIndividualInfo(
             updatedEntity.CardNumber,
@@ -67,7 +67,7 @@ public class VaccinatedIndividualService : IVaccinatedIndividualService
         var existingVaccinatedIndividual = await _unitOfWork.VaccinatedIndividualRepository.GetByIdAsync(id, ct);
 
         if (existingVaccinatedIndividual is null)
-            throw new RecordNotFoundException("This record was not found!");
+            throw new NotFoundException("This record was not found!");
 
         await _unitOfWork.VaccinatedIndividualRepository.DeleteAsync(existingVaccinatedIndividual);
 

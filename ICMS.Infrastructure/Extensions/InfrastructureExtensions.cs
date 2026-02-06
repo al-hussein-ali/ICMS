@@ -1,4 +1,5 @@
-﻿using ICMS.Application.Interfaces;
+﻿using EntityFramework.Exceptions.PostgreSQL;
+using ICMS.Application.Interfaces;
 using ICMS.Application.Interfaces.Repositories;
 using ICMS.Application.Interfaces.Services;
 using ICMS.Application.Services;
@@ -6,11 +7,6 @@ using ICMS.Infrastructure.Persistence.Data;
 using ICMS.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ICMS.Infrastructure.Extensions
 {
@@ -20,7 +16,7 @@ namespace ICMS.Infrastructure.Extensions
         {
             services.AddDbContextPool<AppDbContext>(options =>  {
                 
-                options.UseNpgsql(connectionString);
+                options.UseNpgsql(connectionString).UseExceptionProcessor();
             });
 
 

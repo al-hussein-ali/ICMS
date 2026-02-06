@@ -1,36 +1,41 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using ICMS.Application.DTOs.Person;
+﻿using ICMS.Application.DTOs.Person;
 using ICMS.Application.DTOs.Pagination;
 using ICMS.Application.Extensions;
 using ICMS.Application.Interfaces;
 using ICMS.Application.Interfaces.Services;
 using ICMS.Domain.ValueObjects;
-using System.Runtime.InteropServices;
-using System.Net.Http.Headers;
 using ICMS.Domain.Exceptions;
-using System.Diagnostics;
+using FluentValidation;
 
 namespace ICMS.Application.Services
 {
     public class PersonService : IPersonService
     {
         private readonly IUnitOfWork _unitOfWork;
-        public PersonService(IUnitOfWork unitOfWork)
+        private readonly IValidator<PaginationParams> pagnationValidator;
+        private readonly IValidator<PersonCreateDto> createDTOValidator;
+        public PersonService(IUnitOfWork unitOfWork,
+            IValidator<PaginationParams> pagnationValidator,
+            IValidator<PersonCreateDto> createDTOValidator)
         {
             _unitOfWork = unitOfWork;
+            this.pagnationValidator = pagnationValidator;
+            this.createDTOValidator = createDTOValidator;
         }
-        public PagedResult<PersonReadDto> GetAll(PaginationParams paginationParams, CancellationToken ct = default)
+
+
+        public async Task<PagedResult<PersonReadDto>> GetAll(PaginationParams paginationParams, CancellationToken ct = default)
         {
+            await pagnationValidator.ValidateAndThrowAsync(paginationParams);
+
             var people = _unitOfWork.PersonRepository.GetQueryable().Select(p => p.ToReadDto());
 
             ct.ThrowIfCancellationRequested();
 
             return people.ApplyPagination(pageNumber: paginationParams.PageNumber, pageSize: paginationParams.PageSize);
         }
+
+
         public async Task<PersonReadDto?> GetByIdAsync(int id, CancellationToken ct = default)
         {
             var person = await _unitOfWork.PersonRepository.GetByIdAsync(id, ct);
@@ -47,6 +52,10 @@ namespace ICMS.Application.Services
         }
         public async Task<PersonReadDto> AddAsync(PersonCreateDto entity, CancellationToken ct = default)
         {
+            await createDTOValidator.ValidateAndThrowAsync(entity);
+
+
+
             ct.ThrowIfCancellationRequested();
 
             var person = entity.ToDomain();
@@ -61,14 +70,14 @@ namespace ICMS.Application.Services
             var oldRecord = await _unitOfWork.PersonRepository.GetByIdAsync(id, ct);
 
             if (oldRecord is null)
-                throw new RecordNotFoundException("Record was not found!");
+                throw new NotFoundException("Record was not found!");
 
             oldRecord.UpdatePersonInfo(
                 updatedEntity.FirstName,
                 updatedEntity.SecondName,
                 updatedEntity.ThirdName,
                 updatedEntity.LastName,
-                updatedEntity.Gender,
+                updatedEntity.Gender.FromStringToGenderEnum(),
                 updatedEntity.DateOfBirth
                 );
 
@@ -81,7 +90,7 @@ namespace ICMS.Application.Services
             var exsitingPerson = await _unitOfWork.PersonRepository.GetByIdAsync(id, ct);
 
             if (exsitingPerson is null)
-                throw new RecordNotFoundException("Record was not found!");
+                throw new NotFoundException("Record was not found!");
 
             exsitingPerson.MarkAsDeleted();
 
