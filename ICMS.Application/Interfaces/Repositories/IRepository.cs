@@ -25,7 +25,7 @@ namespace ICMS.Application.Interfaces.Repositories
         Task<bool> ExistAsync(TKey id, CancellationToken cancellationToken = default);
         Task<bool> ExistAsync(Expression<Func<TEntity, bool>> predicate, CancellationToken cancellationToken = default);
 
-        IQueryable<TEntity> GetQueryable();
+        IQueryable<TEntity> GetQueryable(bool track = false, CancellationToken cancellationToken = default, params Expression<Func<TEntity, object>>[] includes);
 
     }
 }

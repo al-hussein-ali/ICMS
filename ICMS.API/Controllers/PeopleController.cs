@@ -23,7 +23,7 @@ namespace ICMS.API.Controllers
         [HttpGet("all")]
         public ActionResult<PagedResult<PersonReadDto>> GetAllAsync([FromQuery] PaginationParams paginationParams)
         {
-            var people = personService.GetAll(paginationParams);
+            var people = personService.GetAllAsync(paginationParams);
 
             return Ok(people);
         }
@@ -37,12 +37,30 @@ namespace ICMS.API.Controllers
         }
 
         [HttpPost]
-        public async Task<PersonReadDto> AddAsync(PersonCreateDto dto)
+        public async Task<ActionResult<PersonReadDto>> AddAsync(PersonCreateDto dto)
         {
-            
+
             var newPerson = await personService.AddAsync(dto);
 
-            return newPerson;
+            return CreatedAtAction(nameof(GetByIdAsync), new { id = newPerson.Id }, newPerson);
+        }
+
+
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateAsync([FromQuery] int id, PersonCreateDto dto)
+        {
+            await personService.UpdateAsync(id, dto);
+
+            return Accepted();
+        }
+
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteAsync([FromQuery] int id)
+        {
+            await personService.DeleteAsync(id);
+
+            return Ok("The record was deleted successfully");
         }
     }
 }

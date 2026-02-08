@@ -24,12 +24,24 @@ namespace ICMS.Infrastructure.Repositories
             _dbSet = _context.Set<TEntity>();
         }
 
-        public IQueryable<TEntity> GetQueryable()
+        public IQueryable<TEntity> GetQueryable(bool track = false, CancellationToken cancellationToken = default, params Expression<Func<TEntity, object>>[] includes)
         {
-            return _dbSet.AsQueryable();
+            var query = track ? _dbSet : _dbSet.AsNoTracking();
+
+
+            if (includes != null)
+            {
+                foreach (var include in includes)
+                {
+                    query = query.Include(include);
+                }
+            }
+
+
+            return query;
         }
 
-        public async Task<IReadOnlyList<TEntity>> GetAllAsync(bool track = false, CancellationToken cancellationToken = default, params Expression<Func<TEntity, object>>[] includes)
+        public async Task<IReadOnlyList<TEntity>> GetAllAsync(bool track = false, CancellationToken cancellationToken = default, params Expression<Func<TEntity, object>>[] includes )
         {
             var query = track ? _dbSet : _dbSet.AsNoTracking();
 

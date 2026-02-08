@@ -20,7 +20,7 @@ namespace ICMS.Domain.Entites
         public int? UserId { get; private set; }
         public int PersonId { get; private set; }
         public User? User { get; private set; }
-        public Person? Person { get; private set; }
+        public Person Person { get; private set; }
 
 
         private VaccinatedIndividual()
@@ -28,7 +28,7 @@ namespace ICMS.Domain.Entites
         }
 
 
-        public static VaccinatedIndividual Create(string cardNumber, string directorate, string area, string neighborhood, int personId)
+        public static VaccinatedIndividual Create(string cardNumber, string directorate, string area, string neighborhood)
         {
             if (string.IsNullOrWhiteSpace(cardNumber) || string.IsNullOrWhiteSpace(directorate) || string.IsNullOrWhiteSpace(area) || string.IsNullOrWhiteSpace(neighborhood))
             {
@@ -36,8 +36,7 @@ namespace ICMS.Domain.Entites
             }
 
 
-            if (personId <= 0)
-                throw new DomainException("Invalid Person Id");
+
 
             return new VaccinatedIndividual
             {
@@ -45,7 +44,6 @@ namespace ICMS.Domain.Entites
                 Directorate = directorate,
                 Area = area,
                 Neighborhood = neighborhood,
-                PersonId = personId
             };
 
         }

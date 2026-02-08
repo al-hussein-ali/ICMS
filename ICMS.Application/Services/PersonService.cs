@@ -1,11 +1,12 @@
-﻿using ICMS.Application.DTOs.Person;
+﻿using FluentValidation;
 using ICMS.Application.DTOs.Pagination;
+using ICMS.Application.DTOs.Person;
 using ICMS.Application.Extensions;
 using ICMS.Application.Interfaces;
 using ICMS.Application.Interfaces.Services;
-using ICMS.Domain.ValueObjects;
 using ICMS.Domain.Exceptions;
-using FluentValidation;
+using ICMS.Domain.ValueObjects;
+using System.Linq.Expressions;
 
 namespace ICMS.Application.Services
 {
@@ -24,17 +25,16 @@ namespace ICMS.Application.Services
         }
 
 
-        public async Task<PagedResult<PersonReadDto>> GetAll(PaginationParams paginationParams, CancellationToken ct = default)
+        public async Task<PagedResult<PersonReadDto>> GetAllAsync(PaginationParams paginationParams, CancellationToken ct = default)
         {
             await pagnationValidator.ValidateAndThrowAsync(paginationParams);
 
-            var people = _unitOfWork.PersonRepository.GetQueryable().Select(p => p.ToReadDto());
+            var people = _unitOfWork.PersonRepository.GetQueryable().Where(p => !p.IsDeleted).Select(p => p.ToReadDto());
 
             ct.ThrowIfCancellationRequested();
 
             return people.ApplyPagination(pageNumber: paginationParams.PageNumber, pageSize: paginationParams.PageSize);
         }
-
 
         public async Task<PersonReadDto?> GetByIdAsync(int id, CancellationToken ct = default)
         {
@@ -50,6 +50,17 @@ namespace ICMS.Application.Services
 
             return person?.ToReadDto();
         }
+
+        public async Task<PersonReadDto?> GetByAsync(Expression<Func<PersonReadDto, bool>> predicate, CancellationToken ct = default)
+        {
+            var person = await _unitOfWork.PersonRepository.GetByAsync(predicate, ct);
+
+            ct.ThrowIfCancellationRequested();
+
+            return person?.ToReadDto();
+        }
+
+        // sovle the insert a Vaccinated one with a person data sent with his record to be inserted, validate if the person is already exists should be run smoothly 
         public async Task<PersonReadDto> AddAsync(PersonCreateDto entity, CancellationToken ct = default)
         {
             await createDTOValidator.ValidateAndThrowAsync(entity);
