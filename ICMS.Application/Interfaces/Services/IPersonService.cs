@@ -20,7 +20,7 @@ namespace ICMS.Application.Interfaces.Services
 
         Task<PersonReadDto?> GetByPhoneNumberAsync(string phoneNumber, CancellationToken ct = default);
 
-        Task<PersonReadDto?> GetByAsync(Expression<Func<PersonReadDto, bool>> predicate, CancellationToken ct = default);
+        //Task<PersonReadDto?> GetByAsync(Expression<Func<PersonReadDto, bool>> predicate, CancellationToken ct = default);
         Task<PersonReadDto> AddAsync(PersonCreateDto entity, CancellationToken ct = default);
 
         Task<bool> UpdateAsync(int id, PersonCreateDto updatedEntity, CancellationToken ct = default);

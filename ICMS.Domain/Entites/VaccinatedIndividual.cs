@@ -1,4 +1,5 @@
-﻿using ICMS.Domain.Exceptions;
+﻿using ICMS.Domain.Enums;
+using ICMS.Domain.Exceptions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -36,8 +37,6 @@ namespace ICMS.Domain.Entites
             }
 
 
-
-
             return new VaccinatedIndividual
             {
                 CardNumber = cardNumber,
@@ -52,10 +51,19 @@ namespace ICMS.Domain.Entites
         {
             if (person == null) throw new DomainException("Person is required");
             if (Person != null) throw new DomainException("Person already assigned");
-            if (person.Id != 0 && person.Id != PersonId) throw new DomainException("Person id mismatch");
 
             Person = person;
-            PersonId = person.Id;
+        }
+
+        public void AssignExistingPersonById(int personId)
+        {
+            if (personId == 0)
+                throw new DomainException("Person Id cannot be zero");
+
+            if (PersonId != 0)
+                throw new DomainException("Person id mismatch");
+
+            PersonId = personId;
         }
 
         public void AssignUser(User user)
@@ -65,10 +73,9 @@ namespace ICMS.Domain.Entites
             if (user.Id != 0 && UserId.HasValue && user.Id != UserId.Value) throw new DomainException("User id mismatch");
 
             User = user;
-            UserId = user.Id;
         }
 
-        public void AssignUserById(int userId)
+        public void AssignExistingUserById(int userId)
         {
             if (userId <= 0) throw new DomainException("Invalid user id");
             if (UserId.HasValue) throw new DomainException("This record is already linked to a user");
@@ -76,22 +83,15 @@ namespace ICMS.Domain.Entites
             UserId = userId;
         }
 
-        public void AddImmunizationRecord(ImmunizationRecord ir)
+        public void UpdateIndividualInfo(string cardNumber, string directorate, string area, string neighborhood,
+            string firstName, string secondName, string? thirdName, string lastName, Gender gender, DateOnly dateOfBirth)
         {
-            if (ir == null) throw new DomainException("Immunization record is required");
-            if (_immunizationRecords.Any(x => x.Id == ir.Id)) throw new DomainException("Immunization record already added");
-
-            _immunizationRecords.Add(ir);
-        }
-
-        public void UpdateIndividualInfo(string cardNumber, string directorate, string area, string neighborhood)
-        {
-            
-
             this.CardNumber = cardNumber;
             this.Directorate = directorate;
             this.Area = area;
             this.Neighborhood = neighborhood;
+
+            Person.UpdatePersonInfo(firstName,secondName,thirdName,lastName,gender,dateOfBirth);
         }
 
         public void TakeDose(int doseId, DateOnly vaccinationDate, string takenIn, int? fieldVisitId = null, string? notes = null)

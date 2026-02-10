@@ -24,9 +24,10 @@ namespace ICMS.Infrastructure.Extensions
 
 
             services.AddScoped<IUnitOfWork, UnitOfWork>();
-            services.AddScoped<IPersonRepository, PersonRepository>();
+            //services.AddScoped<IPersonRepository, PersonRepository>();
 
             services.AddScoped<IPersonService, PersonService>();
+            services.AddScoped<IVaccinatedIndividualService, VaccinatedIndividualService>();
 
             return services;
         }

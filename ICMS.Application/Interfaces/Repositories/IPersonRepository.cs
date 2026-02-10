@@ -15,7 +15,8 @@ namespace ICMS.Application.Interfaces.Repositories
 
         Task<Person?> GetByPhoneNumberAsync(string phoneNumber, CancellationToken ct = default);
 
-        Task<Person?> GetByAsync(Expression<Func<PersonReadDto, bool>> predicate, CancellationToken ct = default);
+        Task<Person?> GetByAsync(string firstName, string lastName, string phoneNumber, DateOnly dateOfBirth,CancellationToken ct = default);
+ 
 
     }
 }

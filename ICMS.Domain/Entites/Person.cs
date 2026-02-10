@@ -62,7 +62,6 @@ namespace ICMS.Domain.Entites
 
             VaccinatedIndividual = vaccinatedIndividual;
         }
-
         public void AssignUser(User user)
         {
             if (User is not null)
@@ -70,7 +69,6 @@ namespace ICMS.Domain.Entites
 
             User = user;
         }
-
         public void ChangeName(string firstName, string secondName, string? thirdName, string lastName)
         {
             this.FirstName = firstName;
@@ -78,7 +76,6 @@ namespace ICMS.Domain.Entites
             this.ThirdName = thirdName;
             this.LastName = lastName;
         }
-
         public void ChangeContactInfo(string phoneNumber)
         {
             this.PhoneNumber = phoneNumber;
@@ -92,7 +89,6 @@ namespace ICMS.Domain.Entites
             DateOfBirth = dateOfBirth;
             Gender = gender;
         }
-
         public void MarkAsDeleted()
         {
             if (IsDeleted)

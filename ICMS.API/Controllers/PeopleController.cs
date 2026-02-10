@@ -28,7 +28,7 @@ namespace ICMS.API.Controllers
             return Ok(people);
         }
 
-        [HttpGet("by-Id")]
+        [HttpGet("{id}",Name = "GetPersonById")]
         public async Task<ActionResult<PersonReadDto>> GetByIdAsync([FromQuery] int id)
         {
             var person = await personService.GetByIdAsync(id);
@@ -37,12 +37,12 @@ namespace ICMS.API.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<PersonReadDto>> AddAsync(PersonCreateDto dto)
+        public async Task<IActionResult> AddAsync(PersonCreateDto dto)
         {
 
             var newPerson = await personService.AddAsync(dto);
 
-            return CreatedAtAction(nameof(GetByIdAsync), new { id = newPerson.Id }, newPerson);
+            return CreatedAtRoute("GetPersonById", new { id = newPerson.Id }, newPerson);
         }
 
 

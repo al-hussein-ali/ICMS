@@ -17,10 +17,11 @@ namespace ICMS.Infrastructure.Persistence.Config
             builder.Property(vi => vi.Neighborhood).HasMaxLength(100).IsUnicode(true).IsRequired();
 
             builder.HasIndex(vi => vi.CardNumber).IsUnique(true);
+            builder.HasIndex(vi => vi.PersonId).IsUnique(true);
+            builder.HasIndex(vi => vi.UserId).IsUnique(true);
 
             builder.HasIndex(vi => new { vi.PersonId ,vi.UserId}, "IX_VaccinatedIndividuals_People_Users");
 
-            
             
             builder.HasOne(vi => vi.Person)
                 .WithOne(p => p.VaccinatedIndividual)
