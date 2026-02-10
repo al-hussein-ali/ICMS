@@ -20,7 +20,7 @@ namespace ICMS.API.Controllers
             this.personService = personService;
         }
 
-        [HttpGet("all")]
+        [HttpGet()]
         public ActionResult<PagedResult<PersonReadDto>> GetAllAsync([FromQuery] PaginationParams paginationParams)
         {
             var people = personService.GetAllAsync(paginationParams);
@@ -29,7 +29,7 @@ namespace ICMS.API.Controllers
         }
 
         [HttpGet("{id}",Name = "GetPersonById")]
-        public async Task<ActionResult<PersonReadDto>> GetByIdAsync([FromQuery] int id)
+        public async Task<ActionResult<PersonReadDto>> GetByIdAsync([FromRoute] int id)
         {
             var person = await personService.GetByIdAsync(id);
 
@@ -47,7 +47,7 @@ namespace ICMS.API.Controllers
 
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateAsync([FromQuery] int id, PersonCreateDto dto)
+        public async Task<IActionResult> UpdateAsync([FromRoute] int id, PersonCreateDto dto)
         {
             await personService.UpdateAsync(id, dto);
 
@@ -56,7 +56,7 @@ namespace ICMS.API.Controllers
 
 
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteAsync([FromQuery] int id)
+        public async Task<IActionResult> DeleteAsync([FromRoute] int id)
         {
             await personService.DeleteAsync(id);
 

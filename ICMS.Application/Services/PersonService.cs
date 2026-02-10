@@ -23,8 +23,6 @@ namespace ICMS.Application.Services
             this.pagnationValidator = pagnationValidator;
             this.createDTOValidator = createDTOValidator;
         }
-
-
         public async Task<PagedResult<PersonReadDto>> GetAllAsync(PaginationParams paginationParams, CancellationToken ct = default)
         {
             await pagnationValidator.ValidateAndThrowAsync(paginationParams);
@@ -34,8 +32,8 @@ namespace ICMS.Application.Services
             ct.ThrowIfCancellationRequested();
 
             return people.ApplyPagination(pageNumber: paginationParams.PageNumber, pageSize: paginationParams.PageSize);
-        }
 
+        }
         public async Task<PersonReadDto?> GetByIdAsync(int id, CancellationToken ct = default)
         {
             var person = await _unitOfWork.PersonRepository.GetByIdAsync(id, ct);
@@ -50,7 +48,6 @@ namespace ICMS.Application.Services
 
             return person?.ToReadDto();
         }
-
         //public async Task<PersonReadDto?> GetByAsync(Expression<Func<PersonReadDto, bool>> predicate, CancellationToken ct = default)
         //{
         //    var person = await _unitOfWork.PersonRepository.GetByAsync(predicate, ct);
@@ -64,8 +61,6 @@ namespace ICMS.Application.Services
         public async Task<PersonReadDto> AddAsync(PersonCreateDto entity, CancellationToken ct = default)
         {
             await createDTOValidator.ValidateAndThrowAsync(entity);
-
-
 
             ct.ThrowIfCancellationRequested();
 
@@ -105,7 +100,7 @@ namespace ICMS.Application.Services
 
             exsitingPerson.MarkAsDeleted();
 
-            return await _unitOfWork.SaveChangesAsync() > 0;
+            return await _unitOfWork.SaveChangesAsync(ct) > 0;
         }
     }
 }

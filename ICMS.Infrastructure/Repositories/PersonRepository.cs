@@ -36,7 +36,7 @@ namespace ICMS.Infrastructure.Repositories
             return await _dbSet.FirstOrDefaultAsync(p => p.FirstName == firstName
                                                       && p.LastName == lastName
                                                       && p.PhoneNumber == phoneNumber
-                                                      && p.DateOfBirth == dateOfBirth);
+                                                      && p.DateOfBirth == dateOfBirth && !p.IsDeleted);
         }
     }
 }

@@ -13,7 +13,6 @@ namespace ICMS.API.Controllers
     public class VaccinatedIndividualsController(IVaccinatedIndividualService vaccinatedIndividualService) : ControllerBase
     {
 
-
         [HttpGet]
         public async Task<ActionResult<PagedResult<VaccinatedIndividualReadDto>>> GetAllAsync([FromQuery] PaginationParams paginationParams)
         {
@@ -44,6 +43,14 @@ namespace ICMS.API.Controllers
         public async Task<IActionResult> UpdateAsync([FromRoute] int id,VaccinatedIndividualCreateDto vaccinatedIndividualCreateDto)
         {
             await vaccinatedIndividualService.UpdateAsync(id, vaccinatedIndividualCreateDto);
+
+            return NoContent();
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteAsync([FromRoute] int id)
+        {
+            await vaccinatedIndividualService.DeleteAsync(id);
 
             return NoContent();
         }

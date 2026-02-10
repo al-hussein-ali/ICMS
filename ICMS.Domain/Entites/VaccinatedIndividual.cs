@@ -84,7 +84,7 @@ namespace ICMS.Domain.Entites
         }
 
         public void UpdateIndividualInfo(string cardNumber, string directorate, string area, string neighborhood,
-            string firstName, string secondName, string? thirdName, string lastName, Gender gender, DateOnly dateOfBirth)
+            string firstName, string secondName, string? thirdName, string lastName, Gender gender, DateOnly dateOfBirth,string phoneNumber)
         {
             this.CardNumber = cardNumber;
             this.Directorate = directorate;
@@ -92,6 +92,7 @@ namespace ICMS.Domain.Entites
             this.Neighborhood = neighborhood;
 
             Person.UpdatePersonInfo(firstName,secondName,thirdName,lastName,gender,dateOfBirth);
+            Person.ChangeContactInfo(phoneNumber);
         }
 
         public void TakeDose(int doseId, DateOnly vaccinationDate, string takenIn, int? fieldVisitId = null, string? notes = null)

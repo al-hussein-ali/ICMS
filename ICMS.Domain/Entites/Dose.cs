@@ -10,11 +10,11 @@ namespace ICMS.Domain.Entites
     public class Dose : BaseEntity<int>
     {
         public int VaccineId { get; private set; }
-        public string DoseName { get; private set; } = string.Empty;
         public byte DoseOrder { get; private set; }
         public string RecommendedAgeGroup { get; private set; } = string.Empty;
         public int RecommendedAgeInMonths { get; private set; }
         public string? Notes { get; private set; }
+        public string DoseName { get; private set; } = string.Empty;
         public Vaccine? Vaccine { get; private set; }
 
         private Dose()
@@ -39,6 +39,7 @@ namespace ICMS.Domain.Entites
             };
         }
 
+
         public void AssignVaccine(Vaccine vaccine)
         {
             if (vaccine == null) throw new DomainException("Vaccine is required");
@@ -47,6 +48,17 @@ namespace ICMS.Domain.Entites
 
             Vaccine = vaccine;
             VaccineId = vaccine.Id;
+        }
+
+
+        public void UpdateDoseInfo(int vaccineId, string doseName, byte doseOrder, int recommendedAgeInMonths, string recommendedAgeGroup, string? notes = null)
+        {
+            VaccineId = vaccineId;
+            DoseName = doseName;
+            DoseOrder = doseOrder;
+            RecommendedAgeInMonths = recommendedAgeInMonths;
+            RecommendedAgeGroup = recommendedAgeGroup;
+            Notes = notes;
         }
     }
 }

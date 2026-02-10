@@ -9,17 +9,15 @@ using System.Threading.Tasks;
 
 namespace ICMS.Application.Validators.VaccinatedIndividual
 {
-    internal class VaccinatedIndividualValidator : AbstractValidator<VaccinatedIndividualCreateDto>
+    internal class VaccinatedIndividualCreateValidator : AbstractValidator<VaccinatedIndividualCreateDto>
     {
-        public VaccinatedIndividualValidator(IValidator<PersonCreateDto> personCreateValidator)
+        public VaccinatedIndividualCreateValidator(IValidator<PersonCreateDto> personCreateValidator)
         {
-
 
             RuleFor(x => x.CardNumber)
                 .NotEmpty()
-                .WithMessage("The Card Number is required");
-
-
+                .WithMessage("The Card Number is required")
+                .Length(1, 100).WithMessage("The Card Number should be at least 1 and at most 100 length");
 
             RuleFor(x => x.Area)
                 .NotEmpty()

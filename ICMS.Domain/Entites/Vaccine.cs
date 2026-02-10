@@ -40,18 +40,25 @@ namespace ICMS.Domain.Entites
         public void AddDose(Dose dose)
         {
             if (dose == null) throw new DomainException("Dose is required");
-            if (_doses.Any(d => d.Id == dose.Id)) throw new DomainException("Dose already added");
-
-            _doses.Add(dose);
-        }
-
-        public void AssignDose(Dose dose)
-        {
-            if (dose == null) throw new DomainException("Dose is required");
             if (dose.Vaccine != null) throw new DomainException("Dose already assigned to a vaccine");
 
-            dose.AssignVaccine(this);
-            if (!_doses.Any(d => d.Id == dose.Id)) _doses.Add(dose);
+            if (!_doses.Any(d => d.Id == dose.Id))
+                _doses.Add(dose);
+        }
+
+        public void Deactivate()
+        {
+            if (!IsActive)
+                return;
+            IsActive = false;
+        }
+
+        public void Reactviate()
+        {
+            if (IsActive)
+                throw new DomainException("The Vaccine is already active!");
+
+            IsActive = true;
         }
     }
 }

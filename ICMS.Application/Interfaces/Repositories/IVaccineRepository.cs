@@ -9,5 +9,7 @@ namespace ICMS.Application.Interfaces.Repositories
 {
     public interface IVaccineRepository : IRepository<Vaccine,int>
     {
+
+        new Task<Vaccine?> GetByIdAsync(int id, CancellationToken ct = default);
     }
 }

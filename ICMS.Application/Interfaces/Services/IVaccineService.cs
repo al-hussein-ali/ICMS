@@ -5,19 +5,20 @@ using System.Text;
 using System.Threading.Tasks;
 using ICMS.Application.DTOs;
 using ICMS.Application.DTOs.Pagination;
+using ICMS.Application.DTOs.Vaccine;
 
 namespace ICMS.Application.Interfaces.Services
 {
     public interface IVaccineService
     {
-        Task<IReadOnlyList<TempDto>> GetAllAsync(PaginationParams paginationParams, CancellationToken ct = default);
+        Task<IReadOnlyList<VaccineReadDto>> GetAllAsync(PaginationParams paginationParams, CancellationToken ct = default);
 
-        Task<TempDto?> GetByIdAsync(int id, CancellationToken ct = default);
+        Task<VaccineReadDto?> GetByIdAsync(int id, CancellationToken ct = default);
 
-        Task<TempDto> AddAsync(TempDto entity, CancellationToken ct = default);
+        Task<VaccineReadDto> AddAsync(VaccineCreateDto entity, CancellationToken ct = default);
 
-        Task<bool> UpdateAsync(TempDto updatedEntity, CancellationToken ct = default);
+        Task<bool> UpdateAsync(int id,VaccineCreateDto updatedEntity, CancellationToken ct = default);
 
-        Task<bool> DeleteAsync(TempDto entity, CancellationToken ct = default);
+        Task<bool> DeleteAsync(int id, CancellationToken ct = default);
     }
 }

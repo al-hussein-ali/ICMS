@@ -8,6 +8,7 @@ namespace ICMS.Infrastructure.Persistence.Config
     {
         public void Configure(EntityTypeBuilder<Dose> builder)
         {
+
             builder.HasKey(d => d.Id);
 
             builder.Property(d => d.Id).HasColumnName("DoseId");

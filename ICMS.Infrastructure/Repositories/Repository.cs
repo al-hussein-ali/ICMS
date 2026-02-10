@@ -41,7 +41,7 @@ namespace ICMS.Infrastructure.Repositories
             return query;
         }
 
-        public async Task<IReadOnlyList<TEntity>> GetAllAsync(bool track = false, CancellationToken cancellationToken = default, params Expression<Func<TEntity, object>>[] includes )
+        public async Task<IReadOnlyList<TEntity>> GetAllAsync(bool track = false, CancellationToken cancellationToken = default, params Expression<Func<TEntity, object>>[] includes)
         {
             var query = track ? _dbSet : _dbSet.AsNoTracking();
 
@@ -92,7 +92,6 @@ namespace ICMS.Infrastructure.Repositories
 
         public async Task DeleteAsync(TEntity entity, CancellationToken cancellationToken = default)
         {
-            var exstingEnity = await _dbSet.FindAsync(entity.Id);
             _dbSet.Remove(entity);
         }
 

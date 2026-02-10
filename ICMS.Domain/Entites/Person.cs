@@ -54,7 +54,6 @@ namespace ICMS.Domain.Entites
 
             PregnantWoman = pregnantWoman;
         }
-
         public void MarkAsVaccinatedIndvidual(VaccinatedIndividual vaccinatedIndividual)
         {
             if (VaccinatedIndividual != null)

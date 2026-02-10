@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection.Emit;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -26,8 +27,9 @@ namespace ICMS.Infrastructure.Persistence.Config
             builder.Property(p => p.LastName).HasMaxLength(20).IsUnicode(true).IsRequired();
 
 
-            builder.HasIndex(p => new {p.PhoneNumber,p.FirstName,p.LastName,p.DateOfBirth}).IsUnique();
+            builder.HasIndex(p => new {p.PhoneNumber,p.FirstName,p.LastName,p.DateOfBirth}).IsUnique().HasFilter("\"IsDeleted\" = false");
 
+    ;
 
             builder.Property(p => p.DateOfBirth).IsRequired();
 

@@ -20,16 +20,13 @@ public class VaccinatedIndividualService : IVaccinatedIndividualService
     private readonly IUnitOfWork _unitOfWork;
     private readonly IValidator<PaginationParams> pagnationValidator;
     private readonly IValidator<VaccinatedIndividualCreateDto> _vaccinatedCreateValidator;
-    private readonly IPersonService personService;
 
     public VaccinatedIndividualService(IUnitOfWork unitOfWork, IValidator<PaginationParams> pagnationValidator, IPersonService personService, IValidator<VaccinatedIndividualCreateDto> vaccinatedCreateValidator)
     {
         this._unitOfWork = unitOfWork;
         this.pagnationValidator = pagnationValidator;
-        this.personService = personService;
         _vaccinatedCreateValidator = vaccinatedCreateValidator;
     }
-
 
     public async Task<PagedResult<VaccinatedIndividualReadDto>> GetAllAsync(PaginationParams paginationParams, CancellationToken ct = default)
     {
@@ -40,7 +37,6 @@ public class VaccinatedIndividualService : IVaccinatedIndividualService
 
         return vaccinatedIndividuals.ApplyPagination(paginationParams.PageNumber, paginationParams.PageSize);
     }
-
     public async Task<VaccinatedIndividualReadDto?> GetByIdAsync(int id, CancellationToken ct = default)
     {
         var vaccinatedIndividual = await _unitOfWork.VaccinatedIndividualRepository.GetByIdAsync(id, ct);
@@ -80,7 +76,6 @@ public class VaccinatedIndividualService : IVaccinatedIndividualService
 
         return vaccinatedIndividual.ToReadDto();
     }
-
     public async Task<bool> UpdateAsync(int id, VaccinatedIndividualCreateDto updatedEntity, CancellationToken ct = default)
     {
         await _vaccinatedCreateValidator.ValidateAndThrowAsync(updatedEntity);
@@ -102,11 +97,13 @@ public class VaccinatedIndividualService : IVaccinatedIndividualService
             updatedEntity.PersonCreateDto.ThirdName,
             updatedEntity.PersonCreateDto.LastName,
             updatedEntity.PersonCreateDto.Gender.FromStringToGenderEnum(),
-            updatedEntity.PersonCreateDto.DateOfBirth);
+            updatedEntity.PersonCreateDto.DateOfBirth,
+            updatedEntity.PersonCreateDto.PhoneNumber);
+
+
 
         return await _unitOfWork.SaveChangesAsync(ct) > 0;
     }
-
     public async Task<bool> DeleteAsync(int id, CancellationToken ct = default)
     {
 
@@ -115,7 +112,8 @@ public class VaccinatedIndividualService : IVaccinatedIndividualService
         if (existingVaccinatedIndividual == null || existingVaccinatedIndividual.Person.IsDeleted)
             throw new NotFoundException("This record was not found!");
 
-        await _unitOfWork.VaccinatedIndividualRepository.DeleteAsync(existingVaccinatedIndividual,ct);
+
+        await _unitOfWork.VaccinatedIndividualRepository.DeleteAsync(existingVaccinatedIndividual, ct);
 
         return await _unitOfWork.SaveChangesAsync() > 0;
     }
