@@ -46,6 +46,15 @@ namespace ICMS.Domain.Entites
                 _doses.Add(dose);
         }
 
+        public void UpdateVaccineInfo(string vaccineName, string vaccineCode, string? description, bool isActive, byte totalDosages)
+        {
+            VaccineName = vaccineName;
+            VaccineCode = vaccineCode;
+            Description = description;
+            IsActive = isActive;
+            TotalDosages = totalDosages;
+        }
+
         public void Deactivate()
         {
             if (!IsActive)
@@ -53,7 +62,7 @@ namespace ICMS.Domain.Entites
             IsActive = false;
         }
 
-        public void Reactviate()
+        public void Reactivate()
         {
             if (IsActive)
                 throw new DomainException("The Vaccine is already active!");

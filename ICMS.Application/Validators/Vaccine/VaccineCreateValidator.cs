@@ -15,6 +15,22 @@ namespace ICMS.Application.Validators.Vaccine
             RuleFor(x => x.VaccineName)
                 .NotEmpty()
                 .WithMessage("The Vaccine Name is required");
+
+
+            RuleFor(x => x.VaccineCode)
+                .NotEmpty()
+                .WithMessage("The Vaccine Code is required");
+
+
+            RuleFor(x => x.TotalDosages)
+                .NotNull()
+                .WithMessage("This Total Dosages is required");
+
+
+            RuleFor(x => x.IsActive)
+                .NotNull()
+                .WithMessage("The Active Field is required");
+
         }
     }
 }

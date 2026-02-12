@@ -11,7 +11,7 @@ namespace ICMS.Application.Interfaces.Services
 {
     public interface IVaccineService
     {
-        Task<IReadOnlyList<VaccineReadDto>> GetAllAsync(PaginationParams paginationParams, CancellationToken ct = default);
+        Task<IReadOnlyList<VaccineReadDto>> GetAllAsync(CancellationToken ct = default);
 
         Task<VaccineReadDto?> GetByIdAsync(int id, CancellationToken ct = default);
 
@@ -19,6 +19,9 @@ namespace ICMS.Application.Interfaces.Services
 
         Task<bool> UpdateAsync(int id,VaccineCreateDto updatedEntity, CancellationToken ct = default);
 
-        Task<bool> DeleteAsync(int id, CancellationToken ct = default);
+        Task<bool> DeactivateAsync(int id, CancellationToken ct = default);
+        Task<bool> ReactivateAsync(int id, CancellationToken ct = default);
+
+
     }
 }
