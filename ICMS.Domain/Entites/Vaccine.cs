@@ -39,11 +39,22 @@ namespace ICMS.Domain.Entites
 
         public void AddDose(Dose dose)
         {
-            if (dose == null) throw new DomainException("Dose is required");
-            if (dose.Vaccine != null) throw new DomainException("Dose already assigned to a vaccine");
+            if (dose == null) throw new DomainException("Dose is required.");
+            if (dose.Vaccine != null) throw new DomainException("Dose already assigned to a vaccine.");
 
-            if (!_doses.Any(d => d.Id == dose.Id))
-                _doses.Add(dose);
+            if (Doses.Count + 1 > TotalDosages)
+                throw new DomainException("The number of Doses exeeded the expected total dosages.");
+
+
+            if (_doses.Any(d => d.DoseOrder == dose.DoseOrder))
+                throw new DomainException("Cannot add Dose with redundunt order.");
+
+
+            if (_doses.Any(d => d.DoseName.Equals(dose.DoseName,StringComparison.OrdinalIgnoreCase)))
+                throw new DomainException("Dose with this name already exists.");
+
+            _doses.Add(dose);
+
         }
 
         public void UpdateVaccineInfo(string vaccineName, string vaccineCode, string? description, bool isActive, byte totalDosages)
@@ -52,6 +63,10 @@ namespace ICMS.Domain.Entites
             VaccineCode = vaccineCode;
             Description = description;
             IsActive = isActive;
+
+            if (totalDosages < Doses.Count)
+                throw new DomainException("The Number of Total Doses is less than Dosages");
+
             TotalDosages = totalDosages;
         }
 

@@ -15,7 +15,7 @@ namespace ICMS.Domain.Entites
         public int RecommendedAgeInMonths { get; private set; }
         public string? Notes { get; private set; }
         public string DoseName { get; private set; } = string.Empty;
-        public Vaccine? Vaccine { get; private set; }
+        public Vaccine Vaccine { get; private set; }
 
         private Dose()
         {   
@@ -24,6 +24,7 @@ namespace ICMS.Domain.Entites
         public static Dose Create(int vaccineId, string doseName, byte doseOrder, int recommendedAgeInMonths, string recommendedAgeGroup, string? notes = null)
         {
             if (vaccineId <= 0) throw new DomainException("Invalid vaccine id");
+
             if (string.IsNullOrWhiteSpace(doseName)) throw new DomainException("Dose name is required");
             if (recommendedAgeInMonths < 0) throw new DomainException("Recommended age cannot be negative");
             if (string.IsNullOrWhiteSpace(recommendedAgeGroup)) throw new DomainException("Recommended age group is required");
@@ -38,18 +39,6 @@ namespace ICMS.Domain.Entites
                 Notes = notes
             };
         }
-
-
-        public void AssignVaccine(Vaccine vaccine)
-        {
-            if (vaccine == null) throw new DomainException("Vaccine is required");
-            if (Vaccine != null) throw new DomainException("Vaccine already assigned");
-            if (vaccine.Id != 0 && vaccine.Id != VaccineId) throw new DomainException("Vaccine id mismatch");
-
-            Vaccine = vaccine;
-            VaccineId = vaccine.Id;
-        }
-
 
         public void UpdateDoseInfo(int vaccineId, string doseName, byte doseOrder, int recommendedAgeInMonths, string recommendedAgeGroup, string? notes = null)
         {
