@@ -1,4 +1,5 @@
-﻿using ICMS.Application.DTOs.Pagination;
+﻿using ICMS.Application.DTOs.ImmunizationRecord;
+using ICMS.Application.DTOs.Pagination;
 using ICMS.Application.DTOs.VaccinatedIndividual;
 using ICMS.Application.Interfaces.Services;
 using ICMS.Domain.ValueObjects;
@@ -54,5 +55,16 @@ namespace ICMS.API.Controllers
 
             return NoContent();
         }
+
+        [HttpPost("/takeDose")]
+        public async Task<IActionResult> TakeDose([FromBody] ImmunizationRecordCreateDto dto)
+        {
+            await vaccinatedIndividualService.GiveDose(dto);
+
+            return Accepted();
+        }
+
+        
+
     }
 }

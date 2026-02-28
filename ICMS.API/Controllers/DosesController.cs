@@ -12,9 +12,9 @@ namespace ICMS.API.Controllers
     public class DosesController(IDoseService doseService) : ControllerBase
     {
         [HttpGet("{id}")]
-        public async Task<ActionResult<IReadOnlyList<DoseReadDto>>> GetAllAsync([FromRoute] int? id)
+        public async Task<ActionResult<IReadOnlyList<DoseReadDto>>> GetAllAsync([FromRoute] int? vaccineId)
         {
-            var dosages = await doseService.GetAllAsync(id);
+            var dosages = await doseService.GetAllAsync(vaccineId);
 
             return Ok(dosages);
         }
@@ -35,7 +35,6 @@ namespace ICMS.API.Controllers
             return Ok(dose);
         }
 
-
-
+ 
     }
 }

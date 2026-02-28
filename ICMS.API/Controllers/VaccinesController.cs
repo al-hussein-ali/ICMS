@@ -18,7 +18,6 @@ namespace ICMS.API.Controllers
             return Ok(vaccines);
         }
 
-
         [HttpGet("{id}", Name = "GetVaccineById")]
         public async Task<ActionResult<VaccineReadDto>> GetByIdAsync([FromRoute] int id)
         {
@@ -37,7 +36,6 @@ namespace ICMS.API.Controllers
 
 
         [HttpPut("{id}")]
-
         public async Task<IActionResult> UpdateAsync([FromRoute] int id,[FromBody] VaccineCreateDto dto)
         {
             await vaccineService.UpdateAsync(id, dto);

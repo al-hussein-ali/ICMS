@@ -21,5 +21,10 @@ namespace ICMS.Infrastructure.Repositories
             return await _dbSet.Include(vi => vi.Person).Include(vi => vi.User).Where(vi => !vi.Person.IsDeleted).FirstOrDefaultAsync(vi => vi.Id == id, ct);
         }
 
+
+        public async Task<VaccinatedIndividual?> GetDetailsById(int id, CancellationToken ct = default)
+        {
+            return await _dbSet.Include(vi => vi.Person).Include(vi => vi.User).Include(vi => vi.ImmunizationRecords).Where(vi => !vi.Person.IsDeleted).FirstOrDefaultAsync(vi => vi.Id == id, ct);
+        }
     }
 }

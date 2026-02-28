@@ -1,5 +1,6 @@
 ﻿using FluentValidation;
 using ICMS.Application.DTOs;
+using ICMS.Application.DTOs.ImmunizationRecord;
 using ICMS.Application.DTOs.Pagination;
 using ICMS.Application.DTOs.VaccinatedIndividual;
 using ICMS.Application.Extensions;
@@ -20,12 +21,14 @@ public class VaccinatedIndividualService : IVaccinatedIndividualService
     private readonly IUnitOfWork _unitOfWork;
     private readonly IValidator<PaginationParams> pagnationValidator;
     private readonly IValidator<VaccinatedIndividualCreateDto> _vaccinatedCreateValidator;
+    private readonly IValidator<ImmunizationRecordCreateDto> _immunizationRecordCreateValidator;
 
-    public VaccinatedIndividualService(IUnitOfWork unitOfWork, IValidator<PaginationParams> pagnationValidator, IPersonService personService, IValidator<VaccinatedIndividualCreateDto> vaccinatedCreateValidator)
+    public VaccinatedIndividualService(IUnitOfWork unitOfWork, IValidator<PaginationParams> pagnationValidator, IPersonService personService, IValidator<VaccinatedIndividualCreateDto> vaccinatedCreateValidator, IValidator<ImmunizationRecordCreateDto> immunizationRecordCreateValidator)
     {
         this._unitOfWork = unitOfWork;
         this.pagnationValidator = pagnationValidator;
         _vaccinatedCreateValidator = vaccinatedCreateValidator;
+        _immunizationRecordCreateValidator = immunizationRecordCreateValidator;
     }
 
     public async Task<PagedResult<VaccinatedIndividualReadDto>> GetAllAsync(PaginationParams paginationParams, CancellationToken ct = default)
@@ -117,5 +120,23 @@ public class VaccinatedIndividualService : IVaccinatedIndividualService
 
         return await _unitOfWork.SaveChangesAsync() > 0;
     }
+    public async Task<bool> GiveDose(ImmunizationRecordCreateDto dto, CancellationToken ct = default)
+    {
+        await _immunizationRecordCreateValidator.ValidateAndThrowAsync(dto);
+        
+        var vaccinatedIndividual = await _unitOfWork.VaccinatedIndividualRepository.GetDetailsById(dto.IndividualId);
+
+        if (vaccinatedIndividual == null)
+            throw new NotFoundException("This record was not found!");
+
+        if (!await _unitOfWork.DoseRepository.ExistAsync(dto.DoseId))
+            throw new NotFoundException("The Dose Id was invalid or not found.");
+
+
+        vaccinatedIndividual.TakeDose(dto.DoseId, dto.VaccinationDate, dto.TakenIn, dto.FieldVisitId, dto.Notes);
+
+        return await _unitOfWork.SaveChangesAsync() > 0;
+    }
+
 
 }

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace ICMS.Application.Services
 {
-    internal class ImmunizationRecordService
+    public class ImmunizationRecordService
     {
     }
 }

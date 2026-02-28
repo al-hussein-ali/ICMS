@@ -31,6 +31,9 @@ namespace ICMS.API.Handlers
                 NotFoundException =>
                     (StatusCodes.Status404NotFound, "Not Found", exception.Message),
 
+                InvalidDoubleDoseException =>
+                (StatusCodes.Status400BadRequest,"Double Dose","This individual has been already toke the dose."),
+
                 // 5. Everything Else (500)
                 _ =>
                     (StatusCodes.Status500InternalServerError, "Server Error", "An unexpected error occurred.")

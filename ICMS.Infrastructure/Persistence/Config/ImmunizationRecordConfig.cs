@@ -22,6 +22,7 @@ namespace ICMS.Infrastructure.Persistence.Config
             builder.HasIndex(ir => ir.IndividualId);
             builder.HasIndex(ir => ir.DoseId);
             builder.HasIndex(ir => ir.FieldVisitId);
+            builder.HasIndex(ir => new { ir.IndividualId, ir.DoseId }).IsUnique();
 
             builder.HasOne(ir => ir.VaccinatedIndividual)
                 .WithMany(vi => vi.ImmunizationRecords)

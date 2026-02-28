@@ -104,7 +104,7 @@ namespace ICMS.Domain.Entites
                 throw new DomainException("A required field is missing!");
 
             if (_immunizationRecords.Any(ir => ir.IndividualId == Id && ir.DoseId == doseId))
-                throw new InvalidDoubleDoseException("This dose was taken already");
+                throw new InvalidDoubleDoseException("This dose already been taken.");
 
 
             _immunizationRecords.Add(ImmunizationRecord.Create(this.Id, doseId, vaccinationDate, takenIn, fieldVisitId, notes));

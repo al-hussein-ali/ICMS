@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ICMS.Application.DTOs;
+using ICMS.Application.DTOs.ImmunizationRecord;
 using ICMS.Application.DTOs.Pagination;
 using ICMS.Application.DTOs.VaccinatedIndividual;
 using ICMS.Domain.ValueObjects;
@@ -21,5 +22,7 @@ namespace ICMS.Application.Interfaces.Services
         Task<bool> UpdateAsync(int id,VaccinatedIndividualCreateDto updatedEntity, CancellationToken ct = default);
 
         Task<bool> DeleteAsync(int id, CancellationToken ct = default);
+
+        Task<bool> GiveDose(ImmunizationRecordCreateDto dto, CancellationToken ct = default);
     }
 }
