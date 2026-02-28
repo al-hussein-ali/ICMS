@@ -21,9 +21,9 @@ namespace ICMS.API.Controllers
         }
 
         [HttpGet()]
-        public ActionResult<PagedResult<PersonReadDto>> GetAllAsync([FromQuery] PaginationParams paginationParams)
+        public async Task<ActionResult<PagedResult<PersonReadDto>>> GetAllAsync([FromQuery] PaginationParams paginationParams)
         {
-            var people = personService.GetAllAsync(paginationParams);
+            var people = await personService.GetAllAsync(paginationParams);
 
             return Ok(people);
         }
