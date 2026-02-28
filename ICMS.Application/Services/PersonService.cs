@@ -83,7 +83,7 @@ namespace ICMS.Application.Services
                 updatedEntity.SecondName,
                 updatedEntity.ThirdName,
                 updatedEntity.LastName,
-                updatedEntity.Gender.FromStringToGenderEnum(),
+                updatedEntity.Gender,
                 updatedEntity.DateOfBirth
                 );
 
