@@ -31,35 +31,35 @@ namespace ICMS.Domain.Entites
             return new ImmunizationRecord { IndividualId = individualId, DoseId = doseId, FieldVisitId = fieldVisitId, VaccinationDate = vaccinationDate, TakenIn = takenIn, Notes = notes };
         }
 
-        public void AssignVaccinatedIndividual(VaccinatedIndividual vi)
+        public void UpdateRecordInfo(int individualId, int doseId, DateOnly vaccinationDate, string takenIn, int? fieldVisitId = null, string? notes = null)
         {
-            if (vi == null) throw new DomainException("Vaccinated individual is required");
-            if (VaccinatedIndividual != null) throw new DomainException("Vaccinated individual already assigned");
-            if (vi.Id != 0 && vi.Id != IndividualId) throw new DomainException("Individual id mismatch");
-
-            VaccinatedIndividual = vi;
-            IndividualId = vi.Id;
+            this.IndividualId = individualId;
+            this.VaccinationDate = vaccinationDate;
+            this.DoseId = doseId;
+            this.TakenIn = takenIn;
+            this.FieldVisitId = fieldVisitId;
+            this.Notes = notes;
         }
 
-        public void AssignDose(Dose dose)
-        {
-            if (dose == null) throw new DomainException("Dose is required");
-            if (Dose != null) throw new DomainException("Dose already assigned");
-            if (dose.Id != 0 && dose.Id != DoseId) throw new DomainException("Dose id mismatch");
+        //public void AssignDose(Dose dose)
+        //{
+        //    if (dose == null) throw new DomainException("Dose is required");
+        //    if (Dose != null) throw new DomainException("Dose already assigned");
+        //    if (dose.Id != 0 && dose.Id != DoseId) throw new DomainException("Dose id mismatch");
 
-            Dose = dose;
-            DoseId = dose.Id;
-        }
+        //    Dose = dose;
+        //    DoseId = dose.Id;
+        //}
 
-        public void AssignFieldVisit(FieldVisit fv)
-        {
-            if (fv == null) throw new DomainException("FieldVisit is required");
-            if (FieldVisit != null) throw new DomainException("FieldVisit already assigned");
-            if (fv.Id != 0 && fv.Id != FieldVisitId) throw new DomainException("FieldVisit id mismatch");
+        //public void AssignFieldVisit(FieldVisit fv)
+        //{
+        //    if (fv == null) throw new DomainException("FieldVisit is required");
+        //    if (FieldVisit != null) throw new DomainException("FieldVisit already assigned");
+        //    if (fv.Id != 0 && fv.Id != FieldVisitId) throw new DomainException("FieldVisit id mismatch");
 
-            FieldVisit = fv;
-            FieldVisitId = fv.Id;
-        }
+        //    FieldVisit = fv;
+        //    FieldVisitId = fv.Id;
+        //}
 
     }
 }

@@ -23,11 +23,10 @@ public class VaccinatedIndividualService : IVaccinatedIndividualService
     private readonly IValidator<VaccinatedIndividualCreateDto> _vaccinatedCreateValidator;
     private readonly IValidator<ImmunizationRecordCreateDto> _immunizationRecordCreateValidator;
 
-<<<<<<< HEAD
-    public VaccinatedIndividualService(IUnitOfWork unitOfWork, IValidator<PaginationParams> pagnationValidator, IPersonService personService, IValidator<VaccinatedIndividualCreateDto> vaccinatedCreateValidator, IValidator<ImmunizationRecordCreateDto> immunizationRecordCreateValidator)
-=======
-    public VaccinatedIndividualService(IUnitOfWork unitOfWork, IValidator<PaginationParams> pagnationValidator, IValidator<VaccinatedIndividualCreateDto> vaccinatedCreateValidator)
->>>>>>> dfd769b3e85ddebe02d7efecbd351527db621e99
+
+
+    public VaccinatedIndividualService(IUnitOfWork unitOfWork,IValidator<PaginationParams> pagnationValidator, IValidator<ImmunizationRecordCreateDto> immunizationRecordCreateValidator, IValidator<VaccinatedIndividualCreateDto> vaccinatedCreateValidator)
+
     {
         this._unitOfWork = unitOfWork;
         this.pagnationValidator = pagnationValidator;
@@ -55,7 +54,7 @@ public class VaccinatedIndividualService : IVaccinatedIndividualService
 
         await _vaccinatedCreateValidator.ValidateAndThrowAsync(entity);
 
-        // ensure person exists
+
         var person = await _unitOfWork.PersonRepository.GetByIdAsync(entity.PersonId, ct);
         if (person == null)
             throw new NotFoundException("Person was not found");

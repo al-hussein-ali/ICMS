@@ -4,20 +4,22 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ICMS.Application.DTOs;
+using ICMS.Application.DTOs.ImmunizationRecord;
 using ICMS.Application.DTOs.Pagination;
+using ICMS.Domain.ValueObjects;
 
 namespace ICMS.Application.Interfaces.Services
 {
     public interface IImmunizationRecordService
     {
-        Task<IReadOnlyList<TempDto>> GetAllAsync(PaginationParams paginationParams, CancellationToken ct = default);
+        Task<PagedResult<ImmunizationRecordReadDto>> GetAllAsync(PaginationParams paginationParams, CancellationToken ct = default);
 
-        Task<TempDto?> GetByIdAsync(int id, CancellationToken ct = default);
+        Task<ImmunizationRecordReadDto?> GetByIdAsync(Guid id, CancellationToken ct = default);
 
-        Task<TempDto> AddAsync(TempDto entity, CancellationToken ct = default);
+        //Task<ImmunizationRecordReadDto> AddAsync(ImmunizationRecordCreateDto entity, CancellationToken ct = default);
 
-        Task<bool> UpdateAsync(TempDto updatedEntity, CancellationToken ct = default);
+        Task<bool> UpdateAsync(Guid id,ImmunizationRecordCreateDto updatedEntity, CancellationToken ct = default);
 
-        Task<bool> DeleteAsync(TempDto entity, CancellationToken ct = default);
+        Task<bool> DeleteAsync(Guid id, CancellationToken ct = default);
     }
 }

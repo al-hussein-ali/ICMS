@@ -48,16 +48,7 @@ namespace ICMS.Application.Services
 
             return person?.ToReadDto();
         }
-        //public async Task<PersonReadDto?> GetByAsync(Expression<Func<PersonReadDto, bool>> predicate, CancellationToken ct = default)
-        //{
-        //    var person = await _unitOfWork.PersonRepository.GetByAsync(predicate, ct);
 
-        //    ct.ThrowIfCancellationRequested();
-
-        //    return person?.ToReadDto();
-        //}
-
-        // solve the insert of a Vaccinated one with a person data sent with his record to be inserted, validate if the person is already exists or not, with one errors
         public async Task<PersonReadDto> AddAsync(PersonCreateDto entity, CancellationToken ct = default)
         {
             await createDTOValidator.ValidateAndThrowAsync(entity);
