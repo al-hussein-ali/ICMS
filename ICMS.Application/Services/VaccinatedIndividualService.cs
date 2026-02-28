@@ -21,7 +21,7 @@ public class VaccinatedIndividualService : IVaccinatedIndividualService
     private readonly IValidator<PaginationParams> pagnationValidator;
     private readonly IValidator<VaccinatedIndividualCreateDto> _vaccinatedCreateValidator;
 
-    public VaccinatedIndividualService(IUnitOfWork unitOfWork, IValidator<PaginationParams> pagnationValidator, IPersonService personService, IValidator<VaccinatedIndividualCreateDto> vaccinatedCreateValidator)
+    public VaccinatedIndividualService(IUnitOfWork unitOfWork, IValidator<PaginationParams> pagnationValidator, IValidator<VaccinatedIndividualCreateDto> vaccinatedCreateValidator)
     {
         this._unitOfWork = unitOfWork;
         this.pagnationValidator = pagnationValidator;
@@ -48,26 +48,21 @@ public class VaccinatedIndividualService : IVaccinatedIndividualService
 
         await _vaccinatedCreateValidator.ValidateAndThrowAsync(entity);
 
-        var person = await _unitOfWork
-            .PersonRepository
-            .GetByAsync(entity.PersonCreateDto.FirstName
-            , entity.PersonCreateDto.LastName
-            , entity.PersonCreateDto.PhoneNumber
-            , entity.PersonCreateDto.DateOfBirth
-            , ct);
-
+        // ensure person exists
+        var person = await _unitOfWork.PersonRepository.GetByIdAsync(entity.PersonId, ct);
+        if (person == null)
+            throw new NotFoundException("Person was not found");
 
         var vaccinatedIndividual = entity.ToDomain();
 
-        if (person != null)
-        {
-            vaccinatedIndividual.AssignExistingPersonById(person.Id);
-        }
-        else
-        {
-            vaccinatedIndividual.AssignPerson(entity.PersonCreateDto.ToDomain());
-        }
+        vaccinatedIndividual.AssignExistingPersonById(person.Id);
 
+        if (entity.UserId.HasValue && entity.UserId.Value > 0)
+        {
+            var user = await _unitOfWork.UserRepository.GetByIdAsync(entity.UserId.Value, ct);
+            if (user == null) throw new NotFoundException("User was not found");
+            vaccinatedIndividual.AssignUser(user);
+        }
 
         ct.ThrowIfCancellationRequested();
 
@@ -86,20 +81,42 @@ public class VaccinatedIndividualService : IVaccinatedIndividualService
         if (existingVaccinatedIndividual == null || existingVaccinatedIndividual.Person.IsDeleted)
             throw new NotFoundException("This record was not found!");
 
+        // If PersonId changed ensure it exists and assign
+        if (existingVaccinatedIndividual.PersonId != updatedEntity.PersonId)
+        {
+            var newPerson = await _unitOfWork.PersonRepository.GetByIdAsync(updatedEntity.PersonId, ct);
+            if (newPerson == null) throw new NotFoundException("Person was not found");
+            existingVaccinatedIndividual.AssignExistingPersonById(newPerson.Id);
+        }
+
+        // update vaccinated individual's own fields. Domain only exposes UpdateIndividualInfo which also updates person info.
+        // We'll call it with existing person details to keep person unchanged.
+        var person = existingVaccinatedIndividual.Person;
+        if (person == null) throw new NotFoundException("Associated person not found.");
 
         existingVaccinatedIndividual.UpdateIndividualInfo(
             updatedEntity.CardNumber,
             updatedEntity.Directorate,
             updatedEntity.Area,
             updatedEntity.Neighborhood,
-            updatedEntity.PersonCreateDto.FirstName,
-            updatedEntity.PersonCreateDto.SecondName,
-            updatedEntity.PersonCreateDto.ThirdName,
-            updatedEntity.PersonCreateDto.LastName,
-            updatedEntity.PersonCreateDto.Gender.FromStringToGenderEnum(),
-            updatedEntity.PersonCreateDto.DateOfBirth,
-            updatedEntity.PersonCreateDto.PhoneNumber);
+            person.FirstName,
+            person.SecondName,
+            person.ThirdName,
+            person.LastName,
+            person.Gender,
+            person.DateOfBirth,
+            person.PhoneNumber);
 
+        // if user changed
+        if (updatedEntity.UserId.HasValue)
+        {
+            if (!existingVaccinatedIndividual.UserId.HasValue || existingVaccinatedIndividual.UserId.Value != updatedEntity.UserId.Value)
+            {
+                var user = await _unitOfWork.UserRepository.GetByIdAsync(updatedEntity.UserId.Value, ct);
+                if (user == null) throw new NotFoundException("User was not found");
+                existingVaccinatedIndividual.AssignUser(user);
+            }
+        }
 
 
         return await _unitOfWork.SaveChangesAsync(ct) > 0;
