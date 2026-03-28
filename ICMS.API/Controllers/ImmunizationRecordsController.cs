@@ -1,8 +1,7 @@
 ﻿using ICMS.Application.DTOs.ImmunizationRecord;
 using ICMS.Application.DTOs.Pagination;
-using ICMS.Application.Services;
+using ICMS.Application.Interfaces.Services;
 using ICMS.Domain.ValueObjects;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ICMS.API.Controllers
@@ -11,14 +10,13 @@ namespace ICMS.API.Controllers
     [ApiController]
     public class ImmunizationRecordsController : ControllerBase
     {
-        private readonly ImmunizationRecordService _immunizationRecordService; 
-        public ImmunizationRecordsController(ImmunizationRecordService immunizationRecordService)
+        private readonly IImmunizationRecordService _immunizationRecordService;
+        public ImmunizationRecordsController(IImmunizationRecordService immunizationRecordService)
         {
             _immunizationRecordService = immunizationRecordService;
         }
 
         [HttpGet()]
-
         public async Task<ActionResult<PagedResult<ImmunizationRecordReadDto>>> GetAllAsync([FromQuery] PaginationParams paginationParams)
         {
             var immnuizationRecords = await _immunizationRecordService.GetAllAsync(paginationParams);
@@ -26,13 +24,28 @@ namespace ICMS.API.Controllers
             return Ok(immnuizationRecords);
         }
 
-
-        [HttpGet("{id}",Name = "GetImmunizationRecordByID")]
+        [HttpGet("{id}", Name = "GetImmunizationRecordById")]
         public async Task<ActionResult<ImmunizationRecordReadDto>> GetByIdAsync([FromRoute] Guid id)
         {
             var immunizationRecord = await _immunizationRecordService.GetByIdAsync(id);
 
             return Ok(immunizationRecord);
+        }
+
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateAsync([FromRoute] Guid id, [FromBody] ImmunizationRecordCreateDto dto)
+        {
+            await _immunizationRecordService.UpdateAsync(id, dto);
+
+            return NoContent();
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteAsync([FromRoute] Guid id)
+        {
+            await _immunizationRecordService.DeleteAsync(id);
+
+            return NoContent();
         }
 
     }

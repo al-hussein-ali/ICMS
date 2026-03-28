@@ -12,5 +12,11 @@ namespace ICMS.Application.Interfaces.Repositories
         new Task<VaccinatedIndividual?> GetByIdAsync(int id, CancellationToken ct = default);
 
         Task<VaccinatedIndividual?> GetDetailsById(int id, CancellationToken ct = default);
+
+        Task<VaccinatedIndividual?> GetDetailsByCardNumber(string cardNumber, CancellationToken ct = default);
+
+        Task BulkInsertAsync(List<VaccinatedIndividual> vaccinatedIndividuals, CancellationToken ct = default);
+
+
     }
 }

@@ -35,24 +35,18 @@ namespace ICMS.Application.Services
             return doses.Select(d => d.ToReadDto()).ToList();
         }
 
-        public async Task<DoseReadDto?> GetByIdAsync(int id, CancellationToken ct = default)
+        public async Task<DoseReadDto> GetByIdAsync(int id, CancellationToken ct = default)
         {
             var dose = await _unitOfWork.DoseRepository.GetByIdAsync(id);
 
-            if (dose == null)
-                throw new NotFoundException("Dose id was not found.");
-
-            return dose.ToReadDto();
+            return dose.ToReadDto() ?? throw new NotFoundException("Dose id was not found."); ;
         }
 
-        public async Task<DoseReadDto?> GetByNameAsync(string doseName, CancellationToken ct)
+        public async Task<DoseReadDto> GetByNameAsync(string doseName, CancellationToken ct)
         {
-            var dose = await _unitOfWork.DoseRepository.GetByAsync(d => d.DoseName == doseName,ct);
+            var dose = await _unitOfWork.DoseRepository.GetByAsync(d => d.DoseName == doseName, ct);
 
-            if (dose == null)
-                throw new NotFoundException("Dose id was not found.");
-
-            return dose.ToReadDto();
+            return dose.ToReadDto() ?? throw new NotFoundException("Dose id was not found."); ;
         }
 
         public async Task<DoseReadDto> AddAsync(DoseCreateDto entity, CancellationToken ct = default)

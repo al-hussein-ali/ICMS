@@ -21,7 +21,7 @@ public class UserConfig : IEntityTypeConfiguration<User>
         builder.HasIndex(u => u.PersonId);
 
         builder.HasOne(u => u.Person)
-            .WithOne(p => p.User)
+            .WithOne()
             .HasForeignKey<User>(u => u.PersonId)
             .OnDelete(DeleteBehavior.Restrict);
 

@@ -34,19 +34,19 @@ namespace ICMS.Application.Services
             return people.ApplyPagination(pageNumber: paginationParams.PageNumber, pageSize: paginationParams.PageSize);
 
         }
-        public async Task<PersonReadDto?> GetByIdAsync(int id, CancellationToken ct = default)
+        public async Task<PersonReadDto> GetByIdAsync(int id, CancellationToken ct = default)
         {
             var person = await _unitOfWork.PersonRepository.GetByIdAsync(id, ct);
             ct.ThrowIfCancellationRequested();
 
-            return person?.ToReadDto();
+            return person?.ToReadDto() ?? throw new NotFoundException("This person was not found");
         }
-        public async Task<PersonReadDto?> GetByPhoneNumberAsync(string phoneNumber, CancellationToken ct = default)
+        public async Task<PersonReadDto> GetByPhoneNumberAsync(string phoneNumber, CancellationToken ct = default)
         {
             var person = await _unitOfWork.PersonRepository.GetByPhoneNumberAsync(phoneNumber, ct);
             ct.ThrowIfCancellationRequested();
 
-            return person?.ToReadDto();
+            return person?.ToReadDto() ?? throw new NotFoundException("This person was not found");
         }
 
         public async Task<PersonReadDto> AddAsync(PersonCreateDto entity, CancellationToken ct = default)
@@ -74,12 +74,12 @@ namespace ICMS.Application.Services
                 updatedEntity.SecondName,
                 updatedEntity.ThirdName,
                 updatedEntity.LastName,
-                updatedEntity.Gender,
-                updatedEntity.DateOfBirth
+                updatedEntity.Gender.FromStringToGenderEnum(),
+                updatedEntity.DateOfBirth,
+                updatedEntity.PhoneNumber
                 );
 
-            oldRecord.ChangeContactInfo(updatedEntity.PhoneNumber);
-
+        
             return await _unitOfWork.SaveChangesAsync(ct) > 0;
         }
         public async Task<bool> DeleteAsync(int id, CancellationToken ct = default)

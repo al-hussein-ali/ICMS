@@ -516,9 +516,6 @@ namespace ICMS.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("PersonId")
-                        .IsUnique();
-
                     b.HasIndex("UserId");
 
                     b.HasIndex(new[] { "PersonId", "UserId" }, "IX_VaccinatedIndividuals_People_Users");
@@ -829,15 +826,17 @@ namespace ICMS.Infrastructure.Migrations
 
                     b.Property<string>("CardNumber")
                         .IsRequired()
-                        .HasMaxLength(100)
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(60)
                         .IsUnicode(false)
-                        .HasColumnType("character varying(100)");
+                        .HasColumnType("character varying(60)")
+                        .HasDefaultValueSql("'AB' || LPAD(nextval('public.cardnumber_sequence')::text, 6, '0')");
 
                     b.Property<string>("Directorate")
                         .IsRequired()
-                        .HasMaxLength(100)
+                        .HasMaxLength(60)
                         .IsUnicode(true)
-                        .HasColumnType("character varying(100)");
+                        .HasColumnType("character varying(60)");
 
                     b.Property<string>("Neighborhood")
                         .IsRequired()
@@ -1136,15 +1135,14 @@ namespace ICMS.Infrastructure.Migrations
             modelBuilder.Entity("ICMS.Domain.Entites.PregnantWoman", b =>
                 {
                     b.HasOne("ICMS.Domain.Entites.Person", "Person")
-                        .WithOne("PregnantWoman")
-                        .HasForeignKey("ICMS.Domain.Entites.PregnantWoman", "PersonId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .WithMany()
+                        .HasForeignKey("PersonId")
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("ICMS.Domain.Entites.User", "User")
                         .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .HasForeignKey("UserId");
 
                     b.Navigation("Person");
 
@@ -1209,7 +1207,7 @@ namespace ICMS.Infrastructure.Migrations
             modelBuilder.Entity("ICMS.Domain.Entites.User", b =>
                 {
                     b.HasOne("ICMS.Domain.Entites.Person", "Person")
-                        .WithOne("User")
+                        .WithOne()
                         .HasForeignKey("ICMS.Domain.Entites.User", "PersonId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
@@ -1239,7 +1237,7 @@ namespace ICMS.Infrastructure.Migrations
             modelBuilder.Entity("ICMS.Domain.Entites.VaccinatedIndividual", b =>
                 {
                     b.HasOne("ICMS.Domain.Entites.Person", "Person")
-                        .WithOne("VaccinatedIndividual")
+                        .WithOne()
                         .HasForeignKey("ICMS.Domain.Entites.VaccinatedIndividual", "PersonId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
@@ -1275,15 +1273,6 @@ namespace ICMS.Infrastructure.Migrations
                     b.Navigation("FieldVisitUsers");
 
                     b.Navigation("ImmunizationRecords");
-                });
-
-            modelBuilder.Entity("ICMS.Domain.Entites.Person", b =>
-                {
-                    b.Navigation("PregnantWoman");
-
-                    b.Navigation("User");
-
-                    b.Navigation("VaccinatedIndividual");
                 });
 
             modelBuilder.Entity("ICMS.Domain.Entites.PregnancyDetails", b =>

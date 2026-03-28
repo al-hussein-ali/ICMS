@@ -30,6 +30,7 @@ namespace ICMS.Infrastructure.Extensions
             services.AddScoped<IVaccinatedIndividualService, VaccinatedIndividualService>();
             services.AddScoped<IVaccineService, VaccineService>();
             services.AddScoped<IDoseService, DoseService>();
+            services.AddScoped<IImmunizationRecordService, ImmunizationRecordService>();
 
 
             return services;

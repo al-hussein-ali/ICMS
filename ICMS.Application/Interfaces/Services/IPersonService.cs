@@ -16,9 +16,9 @@ namespace ICMS.Application.Interfaces.Services
     {
         Task<PagedResult<PersonReadDto>> GetAllAsync(PaginationParams paginationParams, CancellationToken ct = default);
 
-        Task<PersonReadDto?> GetByIdAsync(int id, CancellationToken ct = default);
+        Task<PersonReadDto> GetByIdAsync(int id, CancellationToken ct = default);
 
-        Task<PersonReadDto?> GetByPhoneNumberAsync(string phoneNumber, CancellationToken ct = default);
+        Task<PersonReadDto> GetByPhoneNumberAsync(string phoneNumber, CancellationToken ct = default);
 
         //Task<PersonReadDto?> GetByAsync(Expression<Func<PersonReadDto, bool>> predicate, CancellationToken ct = default);
         Task<PersonReadDto> AddAsync(PersonCreateDto entity, CancellationToken ct = default);

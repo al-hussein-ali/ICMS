@@ -14,9 +14,9 @@ namespace ICMS.Application.Interfaces.Services
 
         Task<IReadOnlyList<DoseReadDto>> GetAllAsync(int? vaccineId, CancellationToken ct = default);
 
-        Task<DoseReadDto?> GetByIdAsync(int id, CancellationToken ct = default);
+        Task<DoseReadDto> GetByIdAsync(int id, CancellationToken ct = default);
 
-        Task<DoseReadDto?> GetByNameAsync(string doseName, CancellationToken ct = default);
+        Task<DoseReadDto> GetByNameAsync(string doseName, CancellationToken ct = default);
 
         Task<DoseReadDto> AddAsync(DoseCreateDto entity, CancellationToken ct = default);
 

@@ -20,13 +20,12 @@ namespace ICMS.Application.Services
         IValidator<PaginationParams> paginationValidator,
         IValidator<ImmunizationRecordCreateDto> immunizationCreateValidator) : IImmunizationRecordService
     {
-
         public async Task<PagedResult<ImmunizationRecordReadDto>> GetAllAsync(PaginationParams paginationParams, CancellationToken ct = default)
         {
             await paginationValidator.ValidateAndThrowAsync(paginationParams);
 
             var immunizationRecords = unitOfWork.ImmunizationRecordRepository.GetQueryable()
-                .Where(ir => !ir.VaccinatedIndividual.Person.IsDeleted)
+                .Where(ir => !ir.VaccinatedIndividual!.Person.IsDeleted)
                 .Select(ir => ir.ToReadDto());
 
             ct.ThrowIfCancellationRequested();
@@ -34,13 +33,13 @@ namespace ICMS.Application.Services
             return immunizationRecords.ApplyPagination(pageNumber: paginationParams.PageNumber, pageSize: paginationParams.PageSize);
         }
 
-        public async Task<ImmunizationRecordReadDto?> GetByIdAsync(Guid id, CancellationToken ct = default)
+        public async Task<ImmunizationRecordReadDto> GetByIdAsync(Guid id, CancellationToken ct = default)
         {
             var immunizationRecord = await unitOfWork.ImmunizationRecordRepository.GetByIdAsync(id, ct);
 
             ct.ThrowIfCancellationRequested();
 
-            return immunizationRecord?.ToReadDto();
+            return immunizationRecord?.ToReadDto() ?? throw new NotFoundException("This record was not found");
         }
 
         //public async Task<ImmunizationRecordReadDto> AddAsync(ImmunizationRecordCreateDto entity, CancellationToken ct = default)
@@ -81,7 +80,6 @@ namespace ICMS.Application.Services
             return await unitOfWork.SaveChangesAsync(ct) > 0;
 
         }
-
         public async Task<bool> DeleteAsync(Guid id, CancellationToken ct = default)
         {
             var existingRecord = await unitOfWork.ImmunizationRecordRepository.GetByIdAsync(id, ct);

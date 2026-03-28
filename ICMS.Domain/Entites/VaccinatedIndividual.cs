@@ -29,9 +29,9 @@ namespace ICMS.Domain.Entites
         }
 
 
-        public static VaccinatedIndividual Create(string cardNumber, string directorate, string area, string neighborhood)
+        public static VaccinatedIndividual Create(string directorate, string area, string neighborhood)
         {
-            if (string.IsNullOrWhiteSpace(cardNumber) || string.IsNullOrWhiteSpace(directorate) || string.IsNullOrWhiteSpace(area) || string.IsNullOrWhiteSpace(neighborhood))
+            if (string.IsNullOrWhiteSpace(directorate) || string.IsNullOrWhiteSpace(area) || string.IsNullOrWhiteSpace(neighborhood))
             {
                 throw new DomainException("All fields are required!");
             }
@@ -39,7 +39,6 @@ namespace ICMS.Domain.Entites
 
             return new VaccinatedIndividual
             {
-                CardNumber = cardNumber,
                 Directorate = directorate,
                 Area = area,
                 Neighborhood = neighborhood,
@@ -59,9 +58,6 @@ namespace ICMS.Domain.Entites
         {
             if (personId == 0)
                 throw new DomainException("Person Id cannot be zero");
-
-            if (PersonId != 0)
-                throw new DomainException("Person id mismatch");
 
             PersonId = personId;
         }
@@ -83,16 +79,11 @@ namespace ICMS.Domain.Entites
             UserId = userId;
         }
 
-        public void UpdateIndividualInfo(string cardNumber, string directorate, string area, string neighborhood,
-            string firstName, string secondName, string? thirdName, string lastName, Gender gender, DateOnly dateOfBirth,string phoneNumber)
+        public void UpdateIndividualInfo(string directorate, string area, string neighborhood)
         {
-            this.CardNumber = cardNumber;
             this.Directorate = directorate;
             this.Area = area;
             this.Neighborhood = neighborhood;
-
-            Person.UpdatePersonInfo(firstName,secondName,thirdName,lastName,gender,dateOfBirth);
-            Person.ChangeContactInfo(phoneNumber);
         }
 
         public void TakeDose(int doseId, DateOnly vaccinationDate, string takenIn, int? fieldVisitId = null, string? notes = null)

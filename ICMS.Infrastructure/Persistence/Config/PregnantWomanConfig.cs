@@ -37,20 +37,7 @@ namespace ICMS.Infrastructure.Persistence.Config
 
             builder.HasIndex(vi => new { vi.PersonId, vi.UserId }, "IX_VaccinatedIndividuals_People_Users");
 
-            builder.HasOne(pw => pw.Person)
-                .WithOne(p => p.PregnantWoman)
-                .HasForeignKey<PregnantWoman>(pw => pw.PersonId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            builder.HasOne(pw => pw.User)
-                .WithMany()
-                .HasForeignKey(pw => pw.UserId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            builder.HasMany(pw => pw.PregnancyDetails)
-                .WithOne(pd => pd.PregnantWoman)
-                .HasForeignKey(pd => pd.PregnantWomanId)
-                .OnDelete(DeleteBehavior.Restrict);
+   
 
             builder.Navigation(nameof(PregnantWoman.PregnancyDetails))?
                 .UsePropertyAccessMode(PropertyAccessMode.Field)

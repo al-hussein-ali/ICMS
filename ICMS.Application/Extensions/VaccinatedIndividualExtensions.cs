@@ -12,6 +12,6 @@ namespace ICMS.Application.Extensions
             => new(vi.Id, vi.CardNumber, vi.Directorate, vi.Area, vi.Neighborhood,vi.Person.ToReadDto());
 
         public static VaccinatedIndividual ToDomain(this VaccinatedIndividualCreateDto dto)
-            => VaccinatedIndividual.Create(dto.CardNumber,dto.Directorate,dto.Area,dto.Neighborhood); // factory not implemented
+            => VaccinatedIndividual.Create(dto.Directorate,dto.Area,dto.Neighborhood); 
     }
 }

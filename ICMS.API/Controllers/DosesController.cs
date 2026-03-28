@@ -1,9 +1,6 @@
 ﻿using ICMS.Application.DTOs.Dose;
 using ICMS.Application.Interfaces.Services;
-using ICMS.Application.Services;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using System.ComponentModel.DataAnnotations;
 
 namespace ICMS.API.Controllers
 {
@@ -11,8 +8,9 @@ namespace ICMS.API.Controllers
     [Route("api/[controller]")]
     public class DosesController(IDoseService doseService) : ControllerBase
     {
-        [HttpGet("{id}")]
-        public async Task<ActionResult<IReadOnlyList<DoseReadDto>>> GetAllAsync([FromRoute] int? vaccineId)
+        [HttpGet()]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IReadOnlyList<DoseReadDto>))]
+        public async Task<ActionResult<IReadOnlyList<DoseReadDto>>> GetAllAsync([FromQuery] int? vaccineId)
         {
             var dosages = await doseService.GetAllAsync(vaccineId);
 
@@ -35,6 +33,30 @@ namespace ICMS.API.Controllers
             return Ok(dose);
         }
 
- 
+        [HttpPost()]
+        public async Task<IActionResult> AddAsync([FromBody] DoseCreateDto dto)
+        {
+            var newDose = await doseService.AddAsync(dto);
+
+            return CreatedAtRoute("GetById", new { id = newDose.Id }, newDose);
+        }
+
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateAsync([FromRoute] int id, [FromBody] DoseCreateDto dto)
+        {
+            await doseService.UpdateAsync(id, dto);
+
+            return NoContent();
+        }
+
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteAsync([FromRoute] int id)
+        {
+            await doseService.DeleteAsync(id);
+
+            return NoContent();
+        }
+
     }
 }

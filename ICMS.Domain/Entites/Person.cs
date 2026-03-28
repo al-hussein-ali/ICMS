@@ -20,9 +20,6 @@ namespace ICMS.Domain.Entites
         public string PhoneNumber { get; private set; } = string.Empty;
         public DateTime CreatedAt { get; private set; }
         public bool IsDeleted { get; private set; }
-        public User? User { get; private set; }
-        public PregnantWoman? PregnantWoman { get; private set; }
-        public VaccinatedIndividual? VaccinatedIndividual { get; private set; }
 
 
         private Person()
@@ -43,31 +40,6 @@ namespace ICMS.Domain.Entites
                 CreatedAt = DateTime.UtcNow
             };
         }
-
-        public void MarkAsPregnant(PregnantWoman pregnantWoman)
-        {
-            if (Gender == Gender.Male)
-                throw new DomainException("A Pregnant Woman can only be assigned to a female records!");
-
-            if (PregnantWoman != null)
-                throw new DomainException("This record is already linked to a Vaccinated Individual record!");
-
-            PregnantWoman = pregnantWoman;
-        }
-        public void MarkAsVaccinatedIndvidual(VaccinatedIndividual vaccinatedIndividual)
-        {
-            if (VaccinatedIndividual != null)
-                throw new DomainException("This record is already linked to a Vaccinated Individual record!");
-
-            VaccinatedIndividual = vaccinatedIndividual;
-        }
-        public void AssignUser(User user)
-        {
-            if (User is not null)
-                throw new DomainException("This record is already linked to a Vaccinated Individual record!");
-
-            User = user;
-        }
         public void ChangeName(string firstName, string secondName, string? thirdName, string lastName)
         {
             this.FirstName = firstName;
@@ -75,11 +47,7 @@ namespace ICMS.Domain.Entites
             this.ThirdName = thirdName;
             this.LastName = lastName;
         }
-        public void ChangeContactInfo(string phoneNumber)
-        {
-            this.PhoneNumber = phoneNumber;
-        }
-        public void UpdatePersonInfo(string firstName, string secondName, string? thirdName, string lastName, Gender gender, DateOnly dateOfBirth)
+        public void UpdatePersonInfo(string firstName, string secondName, string? thirdName, string lastName, Gender gender, DateOnly dateOfBirth, string phoneNumber)
         {
             FirstName = firstName;
             SecondName = secondName;
@@ -87,6 +55,7 @@ namespace ICMS.Domain.Entites
             LastName = lastName;
             DateOfBirth = dateOfBirth;
             Gender = gender;
+            PhoneNumber = phoneNumber;
         }
         public void MarkAsDeleted()
         {

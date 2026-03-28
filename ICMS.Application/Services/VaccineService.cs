@@ -20,15 +20,13 @@ public class VaccineService(IUnitOfWork unitOfWork,IValidator<VaccineCreateDto> 
         return vaccines.Select(v => v.ToReadDto()).ToList();
     }
 
-    public async Task<VaccineReadDto?> GetByIdAsync(int id, CancellationToken ct = default)
+    public async Task<VaccineReadDto> GetByIdAsync(int id, CancellationToken ct = default)
     {
         var vaccine = await unitOfWork.VaccineRepository.GetByIdAsync(id,ct);
 
-        if (vaccine == null)
-            throw new NotFoundException("Vaccine was not found");
 
-
-        return vaccine?.ToReadDto();
+        return vaccine?.ToReadDto() ?? throw new NotFoundException("Vaccine was not found");
+        ;
     }
 
     public async Task<VaccineReadDto> AddAsync(VaccineCreateDto entity, CancellationToken ct = default)

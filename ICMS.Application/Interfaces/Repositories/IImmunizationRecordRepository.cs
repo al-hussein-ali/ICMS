@@ -9,5 +9,7 @@ namespace ICMS.Application.Interfaces.Repositories
 {
     public interface IImmunizationRecordRepository : IRepository<ImmunizationRecord,Guid>
     {
+        Task BulkInsertAsync(List<ImmunizationRecord> immunizationRecords, CancellationToken ct = default);
+        
     }
 }

@@ -10,10 +10,8 @@ namespace ICMS.Domain.Entites
         public DateOnly VaccinationDate { get; private set; }
         public string TakenIn { get; private set; } = string.Empty;
         public string? Notes { get; private set; }
-
         public VaccinatedIndividual? VaccinatedIndividual { get; private set; }
-
-        public Dose? Dose { get; private set; }
+        public Dose Dose { get; private set; }
 
         public FieldVisit? FieldVisit { get; private set; }
 

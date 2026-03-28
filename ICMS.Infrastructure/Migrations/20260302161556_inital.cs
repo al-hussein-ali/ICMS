@@ -7,7 +7,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace ICMS.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class Inital : Migration
+    public partial class inital : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -108,11 +108,11 @@ namespace ICMS.Infrastructure.Migrations
                     DoseId = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     VaccineId = table.Column<int>(type: "integer", nullable: false),
-                    DoseName = table.Column<string>(type: "character varying(150)", maxLength: 150, nullable: false),
                     DoseOrder = table.Column<byte>(type: "smallint", nullable: false),
                     RecommendedAgeGroup = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
                     RecommendedAgeInMonths = table.Column<int>(type: "integer", nullable: false),
-                    Notes = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true)
+                    Notes = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
+                    DoseName = table.Column<string>(type: "character varying(150)", maxLength: 150, nullable: false)
                 },
                 constraints: table =>
                 {
@@ -194,13 +194,34 @@ namespace ICMS.Infrastructure.Migrations
                         column: x => x.PersonId,
                         principalTable: "People",
                         principalColumn: "PersonId",
-                        onDelete: ReferentialAction.Restrict);
+                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_PregnantWomen_Users_UserId",
                         column: x => x.UserId,
                         principalTable: "Users",
+                        principalColumn: "UserId");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "RefreshTokens",
+                columns: table => new
+                {
+                    TokenId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Token = table.Column<string>(type: "text", nullable: false),
+                    UserId = table.Column<int>(type: "integer", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    ExpirationDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    IsRevoked = table.Column<bool>(type: "boolean", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_RefreshTokens", x => x.TokenId);
+                    table.ForeignKey(
+                        name: "FK_RefreshTokens_Users_UserId",
+                        column: x => x.UserId,
+                        principalTable: "Users",
                         principalColumn: "UserId",
-                        onDelete: ReferentialAction.Restrict);
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -227,14 +248,20 @@ namespace ICMS.Infrastructure.Migrations
                         onDelete: ReferentialAction.Restrict);
                 });
 
+            migrationBuilder.Sql(@"
+    CREATE SEQUENCE IF NOT EXISTS public.cardnumber_sequence
+    START WITH 1
+    INCREMENT BY 1;
+");
+
             migrationBuilder.CreateTable(
                 name: "VaccinatedIndividuals",
                 columns: table => new
                 {
                     VaccinatedIndividualId = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    CardNumber = table.Column<string>(type: "character varying(100)", unicode: false, maxLength: 100, nullable: false),
-                    Directorate = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    CardNumber = table.Column<string>(type: "character varying(60)", unicode: false, maxLength: 60, nullable: false, defaultValueSql: "'AB' || LPAD(nextval('public.cardnumber_sequence')::text, 6, '0')"),
+                    Directorate = table.Column<string>(type: "character varying(60)", maxLength: 60, nullable: false),
                     Area = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
                     Neighborhood = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
                     UserId = table.Column<int>(type: "integer", nullable: true),
@@ -597,6 +624,12 @@ namespace ICMS.Infrastructure.Migrations
                 column: "IndividualId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_ImmunizationRecords_IndividualId_DoseId",
+                table: "ImmunizationRecords",
+                columns: new[] { "IndividualId", "DoseId" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Newborns_PregnancyDetailsId",
                 table: "Newborns",
                 column: "PregnancyDetailsId");
@@ -605,7 +638,8 @@ namespace ICMS.Infrastructure.Migrations
                 name: "IX_People_PhoneNumber_FirstName_LastName_DateOfBirth",
                 table: "People",
                 columns: new[] { "PhoneNumber", "FirstName", "LastName", "DateOfBirth" },
-                unique: true);
+                unique: true,
+                filter: "\"IsDeleted\" = false");
 
             migrationBuilder.CreateIndex(
                 name: "IX_PregnancyDetails_PregnantWomanId",
@@ -628,12 +662,6 @@ namespace ICMS.Infrastructure.Migrations
                 name: "IX_PregnancyDetails_PreviousPregnancyDeliveryComplicationsId",
                 table: "PregnancyDetails",
                 column: "PreviousPregnancyDeliveryComplicationsId",
-                unique: true);
-
-            migrationBuilder.CreateIndex(
-                name: "IX_PregnantWomen_PersonId",
-                table: "PregnantWomen",
-                column: "PersonId",
                 unique: true);
 
             migrationBuilder.CreateIndex(
@@ -663,6 +691,11 @@ namespace ICMS.Infrastructure.Migrations
                 table: "PreviousPregnancyDeliveryComplications",
                 column: "PregnancyDetailId",
                 unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_RefreshTokens_UserId",
+                table: "RefreshTokens",
+                column: "UserId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Transactions_BatchId",
@@ -706,7 +739,8 @@ namespace ICMS.Infrastructure.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_VaccinatedIndividuals_UserId",
                 table: "VaccinatedIndividuals",
-                column: "UserId");
+                column: "UserId",
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_Vaccines_VaccineCode",
@@ -746,6 +780,9 @@ namespace ICMS.Infrastructure.Migrations
 
             migrationBuilder.DropTable(
                 name: "PreviousPregnancyDeliveryComplications");
+
+            migrationBuilder.DropTable(
+                name: "RefreshTokens");
 
             migrationBuilder.DropTable(
                 name: "Transactions");

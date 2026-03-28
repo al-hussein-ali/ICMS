@@ -13,7 +13,7 @@ namespace ICMS.Application.Interfaces.Services
     {
         Task<IReadOnlyList<VaccineReadDto>> GetAllAsync(CancellationToken ct = default);
 
-        Task<VaccineReadDto?> GetByIdAsync(int id, CancellationToken ct = default);
+        Task<VaccineReadDto> GetByIdAsync(int id, CancellationToken ct = default);
 
         Task<VaccineReadDto> AddAsync(VaccineCreateDto entity, CancellationToken ct = default);
 

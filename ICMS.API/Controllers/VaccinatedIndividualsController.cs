@@ -22,14 +22,23 @@ namespace ICMS.API.Controllers
             return Ok(individuals);
         }
 
-        [HttpGet("{id}",Name = "GetVaccintedIndividualById")]
-        public async Task<ActionResult<VaccinatedIndividualReadDto>> GetByIdAsync([FromRoute] int id)
+        [HttpGet("byId/{id}", Name = "GetVaccintedIndividualById")]
+        public async Task<ActionResult<VaccinatedIndividualDetailsDto>> GetByIdAsync([FromRoute] int id)
         {
             var existingIndividual = await vaccinatedIndividualService.GetByIdAsync(id);
 
             return Ok(existingIndividual);
         }
 
+
+        [HttpGet("byCardNumber/{cardNumber}",Name = "GetVaccinatedIndividualByCardNumber")]
+        public async Task<ActionResult<VaccinatedIndividualDetailsDto>> GetByCardNumberAsync([FromRoute] string cardNumber)
+        {
+            var vaccinatedIndividual = await vaccinatedIndividualService.GetByCardNumberAsync(cardNumber);
+
+            return Ok(vaccinatedIndividual);
+        }
+   
 
         [HttpPost]
         public async Task<IActionResult> AddAsync([FromBody] VaccinatedIndividualCreateDto vaccinatedIndividualCreateDto)
@@ -64,7 +73,15 @@ namespace ICMS.API.Controllers
             return Accepted();
         }
 
-        
+        [HttpPost("new-Individuals")]
+        public async Task<IActionResult> BulkInsertNewIndividuals([FromBody] List<NewFieldVaccinatedIndividualDto> newFieldVaccinatedIndividuals)
+        {
+            if (newFieldVaccinatedIndividuals == null || !newFieldVaccinatedIndividuals.Any())
+                return BadRequest("No records were found.");
 
+            var result = await vaccinatedIndividualService.BulkInsertIndividualAsync(newFieldVaccinatedIndividuals);
+
+            return Ok(result);
+        }
     }
 }

@@ -14,9 +14,7 @@ namespace ICMS.Application.Interfaces.Services
     {
         Task<PagedResult<ImmunizationRecordReadDto>> GetAllAsync(PaginationParams paginationParams, CancellationToken ct = default);
 
-        Task<ImmunizationRecordReadDto?> GetByIdAsync(Guid id, CancellationToken ct = default);
-
-        //Task<ImmunizationRecordReadDto> AddAsync(ImmunizationRecordCreateDto entity, CancellationToken ct = default);
+        Task<ImmunizationRecordReadDto> GetByIdAsync(Guid id, CancellationToken ct = default);
 
         Task<bool> UpdateAsync(Guid id,ImmunizationRecordCreateDto updatedEntity, CancellationToken ct = default);
 
