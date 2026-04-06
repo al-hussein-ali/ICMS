@@ -1,11 +1,11 @@
-﻿using ICMS.Application.DTOs.Dose;
+using ICMS.Application.DTOs.Dose;
 using ICMS.Application.Interfaces.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ICMS.API.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/doses")]
     public class DosesController(IDoseService doseService) : ControllerBase
     {
         [HttpGet()]
@@ -17,15 +17,15 @@ namespace ICMS.API.Controllers
             return Ok(dosages);
         }
 
-        [HttpGet("byId/{id}", Name = "GetById")]
-        public async Task<ActionResult<DoseReadDto>> GetByNameAsync([FromRoute] int id)
+        [HttpGet("{id}", Name = "GetDoseById")]
+        public async Task<ActionResult<DoseReadDto>> GetByIdAsync([FromRoute] int id)
         {
             var dose = await doseService.GetByIdAsync(id);
 
             return Ok(dose);
         }
 
-        [HttpGet("byName/{name}", Name = "GetByName")]
+        [HttpGet("name/{name}", Name = "GetDoseByName")]
         public async Task<ActionResult<DoseReadDto>> GetByNameAsync([FromRoute] string name)
         {
             var dose = await doseService.GetByNameAsync(name);
@@ -33,15 +33,15 @@ namespace ICMS.API.Controllers
             return Ok(dose);
         }
 
-        [HttpPost()]
+        [HttpPost("create")]
         public async Task<IActionResult> AddAsync([FromBody] DoseCreateDto dto)
         {
             var newDose = await doseService.AddAsync(dto);
 
-            return CreatedAtRoute("GetById", new { id = newDose.Id }, newDose);
+            return CreatedAtRoute("GetDoseById", new { id = newDose.Id }, newDose);
         }
 
-        [HttpPut("{id}")]
+        [HttpPut("update/{id}")]
         public async Task<IActionResult> UpdateAsync([FromRoute] int id, [FromBody] DoseCreateDto dto)
         {
             await doseService.UpdateAsync(id, dto);
@@ -50,7 +50,7 @@ namespace ICMS.API.Controllers
         }
 
 
-        [HttpDelete("{id}")]
+        [HttpDelete("delete/{id}")]
         public async Task<IActionResult> DeleteAsync([FromRoute] int id)
         {
             await doseService.DeleteAsync(id);

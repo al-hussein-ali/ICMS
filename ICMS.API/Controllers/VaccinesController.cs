@@ -1,11 +1,10 @@
-﻿using ICMS.Application.DTOs.Vaccine;
+using ICMS.Application.DTOs.Vaccine;
 using ICMS.Application.Interfaces.Services;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ICMS.API.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/vaccines")]
     [ApiController]
     public class VaccinesController(IVaccineService vaccineService) : ControllerBase
     {
@@ -26,7 +25,7 @@ namespace ICMS.API.Controllers
             return Ok(vaccine);
         }
 
-        [HttpPost]
+        [HttpPost("create")]
         public async Task<IActionResult> AddAsync([FromBody] VaccineCreateDto dto)
         {
             var newVaccine = await vaccineService.AddAsync(dto);
@@ -35,8 +34,8 @@ namespace ICMS.API.Controllers
         }
 
 
-        [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateAsync([FromRoute] int id,[FromBody] VaccineCreateDto dto)
+        [HttpPut("update/{id}")]
+        public async Task<IActionResult> UpdateAsync([FromRoute] int id, [FromBody] VaccineCreateDto dto)
         {
             await vaccineService.UpdateAsync(id, dto);
 
@@ -44,7 +43,7 @@ namespace ICMS.API.Controllers
         }
 
 
-        [HttpPut("deactivate/{id}")]
+        [HttpPut("{id}/deactivate")]
         public async Task<IActionResult> DeactivateAsync([FromRoute] int id)
         {
             await vaccineService.DeactivateAsync(id);
@@ -53,7 +52,7 @@ namespace ICMS.API.Controllers
         }
 
 
-        [HttpPut("reactivate/{id}")]
+        [HttpPut("{id}/reactivate")]
         public async Task<IActionResult> ReactivateAsync([FromRoute] int id)
         {
             await vaccineService.ReactivateAsync(id);

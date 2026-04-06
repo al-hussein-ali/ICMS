@@ -22,7 +22,50 @@ namespace ICMS.Infrastructure.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("ICMS.Domain.Entites.Batch", b =>
+            modelBuilder.Entity("ICMS.Domain.Entites.Audit.Transaction", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("TransactionId");
+
+                    b.Property<int>("BatchId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("PermissionNumber")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .IsUnicode(true)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("SourceorDestination")
+                        .IsRequired()
+                        .HasMaxLength(250)
+                        .IsUnicode(true)
+                        .HasColumnType("character varying(250)");
+
+                    b.Property<DateTime>("TransactionDate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("TIMEZONE('utc', NOW())");
+
+                    b.Property<string>("TransactionType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .IsUnicode(true)
+                        .HasColumnType("character varying(50)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BatchId");
+
+                    b.ToTable("Transactions");
+                });
+
+            modelBuilder.Entity("ICMS.Domain.Entites.Clinical.Batch", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -68,7 +111,7 @@ namespace ICMS.Infrastructure.Migrations
                     b.ToTable("Batches");
                 });
 
-            modelBuilder.Entity("ICMS.Domain.Entites.Dose", b =>
+            modelBuilder.Entity("ICMS.Domain.Entites.Clinical.Dose", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -113,7 +156,7 @@ namespace ICMS.Infrastructure.Migrations
                     b.ToTable("Doses");
                 });
 
-            modelBuilder.Entity("ICMS.Domain.Entites.DoseReport", b =>
+            modelBuilder.Entity("ICMS.Domain.Entites.Clinical.DoseReport", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -148,50 +191,7 @@ namespace ICMS.Infrastructure.Migrations
                     b.ToTable("DoseReports");
                 });
 
-            modelBuilder.Entity("ICMS.Domain.Entites.FieldVisit", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasColumnName("FieldVisitId");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<bool>("IsCompleted")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("boolean")
-                        .HasDefaultValue(false);
-
-                    b.Property<string>("TargetedLocation")
-                        .IsRequired()
-                        .HasMaxLength(250)
-                        .IsUnicode(true)
-                        .HasColumnType("character varying(250)");
-
-                    b.Property<DateOnly>("VisitDate")
-                        .HasColumnType("date");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("FieldVisits");
-                });
-
-            modelBuilder.Entity("ICMS.Domain.Entites.FieldVisitUser", b =>
-                {
-                    b.Property<int>("FieldVisitId")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("integer");
-
-                    b.HasKey("FieldVisitId", "UserId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("FieldVisitUsers");
-                });
-
-            modelBuilder.Entity("ICMS.Domain.Entites.HealthAdvisory", b =>
+            modelBuilder.Entity("ICMS.Domain.Entites.Clinical.HealthAdvisory", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -233,7 +233,7 @@ namespace ICMS.Infrastructure.Migrations
                     b.ToTable("HealthAdvisories");
                 });
 
-            modelBuilder.Entity("ICMS.Domain.Entites.ImmunizationRecord", b =>
+            modelBuilder.Entity("ICMS.Domain.Entites.Clinical.ImmunizationRecord", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -277,38 +277,561 @@ namespace ICMS.Infrastructure.Migrations
                     b.ToTable("ImmunizationRecords");
                 });
 
-            modelBuilder.Entity("ICMS.Domain.Entites.Newborn", b =>
+            modelBuilder.Entity("ICMS.Domain.Entites.Clinical.VaccinationSchedule", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer")
-                        .HasColumnName("NewbornId");
+                        .HasColumnName("VaccinationScheduleId");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("NewbornGender")
+                    b.Property<DateOnly?>("ActualDate")
+                        .HasColumnType("date");
+
+                    b.Property<int>("DoseId")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid?>("ImmunizationRecordId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateOnly>("ScheduledDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("Status")
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("NewbornStatus")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<decimal>("NewbornWeightInGrams")
-                        .HasPrecision(8, 2)
-                        .HasColumnType("numeric(8,2)");
-
-                    b.Property<int>("PregnancyDetailsId")
+                    b.Property<int>("VaccinatedIndividualId")
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("PregnancyDetailsId");
+                    b.HasIndex("DoseId");
 
-                    b.ToTable("Newborns");
+                    b.HasIndex("ImmunizationRecordId")
+                        .IsUnique();
+
+                    b.HasIndex("VaccinatedIndividualId");
+
+                    b.ToTable("VaccinationSchedules");
                 });
 
-            modelBuilder.Entity("ICMS.Domain.Entites.Person", b =>
+            modelBuilder.Entity("ICMS.Domain.Entites.Clinical.Vaccine", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("VaccineId");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("Audience")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(600)
+                        .IsUnicode(true)
+                        .HasColumnType("character varying(600)");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true);
+
+                    b.Property<byte>("TotalDosages")
+                        .HasColumnType("smallint");
+
+                    b.Property<string>("VaccineCode")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .IsUnicode(true)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("VaccineName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .IsUnicode(true)
+                        .HasColumnType("character varying(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("VaccineCode")
+                        .IsUnique();
+
+                    b.ToTable("Vaccines");
+                });
+
+            modelBuilder.Entity("ICMS.Domain.Entites.Geography.Directorate", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("GovernorateId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GovernorateId");
+
+                    b.ToTable("Directorates");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            GovernorateId = 22,
+                            Name = "السبعين"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            GovernorateId = 22,
+                            Name = "الوحدة"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            GovernorateId = 22,
+                            Name = "التحرير"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            GovernorateId = 22,
+                            Name = "معين"
+                        },
+                        new
+                        {
+                            Id = 5,
+                            GovernorateId = 22,
+                            Name = "الصافية"
+                        },
+                        new
+                        {
+                            Id = 6,
+                            GovernorateId = 22,
+                            Name = "آزال"
+                        },
+                        new
+                        {
+                            Id = 7,
+                            GovernorateId = 22,
+                            Name = "صنعاء القديمة"
+                        },
+                        new
+                        {
+                            Id = 8,
+                            GovernorateId = 22,
+                            Name = "شعوب"
+                        },
+                        new
+                        {
+                            Id = 9,
+                            GovernorateId = 22,
+                            Name = "الثورة"
+                        },
+                        new
+                        {
+                            Id = 10,
+                            GovernorateId = 22,
+                            Name = "بني الحارث"
+                        },
+                        new
+                        {
+                            Id = 11,
+                            GovernorateId = 5,
+                            Name = "مدينة المكلا"
+                        },
+                        new
+                        {
+                            Id = 12,
+                            GovernorateId = 5,
+                            Name = "أرياف المكلا"
+                        },
+                        new
+                        {
+                            Id = 13,
+                            GovernorateId = 5,
+                            Name = "الشحر"
+                        },
+                        new
+                        {
+                            Id = 14,
+                            GovernorateId = 5,
+                            Name = "سيئون"
+                        },
+                        new
+                        {
+                            Id = 15,
+                            GovernorateId = 5,
+                            Name = "غيل باوزير"
+                        });
+                });
+
+            modelBuilder.Entity("ICMS.Domain.Entites.Geography.Governorate", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Governorates");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Name = "صنعاء"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Name = "عدن"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            Name = "تعز"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            Name = "الحديدة"
+                        },
+                        new
+                        {
+                            Id = 5,
+                            Name = "حضرموت"
+                        },
+                        new
+                        {
+                            Id = 6,
+                            Name = "إب"
+                        },
+                        new
+                        {
+                            Id = 7,
+                            Name = "أبين"
+                        },
+                        new
+                        {
+                            Id = 8,
+                            Name = "البيضاء"
+                        },
+                        new
+                        {
+                            Id = 9,
+                            Name = "لحج"
+                        },
+                        new
+                        {
+                            Id = 10,
+                            Name = "مأرب"
+                        },
+                        new
+                        {
+                            Id = 11,
+                            Name = "شبوة"
+                        },
+                        new
+                        {
+                            Id = 12,
+                            Name = "الجوف"
+                        },
+                        new
+                        {
+                            Id = 13,
+                            Name = "المهرة"
+                        },
+                        new
+                        {
+                            Id = 14,
+                            Name = "المحويت"
+                        },
+                        new
+                        {
+                            Id = 15,
+                            Name = "صعدة"
+                        },
+                        new
+                        {
+                            Id = 16,
+                            Name = "حجة"
+                        },
+                        new
+                        {
+                            Id = 17,
+                            Name = "الضالع"
+                        },
+                        new
+                        {
+                            Id = 18,
+                            Name = "عمران"
+                        },
+                        new
+                        {
+                            Id = 19,
+                            Name = "ذمار"
+                        },
+                        new
+                        {
+                            Id = 20,
+                            Name = "ريمة"
+                        },
+                        new
+                        {
+                            Id = 21,
+                            Name = "سقطرى"
+                        },
+                        new
+                        {
+                            Id = 22,
+                            Name = "أمانة العاصمة"
+                        });
+                });
+
+            modelBuilder.Entity("ICMS.Domain.Entites.Geography.Neighborhood", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("DirectorateId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DirectorateId");
+
+                    b.ToTable("Neighborhoods");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            DirectorateId = 1,
+                            Name = "فوة-المتضررين"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            DirectorateId = 1,
+                            Name = "فوة-ابن سيناء"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            DirectorateId = 1,
+                            Name = "فوة-المساكن"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            DirectorateId = 1,
+                            Name = "فوة-الإنشاءات"
+                        },
+                        new
+                        {
+                            Id = 5,
+                            DirectorateId = 1,
+                            Name = "فوة-القديمة"
+                        },
+                        new
+                        {
+                            Id = 6,
+                            DirectorateId = 1,
+                            Name = "الشرج-حي العمال"
+                        },
+                        new
+                        {
+                            Id = 7,
+                            DirectorateId = 1,
+                            Name = "الشرج-باعبود"
+                        },
+                        new
+                        {
+                            Id = 8,
+                            DirectorateId = 1,
+                            Name = "الشرج-المنورة"
+                        },
+                        new
+                        {
+                            Id = 9,
+                            DirectorateId = 1,
+                            Name = "الشرج-حي أكتوبر"
+                        },
+                        new
+                        {
+                            Id = 10,
+                            DirectorateId = 1,
+                            Name = "الديس-شعب البادية"
+                        },
+                        new
+                        {
+                            Id = 11,
+                            DirectorateId = 1,
+                            Name = "الديس-الغويزي"
+                        },
+                        new
+                        {
+                            Id = 12,
+                            DirectorateId = 1,
+                            Name = "الديس-حي 14 أكتوبر"
+                        },
+                        new
+                        {
+                            Id = 13,
+                            DirectorateId = 1,
+                            Name = "الديس-جول الشفاء"
+                        },
+                        new
+                        {
+                            Id = 14,
+                            DirectorateId = 1,
+                            Name = "المكلا-حي الشهيد"
+                        },
+                        new
+                        {
+                            Id = 15,
+                            DirectorateId = 1,
+                            Name = "المكلا-حي السلام"
+                        },
+                        new
+                        {
+                            Id = 16,
+                            DirectorateId = 1,
+                            Name = "المكلا-حي الصيادين"
+                        });
+                });
+
+            modelBuilder.Entity("ICMS.Domain.Entites.Geography.SubNeighborhood", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<int>("NeighborhoodId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NeighborhoodId");
+
+                    b.ToTable("SubNeighborhoods");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Name = "المتضررين-وحدة الصديق",
+                            NeighborhoodId = 1
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Name = "المتضررين-وحدة الربوة",
+                            NeighborhoodId = 1
+                        },
+                        new
+                        {
+                            Id = 3,
+                            Name = "المتضررين-المنطقة المرتفعة",
+                            NeighborhoodId = 1
+                        },
+                        new
+                        {
+                            Id = 4,
+                            Name = "ابن سيناء-مربع السكن الجامعي",
+                            NeighborhoodId = 2
+                        },
+                        new
+                        {
+                            Id = 5,
+                            Name = "ابن سيناء-حي الكوادر",
+                            NeighborhoodId = 2
+                        },
+                        new
+                        {
+                            Id = 6,
+                            Name = "ابن سيناء-منطقة المستشفى",
+                            NeighborhoodId = 2
+                        },
+                        new
+                        {
+                            Id = 7,
+                            Name = "حي العمال-مربع الورش",
+                            NeighborhoodId = 6
+                        },
+                        new
+                        {
+                            Id = 8,
+                            Name = "حي العمال-عمارة باجرش",
+                            NeighborhoodId = 6
+                        },
+                        new
+                        {
+                            Id = 9,
+                            Name = "شعب البادية-حارة الروضة",
+                            NeighborhoodId = 10
+                        },
+                        new
+                        {
+                            Id = 10,
+                            Name = "شعب البادية-جول الغليلة",
+                            NeighborhoodId = 10
+                        },
+                        new
+                        {
+                            Id = 11,
+                            Name = "حي الشهيد-سكة يعقوب",
+                            NeighborhoodId = 14
+                        },
+                        new
+                        {
+                            Id = 12,
+                            Name = "حي الشهيد-حارة البلاد",
+                            NeighborhoodId = 14
+                        },
+                        new
+                        {
+                            Id = 13,
+                            Name = "حي السلام-خلف البريد",
+                            NeighborhoodId = 15
+                        });
+                });
+
+            modelBuilder.Entity("ICMS.Domain.Entites.Identity.Person", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -370,7 +893,194 @@ namespace ICMS.Infrastructure.Migrations
                     b.ToTable("People");
                 });
 
-            modelBuilder.Entity("ICMS.Domain.Entites.PregnancyDetails", b =>
+            modelBuilder.Entity("ICMS.Domain.Entites.Identity.RefreshToken", b =>
+                {
+                    b.Property<Guid>("TokenId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("ExpirationDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsRevoked")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Token")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("TokenId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("RefreshTokens");
+                });
+
+            modelBuilder.Entity("ICMS.Domain.Entites.Identity.Role", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("RoleId");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("RoleName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .IsUnicode(true)
+                        .HasColumnType("character varying(100)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Roles");
+                });
+
+            modelBuilder.Entity("ICMS.Domain.Entites.Identity.User", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("UserId");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true);
+
+                    b.Property<string>("PasswordHash")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<int>("PersonId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("UserName")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .IsUnicode(true)
+                        .HasColumnType("character varying(50)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PersonId")
+                        .IsUnique();
+
+                    b.HasIndex("UserName")
+                        .IsUnique();
+
+                    b.ToTable("Users");
+                });
+
+            modelBuilder.Entity("ICMS.Domain.Entites.Identity.UserRole", b =>
+                {
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("RoleId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("UserId", "RoleId");
+
+                    b.HasIndex("RoleId");
+
+                    b.ToTable("UserRoles");
+                });
+
+            modelBuilder.Entity("ICMS.Domain.Entites.Identity.VaccinatedIndividual", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("VaccinatedIndividualId");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("CardNumber")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(60)
+                        .IsUnicode(false)
+                        .HasColumnType("character varying(60)")
+                        .HasDefaultValueSql("'AB' || LPAD(nextval('public.cardnumber_sequence')::text, 6, '0')");
+
+                    b.Property<int>("DirectorateId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("NeighborhoodId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("PersonId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("SubNeighborhoodId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CardNumber")
+                        .IsUnique();
+
+                    b.HasIndex("PersonId")
+                        .IsUnique();
+
+                    b.HasIndex("UserId")
+                        .IsUnique();
+
+                    b.HasIndex(new[] { "PersonId", "UserId" }, "IX_VaccinatedIndividuals_People_Users");
+
+                    b.ToTable("VaccinatedIndividuals");
+                });
+
+            modelBuilder.Entity("ICMS.Domain.Entites.Maternal.Newborn", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("NewbornId");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("NewbornGender")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("NewbornStatus")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<decimal>("NewbornWeightInGrams")
+                        .HasPrecision(8, 2)
+                        .HasColumnType("numeric(8,2)");
+
+                    b.Property<int>("PregnancyDetailsId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PregnancyDetailsId");
+
+                    b.ToTable("Newborns");
+                });
+
+            modelBuilder.Entity("ICMS.Domain.Entites.Maternal.PregnancyDetails", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -385,11 +1095,9 @@ namespace ICMS.Infrastructure.Migrations
                         .HasColumnType("character varying(250)");
 
                     b.Property<string>("BirthLocationType")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("BirthNature")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("BirthNatureReason")
@@ -446,7 +1154,7 @@ namespace ICMS.Infrastructure.Migrations
                     b.Property<int>("PregnantWomanId")
                         .HasColumnType("integer");
 
-                    b.Property<int?>("PreviousPostartumComplicationsId")
+                    b.Property<int?>("PreviousPostpartumComplicationsId")
                         .HasColumnType("integer");
 
                     b.Property<int?>("PreviousPregnancyComplicationsId")
@@ -464,7 +1172,7 @@ namespace ICMS.Infrastructure.Migrations
 
                     b.HasIndex("PregnantWomanId");
 
-                    b.HasIndex("PreviousPostartumComplicationsId")
+                    b.HasIndex("PreviousPostpartumComplicationsId")
                         .IsUnique();
 
                     b.HasIndex("PreviousPregnancyComplicationsId")
@@ -476,7 +1184,7 @@ namespace ICMS.Infrastructure.Migrations
                     b.ToTable("PregnancyDetails");
                 });
 
-            modelBuilder.Entity("ICMS.Domain.Entites.PregnantWoman", b =>
+            modelBuilder.Entity("ICMS.Domain.Entites.Maternal.PregnantWoman", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -495,12 +1203,6 @@ namespace ICMS.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("CurrentAddress")
-                        .IsRequired()
-                        .HasMaxLength(250)
-                        .IsUnicode(true)
-                        .HasColumnType("character varying(250)");
-
                     b.Property<int>("PersonId")
                         .HasColumnType("integer");
 
@@ -516,19 +1218,23 @@ namespace ICMS.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("PersonId")
+                        .IsUnique();
 
-                    b.HasIndex(new[] { "PersonId", "UserId" }, "IX_VaccinatedIndividuals_People_Users");
+                    b.HasIndex("UserId")
+                        .IsUnique();
+
+                    b.HasIndex(new[] { "PersonId", "UserId" }, "IX_PregnantWomen_People_Users");
 
                     b.ToTable("PregnantWomen");
                 });
 
-            modelBuilder.Entity("ICMS.Domain.Entites.PreviousPostartumComplications", b =>
+            modelBuilder.Entity("ICMS.Domain.Entites.Maternal.PreviousPostpartumComplications", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer")
-                        .HasColumnName("PreviousPostartumComplicationsId");
+                        .HasColumnName("PreviousPostpartumComplicationsId");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
@@ -565,10 +1271,10 @@ namespace ICMS.Infrastructure.Migrations
                     b.HasIndex("PregnancyDetailId")
                         .IsUnique();
 
-                    b.ToTable("PreviousPostartumComplications");
+                    b.ToTable("PreviousPostpartumComplications");
                 });
 
-            modelBuilder.Entity("ICMS.Domain.Entites.PreviousPregnancyComplications", b =>
+            modelBuilder.Entity("ICMS.Domain.Entites.Maternal.PreviousPregnancyComplications", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -623,7 +1329,7 @@ namespace ICMS.Infrastructure.Migrations
                     b.ToTable("PreviousPregnancyComplications");
                 });
 
-            modelBuilder.Entity("ICMS.Domain.Entites.PreviousPregnancyDeliveryComplications", b =>
+            modelBuilder.Entity("ICMS.Domain.Entites.Maternal.PreviousPregnancyDeliveryComplications", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -658,258 +1364,50 @@ namespace ICMS.Infrastructure.Migrations
                     b.ToTable("PreviousPregnancyDeliveryComplications");
                 });
 
-            modelBuilder.Entity("ICMS.Domain.Entites.RefreshToken", b =>
-                {
-                    b.Property<Guid>("TokenId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTime>("ExpirationDate")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<bool>("IsRevoked")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("Token")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("integer");
-
-                    b.HasKey("TokenId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("RefreshTokens");
-                });
-
-            modelBuilder.Entity("ICMS.Domain.Entites.Role", b =>
+            modelBuilder.Entity("ICMS.Domain.Entites.Visits.FieldVisit", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer")
-                        .HasColumnName("RoleId");
+                        .HasColumnName("FieldVisitId");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("RoleName")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .IsUnicode(true)
-                        .HasColumnType("character varying(100)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Roles");
-                });
-
-            modelBuilder.Entity("ICMS.Domain.Entites.Transaction", b =>
-                {
-                    b.Property<Guid>("Id")
+                    b.Property<bool>("IsCompleted")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("TransactionId");
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
 
-                    b.Property<int>("BatchId")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("PermissionNumber")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .IsUnicode(true)
-                        .HasColumnType("character varying(200)");
-
-                    b.Property<int>("Quantity")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("SourceorDestination")
+                    b.Property<string>("TargetedLocation")
                         .IsRequired()
                         .HasMaxLength(250)
                         .IsUnicode(true)
                         .HasColumnType("character varying(250)");
 
-                    b.Property<DateTime>("TransactionDate")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("TIMEZONE('utc', NOW())");
-
-                    b.Property<string>("TransactionType")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .IsUnicode(true)
-                        .HasColumnType("character varying(50)");
+                    b.Property<DateOnly>("VisitDate")
+                        .HasColumnType("date");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("BatchId");
-
-                    b.ToTable("Transactions");
+                    b.ToTable("FieldVisits");
                 });
 
-            modelBuilder.Entity("ICMS.Domain.Entites.User", b =>
+            modelBuilder.Entity("ICMS.Domain.Entites.Visits.FieldVisitUser", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasColumnName("UserId");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
-
-                    b.Property<bool>("IsActive")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("boolean")
-                        .HasDefaultValue(true);
-
-                    b.Property<string>("PasswordHash")
-                        .IsRequired()
-                        .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
-
-                    b.Property<int>("PersonId")
+                    b.Property<int>("FieldVisitId")
                         .HasColumnType("integer");
 
-                    b.Property<string>("UserName")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .IsUnicode(true)
-                        .HasColumnType("character varying(50)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("PersonId")
-                        .IsUnique();
-
-                    b.HasIndex("UserName")
-                        .IsUnique();
-
-                    b.ToTable("Users");
-                });
-
-            modelBuilder.Entity("ICMS.Domain.Entites.UserRole", b =>
-                {
                     b.Property<int>("UserId")
                         .HasColumnType("integer");
 
-                    b.Property<int>("RoleId")
-                        .HasColumnType("integer");
+                    b.HasKey("FieldVisitId", "UserId");
 
-                    b.HasKey("UserId", "RoleId");
+                    b.HasIndex("UserId");
 
-                    b.HasIndex("RoleId");
-
-                    b.ToTable("UserRoles");
+                    b.ToTable("FieldVisitUsers");
                 });
 
-            modelBuilder.Entity("ICMS.Domain.Entites.VaccinatedIndividual", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasColumnName("VaccinatedIndividualId");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Area")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .IsUnicode(true)
-                        .HasColumnType("character varying(100)");
-
-                    b.Property<string>("CardNumber")
-                        .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasMaxLength(60)
-                        .IsUnicode(false)
-                        .HasColumnType("character varying(60)")
-                        .HasDefaultValueSql("'AB' || LPAD(nextval('public.cardnumber_sequence')::text, 6, '0')");
-
-                    b.Property<string>("Directorate")
-                        .IsRequired()
-                        .HasMaxLength(60)
-                        .IsUnicode(true)
-                        .HasColumnType("character varying(60)");
-
-                    b.Property<string>("Neighborhood")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .IsUnicode(true)
-                        .HasColumnType("character varying(100)");
-
-                    b.Property<int>("PersonId")
-                        .HasColumnType("integer");
-
-                    b.Property<int?>("UserId")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CardNumber")
-                        .IsUnique();
-
-                    b.HasIndex("PersonId")
-                        .IsUnique();
-
-                    b.HasIndex("UserId")
-                        .IsUnique();
-
-                    b.HasIndex(new[] { "PersonId", "UserId" }, "IX_VaccinatedIndividuals_People_Users")
-                        .HasDatabaseName("IX_VaccinatedIndividuals_People_Users1");
-
-                    b.ToTable("VaccinatedIndividuals");
-                });
-
-            modelBuilder.Entity("ICMS.Domain.Entites.Vaccine", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasColumnName("VaccineId");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Description")
-                        .HasMaxLength(600)
-                        .IsUnicode(true)
-                        .HasColumnType("character varying(600)");
-
-                    b.Property<bool>("IsActive")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("boolean")
-                        .HasDefaultValue(true);
-
-                    b.Property<byte>("TotalDosages")
-                        .HasColumnType("smallint");
-
-                    b.Property<string>("VaccineCode")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .IsUnicode(true)
-                        .HasColumnType("character varying(100)");
-
-                    b.Property<string>("VaccineName")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .IsUnicode(true)
-                        .HasColumnType("character varying(100)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("VaccineCode")
-                        .IsUnique();
-
-                    b.ToTable("Vaccines");
-                });
-
-            modelBuilder.Entity("ICMS.Domain.Entites.VisitDetails", b =>
+            modelBuilder.Entity("ICMS.Domain.Entites.Visits.VisitDetails", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -979,11 +1477,6 @@ namespace ICMS.Infrastructure.Migrations
                     b.Property<int>("PregnancyDurationInWeeks")
                         .HasColumnType("integer");
 
-                    b.Property<byte>("TetanusDoseNumber")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("smallint")
-                        .HasDefaultValue((byte)0);
-
                     b.Property<bool>("VaginalBleeding")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")
@@ -1005,15 +1498,26 @@ namespace ICMS.Infrastructure.Migrations
                     b.ToTable("VisitDetails");
                 });
 
-            modelBuilder.Entity("ICMS.Domain.Entites.Batch", b =>
+            modelBuilder.Entity("ICMS.Domain.Entites.Audit.Transaction", b =>
                 {
-                    b.HasOne("ICMS.Domain.Entites.Dose", "Dose")
+                    b.HasOne("ICMS.Domain.Entites.Clinical.Batch", "Batch")
+                        .WithMany("Transactions")
+                        .HasForeignKey("BatchId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Batch");
+                });
+
+            modelBuilder.Entity("ICMS.Domain.Entites.Clinical.Batch", b =>
+                {
+                    b.HasOne("ICMS.Domain.Entites.Clinical.Dose", "Dose")
                         .WithMany()
                         .HasForeignKey("DoseId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("ICMS.Domain.Entites.User", "User")
+                    b.HasOne("ICMS.Domain.Entites.Identity.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -1024,9 +1528,9 @@ namespace ICMS.Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("ICMS.Domain.Entites.Dose", b =>
+            modelBuilder.Entity("ICMS.Domain.Entites.Clinical.Dose", b =>
                 {
-                    b.HasOne("ICMS.Domain.Entites.Vaccine", "Vaccine")
+                    b.HasOne("ICMS.Domain.Entites.Clinical.Vaccine", "Vaccine")
                         .WithMany("Doses")
                         .HasForeignKey("VaccineId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -1035,15 +1539,15 @@ namespace ICMS.Infrastructure.Migrations
                     b.Navigation("Vaccine");
                 });
 
-            modelBuilder.Entity("ICMS.Domain.Entites.DoseReport", b =>
+            modelBuilder.Entity("ICMS.Domain.Entites.Clinical.DoseReport", b =>
                 {
-                    b.HasOne("ICMS.Domain.Entites.Batch", "Batch")
+                    b.HasOne("ICMS.Domain.Entites.Clinical.Batch", "Batch")
                         .WithOne()
-                        .HasForeignKey("ICMS.Domain.Entites.DoseReport", "BatchId")
+                        .HasForeignKey("ICMS.Domain.Entites.Clinical.DoseReport", "BatchId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("ICMS.Domain.Entites.User", "User")
+                    b.HasOne("ICMS.Domain.Entites.Identity.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -1054,28 +1558,9 @@ namespace ICMS.Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("ICMS.Domain.Entites.FieldVisitUser", b =>
+            modelBuilder.Entity("ICMS.Domain.Entites.Clinical.HealthAdvisory", b =>
                 {
-                    b.HasOne("ICMS.Domain.Entites.FieldVisit", "FieldVisit")
-                        .WithMany("FieldVisitUsers")
-                        .HasForeignKey("FieldVisitId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("ICMS.Domain.Entites.User", "FieldWorker")
-                        .WithMany("FieldVisitUsers")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("FieldVisit");
-
-                    b.Navigation("FieldWorker");
-                });
-
-            modelBuilder.Entity("ICMS.Domain.Entites.HealthAdvisory", b =>
-                {
-                    b.HasOne("ICMS.Domain.Entites.User", "User")
+                    b.HasOne("ICMS.Domain.Entites.Identity.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -1084,20 +1569,20 @@ namespace ICMS.Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("ICMS.Domain.Entites.ImmunizationRecord", b =>
+            modelBuilder.Entity("ICMS.Domain.Entites.Clinical.ImmunizationRecord", b =>
                 {
-                    b.HasOne("ICMS.Domain.Entites.Dose", "Dose")
+                    b.HasOne("ICMS.Domain.Entites.Clinical.Dose", "Dose")
                         .WithMany()
                         .HasForeignKey("DoseId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("ICMS.Domain.Entites.FieldVisit", "FieldVisit")
+                    b.HasOne("ICMS.Domain.Entites.Visits.FieldVisit", "FieldVisit")
                         .WithMany("ImmunizationRecords")
                         .HasForeignKey("FieldVisitId")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.HasOne("ICMS.Domain.Entites.VaccinatedIndividual", "VaccinatedIndividual")
+                    b.HasOne("ICMS.Domain.Entites.Identity.VaccinatedIndividual", "VaccinatedIndividual")
                         .WithMany("ImmunizationRecords")
                         .HasForeignKey("IndividualId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -1110,81 +1595,68 @@ namespace ICMS.Infrastructure.Migrations
                     b.Navigation("VaccinatedIndividual");
                 });
 
-            modelBuilder.Entity("ICMS.Domain.Entites.Newborn", b =>
+            modelBuilder.Entity("ICMS.Domain.Entites.Clinical.VaccinationSchedule", b =>
                 {
-                    b.HasOne("ICMS.Domain.Entites.PregnancyDetails", "PregnancyDetails")
+                    b.HasOne("ICMS.Domain.Entites.Clinical.Dose", "Dose")
                         .WithMany()
-                        .HasForeignKey("PregnancyDetailsId")
+                        .HasForeignKey("DoseId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("PregnancyDetails");
-                });
+                    b.HasOne("ICMS.Domain.Entites.Clinical.ImmunizationRecord", "ImmunizationRecord")
+                        .WithOne()
+                        .HasForeignKey("ICMS.Domain.Entites.Clinical.VaccinationSchedule", "ImmunizationRecordId")
+                        .OnDelete(DeleteBehavior.SetNull);
 
-            modelBuilder.Entity("ICMS.Domain.Entites.PregnancyDetails", b =>
-                {
-                    b.HasOne("ICMS.Domain.Entites.PregnantWoman", "PregnantWoman")
-                        .WithMany("PregnancyDetails")
-                        .HasForeignKey("PregnantWomanId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("PregnantWoman");
-                });
-
-            modelBuilder.Entity("ICMS.Domain.Entites.PregnantWoman", b =>
-                {
-                    b.HasOne("ICMS.Domain.Entites.Person", "Person")
-                        .WithMany()
-                        .HasForeignKey("PersonId")
+                    b.HasOne("ICMS.Domain.Entites.Identity.VaccinatedIndividual", "VaccinatedIndividual")
+                        .WithMany("Schedules")
+                        .HasForeignKey("VaccinatedIndividualId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("ICMS.Domain.Entites.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId");
+                    b.Navigation("Dose");
 
-                    b.Navigation("Person");
+                    b.Navigation("ImmunizationRecord");
 
-                    b.Navigation("User");
+                    b.Navigation("VaccinatedIndividual");
                 });
 
-            modelBuilder.Entity("ICMS.Domain.Entites.PreviousPostartumComplications", b =>
+            modelBuilder.Entity("ICMS.Domain.Entites.Geography.Directorate", b =>
                 {
-                    b.HasOne("ICMS.Domain.Entites.PregnancyDetails", "PregnancyDetails")
-                        .WithOne("PreviousPostartumComplications")
-                        .HasForeignKey("ICMS.Domain.Entites.PreviousPostartumComplications", "PregnancyDetailId")
+                    b.HasOne("ICMS.Domain.Entites.Geography.Governorate", "Governorate")
+                        .WithMany("Directorates")
+                        .HasForeignKey("GovernorateId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("PregnancyDetails");
+                    b.Navigation("Governorate");
                 });
 
-            modelBuilder.Entity("ICMS.Domain.Entites.PreviousPregnancyComplications", b =>
+            modelBuilder.Entity("ICMS.Domain.Entites.Geography.Neighborhood", b =>
                 {
-                    b.HasOne("ICMS.Domain.Entites.PregnancyDetails", "PregnancyDetails")
-                        .WithOne("PreviousPregnancyComplications")
-                        .HasForeignKey("ICMS.Domain.Entites.PreviousPregnancyComplications", "PregnancyDetailId")
+                    b.HasOne("ICMS.Domain.Entites.Geography.Directorate", "Directorate")
+                        .WithMany("Neighborhoods")
+                        .HasForeignKey("DirectorateId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("PregnancyDetails");
+                    b.Navigation("Directorate");
                 });
 
-            modelBuilder.Entity("ICMS.Domain.Entites.PreviousPregnancyDeliveryComplications", b =>
+            modelBuilder.Entity("ICMS.Domain.Entites.Geography.SubNeighborhood", b =>
                 {
-                    b.HasOne("ICMS.Domain.Entites.PregnancyDetails", "PregnancyDetails")
-                        .WithOne("PreviousPregnancyDelivaryComplications")
-                        .HasForeignKey("ICMS.Domain.Entites.PreviousPregnancyDeliveryComplications", "PregnancyDetailId")
+                    b.HasOne("ICMS.Domain.Entites.Geography.Neighborhood", "Neighborhood")
+                        .WithMany("SubNeighborhoods")
+                        .HasForeignKey("NeighborhoodId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("PregnancyDetails");
+                    b.Navigation("Neighborhood");
                 });
 
-            modelBuilder.Entity("ICMS.Domain.Entites.RefreshToken", b =>
+            modelBuilder.Entity("ICMS.Domain.Entites.Identity.RefreshToken", b =>
                 {
-                    b.HasOne("ICMS.Domain.Entites.User", "User")
+                    b.HasOne("ICMS.Domain.Entites.Identity.User", "User")
                         .WithMany("RefreshTokens")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1193,37 +1665,26 @@ namespace ICMS.Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("ICMS.Domain.Entites.Transaction", b =>
+            modelBuilder.Entity("ICMS.Domain.Entites.Identity.User", b =>
                 {
-                    b.HasOne("ICMS.Domain.Entites.Batch", "Batch")
-                        .WithMany("Transactions")
-                        .HasForeignKey("BatchId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Batch");
-                });
-
-            modelBuilder.Entity("ICMS.Domain.Entites.User", b =>
-                {
-                    b.HasOne("ICMS.Domain.Entites.Person", "Person")
+                    b.HasOne("ICMS.Domain.Entites.Identity.Person", "Person")
                         .WithOne()
-                        .HasForeignKey("ICMS.Domain.Entites.User", "PersonId")
+                        .HasForeignKey("ICMS.Domain.Entites.Identity.User", "PersonId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Person");
                 });
 
-            modelBuilder.Entity("ICMS.Domain.Entites.UserRole", b =>
+            modelBuilder.Entity("ICMS.Domain.Entites.Identity.UserRole", b =>
                 {
-                    b.HasOne("ICMS.Domain.Entites.Role", "Role")
+                    b.HasOne("ICMS.Domain.Entites.Identity.Role", "Role")
                         .WithMany("UserRoles")
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("ICMS.Domain.Entites.User", "User")
+                    b.HasOne("ICMS.Domain.Entites.Identity.User", "User")
                         .WithMany("UserRoles")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -1234,27 +1695,119 @@ namespace ICMS.Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("ICMS.Domain.Entites.VaccinatedIndividual", b =>
+            modelBuilder.Entity("ICMS.Domain.Entites.Identity.VaccinatedIndividual", b =>
                 {
-                    b.HasOne("ICMS.Domain.Entites.Person", "Person")
+                    b.HasOne("ICMS.Domain.Entites.Identity.Person", "Person")
                         .WithOne()
-                        .HasForeignKey("ICMS.Domain.Entites.VaccinatedIndividual", "PersonId")
+                        .HasForeignKey("ICMS.Domain.Entites.Identity.VaccinatedIndividual", "PersonId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("ICMS.Domain.Entites.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                    b.HasOne("ICMS.Domain.Entites.Identity.User", "User")
+                        .WithOne()
+                        .HasForeignKey("ICMS.Domain.Entites.Identity.VaccinatedIndividual", "UserId")
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("Person");
 
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("ICMS.Domain.Entites.VisitDetails", b =>
+            modelBuilder.Entity("ICMS.Domain.Entites.Maternal.Newborn", b =>
                 {
-                    b.HasOne("ICMS.Domain.Entites.PregnancyDetails", "PregnancyDetails")
+                    b.HasOne("ICMS.Domain.Entites.Maternal.PregnancyDetails", "PregnancyDetails")
+                        .WithMany("Newborns")
+                        .HasForeignKey("PregnancyDetailsId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("PregnancyDetails");
+                });
+
+            modelBuilder.Entity("ICMS.Domain.Entites.Maternal.PregnancyDetails", b =>
+                {
+                    b.HasOne("ICMS.Domain.Entites.Maternal.PregnantWoman", "PregnantWoman")
+                        .WithMany("PregnancyDetails")
+                        .HasForeignKey("PregnantWomanId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("PregnantWoman");
+                });
+
+            modelBuilder.Entity("ICMS.Domain.Entites.Maternal.PregnantWoman", b =>
+                {
+                    b.HasOne("ICMS.Domain.Entites.Identity.Person", "Person")
+                        .WithOne()
+                        .HasForeignKey("ICMS.Domain.Entites.Maternal.PregnantWoman", "PersonId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ICMS.Domain.Entites.Identity.User", "User")
+                        .WithOne()
+                        .HasForeignKey("ICMS.Domain.Entites.Maternal.PregnantWoman", "UserId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Person");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("ICMS.Domain.Entites.Maternal.PreviousPostpartumComplications", b =>
+                {
+                    b.HasOne("ICMS.Domain.Entites.Maternal.PregnancyDetails", "PregnancyDetails")
+                        .WithOne("PreviousPostpartumComplications")
+                        .HasForeignKey("ICMS.Domain.Entites.Maternal.PreviousPostpartumComplications", "PregnancyDetailId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("PregnancyDetails");
+                });
+
+            modelBuilder.Entity("ICMS.Domain.Entites.Maternal.PreviousPregnancyComplications", b =>
+                {
+                    b.HasOne("ICMS.Domain.Entites.Maternal.PregnancyDetails", "PregnancyDetails")
+                        .WithOne("PreviousPregnancyComplications")
+                        .HasForeignKey("ICMS.Domain.Entites.Maternal.PreviousPregnancyComplications", "PregnancyDetailId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("PregnancyDetails");
+                });
+
+            modelBuilder.Entity("ICMS.Domain.Entites.Maternal.PreviousPregnancyDeliveryComplications", b =>
+                {
+                    b.HasOne("ICMS.Domain.Entites.Maternal.PregnancyDetails", "PregnancyDetails")
+                        .WithOne("PreviousPregnancyDeliveryComplications")
+                        .HasForeignKey("ICMS.Domain.Entites.Maternal.PreviousPregnancyDeliveryComplications", "PregnancyDetailId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("PregnancyDetails");
+                });
+
+            modelBuilder.Entity("ICMS.Domain.Entites.Visits.FieldVisitUser", b =>
+                {
+                    b.HasOne("ICMS.Domain.Entites.Visits.FieldVisit", "FieldVisit")
+                        .WithMany("FieldVisitUsers")
+                        .HasForeignKey("FieldVisitId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ICMS.Domain.Entites.Identity.User", "FieldWorker")
+                        .WithMany("FieldVisitUsers")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("FieldVisit");
+
+                    b.Navigation("FieldWorker");
+                });
+
+            modelBuilder.Entity("ICMS.Domain.Entites.Visits.VisitDetails", b =>
+                {
+                    b.HasOne("ICMS.Domain.Entites.Maternal.PregnancyDetails", "PregnancyDetails")
                         .WithMany("VisitDetails")
                         .HasForeignKey("PregnancyDetailsId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -1263,40 +1816,37 @@ namespace ICMS.Infrastructure.Migrations
                     b.Navigation("PregnancyDetails");
                 });
 
-            modelBuilder.Entity("ICMS.Domain.Entites.Batch", b =>
+            modelBuilder.Entity("ICMS.Domain.Entites.Clinical.Batch", b =>
                 {
                     b.Navigation("Transactions");
                 });
 
-            modelBuilder.Entity("ICMS.Domain.Entites.FieldVisit", b =>
+            modelBuilder.Entity("ICMS.Domain.Entites.Clinical.Vaccine", b =>
                 {
-                    b.Navigation("FieldVisitUsers");
-
-                    b.Navigation("ImmunizationRecords");
+                    b.Navigation("Doses");
                 });
 
-            modelBuilder.Entity("ICMS.Domain.Entites.PregnancyDetails", b =>
+            modelBuilder.Entity("ICMS.Domain.Entites.Geography.Directorate", b =>
                 {
-                    b.Navigation("PreviousPostartumComplications");
-
-                    b.Navigation("PreviousPregnancyComplications");
-
-                    b.Navigation("PreviousPregnancyDelivaryComplications");
-
-                    b.Navigation("VisitDetails");
+                    b.Navigation("Neighborhoods");
                 });
 
-            modelBuilder.Entity("ICMS.Domain.Entites.PregnantWoman", b =>
+            modelBuilder.Entity("ICMS.Domain.Entites.Geography.Governorate", b =>
                 {
-                    b.Navigation("PregnancyDetails");
+                    b.Navigation("Directorates");
                 });
 
-            modelBuilder.Entity("ICMS.Domain.Entites.Role", b =>
+            modelBuilder.Entity("ICMS.Domain.Entites.Geography.Neighborhood", b =>
+                {
+                    b.Navigation("SubNeighborhoods");
+                });
+
+            modelBuilder.Entity("ICMS.Domain.Entites.Identity.Role", b =>
                 {
                     b.Navigation("UserRoles");
                 });
 
-            modelBuilder.Entity("ICMS.Domain.Entites.User", b =>
+            modelBuilder.Entity("ICMS.Domain.Entites.Identity.User", b =>
                 {
                     b.Navigation("FieldVisitUsers");
 
@@ -1305,14 +1855,36 @@ namespace ICMS.Infrastructure.Migrations
                     b.Navigation("UserRoles");
                 });
 
-            modelBuilder.Entity("ICMS.Domain.Entites.VaccinatedIndividual", b =>
+            modelBuilder.Entity("ICMS.Domain.Entites.Identity.VaccinatedIndividual", b =>
                 {
                     b.Navigation("ImmunizationRecords");
+
+                    b.Navigation("Schedules");
                 });
 
-            modelBuilder.Entity("ICMS.Domain.Entites.Vaccine", b =>
+            modelBuilder.Entity("ICMS.Domain.Entites.Maternal.PregnancyDetails", b =>
                 {
-                    b.Navigation("Doses");
+                    b.Navigation("Newborns");
+
+                    b.Navigation("PreviousPostpartumComplications");
+
+                    b.Navigation("PreviousPregnancyComplications");
+
+                    b.Navigation("PreviousPregnancyDeliveryComplications");
+
+                    b.Navigation("VisitDetails");
+                });
+
+            modelBuilder.Entity("ICMS.Domain.Entites.Maternal.PregnantWoman", b =>
+                {
+                    b.Navigation("PregnancyDetails");
+                });
+
+            modelBuilder.Entity("ICMS.Domain.Entites.Visits.FieldVisit", b =>
+                {
+                    b.Navigation("FieldVisitUsers");
+
+                    b.Navigation("ImmunizationRecords");
                 });
 #pragma warning restore 612, 618
         }

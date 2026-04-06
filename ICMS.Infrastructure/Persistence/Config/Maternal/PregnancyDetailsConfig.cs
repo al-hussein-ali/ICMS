@@ -1,0 +1,114 @@
+using ICMS.Domain.Entites.Common;
+using ICMS.Domain.Entites.Identity;
+using ICMS.Domain.Entites.Clinical;
+using ICMS.Domain.Entites.Maternal;
+using ICMS.Domain.Entites.Visits;
+using ICMS.Domain.Entites.Audit;
+using ICMS.Domain.Entites.Geography;
+using ICMS.Domain.Enums;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+
+namespace ICMS.Infrastructure.Persistence.Config.Maternal
+{
+    public class PregnancyDetailsConfig : IEntityTypeConfiguration<PregnancyDetails>
+    {
+        private string[] _pregnancyTypes = { "?????", "???????" };
+        private string[] _birthNatures = { "?????", "????? ??????", "??????", "????????" };
+        private string[] _birthLocationTypes = { "??????", "??????", "??????", "????????" };
+
+        public void Configure(EntityTypeBuilder<PregnancyDetails> builder)
+        {
+            builder.HasKey(pd => pd.Id);
+
+            builder.Property(pd => pd.Id).HasColumnName("PregnancyDetailsId");
+
+            builder.Property(pd => pd.VisitsCount).HasDefaultValue(0);
+
+            builder.Property(pd => pd.LastMenstrualPeriodDate).IsRequired();
+            builder.Property(pd => pd.ExpectedDeliveryDate).IsRequired();
+            builder.Property(pd => pd.DeliveryDate).IsRequired(false);
+
+            builder.Property(pd => pd.PregnancyType).HasConversion(
+                v => v == PregnancyType.Normal ? _pregnancyTypes[0] : _pregnancyTypes[1],
+                v => v == _pregnancyTypes[0] ? PregnancyType.Normal : PregnancyType.Complicated
+            ).IsRequired();
+
+
+            builder.Property(pd => pd.BirthNature).HasConversion(
+                v => v.HasValue ? (v.Value == BirthNature.Natural ? _birthNatures[0]
+                      : v.Value == BirthNature.CesareanSection ? _birthNatures[1]
+                      : v.Value == BirthNature.VacuumExtraction ? _birthNatures[2]
+                      : _birthNatures[3]) : null,
+                v => v == _birthNatures[0] ? BirthNature.Natural
+                      : v == _birthNatures[1] ? BirthNature.CesareanSection
+                      : v == _birthNatures[2] ? BirthNature.VacuumExtraction
+                      : BirthNature.ForcepsDelivery
+            ).IsRequired(false);
+
+
+            builder.Property(pd => pd.BirthLocationType).HasConversion(
+                v => v.HasValue ? (v.Value == BirthLocationType.AtHome ? _birthLocationTypes[0]
+                      : v.Value == BirthLocationType.AtTheUnit ? _birthLocationTypes[1]
+                      : v.Value == BirthLocationType.AtTheCenter ? _birthLocationTypes[2]
+                      : _birthLocationTypes[3]) : null,
+                v => v == _birthLocationTypes[0] ? BirthLocationType.AtHome
+                      : v == _birthLocationTypes[1] ? BirthLocationType.AtTheUnit
+                      : v == _birthLocationTypes[2] ? BirthLocationType.AtTheCenter
+                      : BirthLocationType.AtTheHospital
+            ).IsRequired(false);
+
+            builder.Property(pd => pd.BirthLocationDetails).HasMaxLength(250).IsUnicode(true).IsRequired(false);
+            builder.Property(pd => pd.BirthNatureReason).HasMaxLength(250).IsUnicode(true).IsRequired();
+            builder.Property(pd => pd.PregnancyComplications).HasMaxLength(500).IsUnicode(true).IsRequired();
+            builder.Property(pd => pd.Interferences).HasMaxLength(500).IsUnicode(true).IsRequired();
+
+            builder.Property(pd => pd.NewbornCount).HasDefaultValue(0);
+            builder.Property(pd => pd.IsPregnancyDone).HasDefaultValue(false);
+            builder.Property(pd => pd.ComplicationsDuringChildbirth).HasMaxLength(500).IsUnicode(true).IsRequired(false);
+            builder.Property(pd => pd.PostpartumComplications).HasMaxLength(500).IsUnicode(true).IsRequired(false);
+
+
+
+            builder.HasIndex(pd => pd.PreviousPostpartumComplicationsId);
+            builder.HasIndex(pd => pd.PreviousPregnancyComplicationsId);
+            builder.HasIndex(pd => pd.PreviousPregnancyDeliveryComplicationsId);
+
+            builder.HasOne(pd => pd.PregnantWoman)
+                .WithMany(pw => pw.PregnancyDetails)
+                .HasForeignKey(pd => pd.PregnantWomanId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasOne(pd => pd.PreviousPregnancyComplications)
+                .WithOne(ppc => ppc.PregnancyDetails)
+                .HasForeignKey<PreviousPregnancyComplications>(ppc => ppc.PregnancyDetailId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasOne(pd => pd.PreviousPostpartumComplications)
+                .WithOne(pp => pp.PregnancyDetails)
+                .HasForeignKey<PreviousPostpartumComplications>(pp => pp.PregnancyDetailId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasOne(pd => pd.PreviousPregnancyDeliveryComplications)
+                .WithOne(ppd => ppd.PregnancyDetails)
+                .HasForeignKey<PreviousPregnancyDeliveryComplications>(ppd => ppd.PregnancyDetailId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasMany(pd => pd.VisitDetails)
+                .WithOne(vd => vd.PregnancyDetails)
+                .HasForeignKey(vd => vd.PregnancyDetailsId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Metadata.FindNavigation(nameof(PregnancyDetails.VisitDetails))?
+                .SetPropertyAccessMode(PropertyAccessMode.Field);
+
+            builder.HasMany(pd => pd.Newborns)
+                .WithOne(n => n.PregnancyDetails)
+                .HasForeignKey(n => n.PregnancyDetailsId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Metadata.FindNavigation(nameof(PregnancyDetails.Newborns))?
+                .SetPropertyAccessMode(PropertyAccessMode.Field);
+        }
+    }
+}

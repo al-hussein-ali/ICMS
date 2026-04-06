@@ -1,5 +1,11 @@
-﻿using ICMS.Application.Interfaces.Services;
-using ICMS.Domain.Entites;
+using ICMS.Application.Interfaces.Services;
+using ICMS.Domain.Entites.Common;
+using ICMS.Domain.Entites.Identity;
+using ICMS.Domain.Entites.Clinical;
+using ICMS.Domain.Entites.Maternal;
+using ICMS.Domain.Entites.Visits;
+using ICMS.Domain.Entites.Audit;
+using ICMS.Domain.Entites.Geography;
 using System.IdentityModel.Tokens.Jwt;
 using Microsoft.IdentityModel.Tokens;
 using System.Security.Claims;

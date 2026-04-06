@@ -1,286 +1,321 @@
-﻿using FluentValidation;
-using ICMS.Application.DTOs;
 using ICMS.Application.DTOs.BulkResult;
 using ICMS.Application.DTOs.ImmunizationRecord;
 using ICMS.Application.DTOs.Pagination;
 using ICMS.Application.DTOs.VaccinatedIndividual;
-using ICMS.Application.Extensions;
+using ICMS.Application.DTOs.Account;
 using ICMS.Application.Interfaces;
 using ICMS.Application.Interfaces.Services;
-using ICMS.Application.Validators;
-using ICMS.Domain.Entites;
+using ICMS.Application.Utilities;
+using ICMS.Domain.Constants;
+using ICMS.Domain.Entites.Clinical;
+using ICMS.Domain.Entites.Identity;
 using ICMS.Domain.Exceptions;
 using ICMS.Domain.ValueObjects;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
+using ICMS.Application.Extensions;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
+using System;
 
-namespace ICMS.Application.Services;
-
-public class VaccinatedIndividualService : IVaccinatedIndividualService
+namespace ICMS.Application.Services
 {
-    private readonly IUnitOfWork _unitOfWork;
-    private readonly IValidator<PaginationParams> pagnationValidator;
-    private readonly IValidator<VaccinatedIndividualCreateDto> _vaccinatedCreateValidator;
-    private readonly IValidator<ImmunizationRecordCreateDto> _immunizationRecordCreateValidator;
-    private readonly IValidator<NewFieldVaccinatedIndividualDto> _newFieldIndividualValidator;
-
-    public VaccinatedIndividualService(IUnitOfWork unitOfWork, IValidator<PaginationParams> pagnationValidator, IValidator<ImmunizationRecordCreateDto> immunizationRecordCreateValidator, IValidator<VaccinatedIndividualCreateDto> vaccinatedCreateValidator, IValidator<NewFieldVaccinatedIndividualDto> newFieldIndividualValidator)
-
+    public class VaccinatedIndividualService : IVaccinatedIndividualService
     {
-        this._unitOfWork = unitOfWork;
-        this.pagnationValidator = pagnationValidator;
-        _vaccinatedCreateValidator = vaccinatedCreateValidator;
-        _immunizationRecordCreateValidator = immunizationRecordCreateValidator;
-        _newFieldIndividualValidator = newFieldIndividualValidator;
-    }
+        private readonly IUnitOfWork _unitOfWork;
+        private readonly IIdentityService _identityService;
 
-    public async Task<PagedResult<VaccinatedIndividualReadDto>> GetAllAsync(PaginationParams paginationParams, CancellationToken ct = default)
-    {
-        await pagnationValidator.ValidateAndThrowAsync(paginationParams);
-
-
-        var vaccinatedIndividuals = _unitOfWork.VaccinatedIndividualRepository.GetQueryable().Select(vi => vi.ToReadDto());
-
-        return vaccinatedIndividuals.ApplyPagination(paginationParams.PageNumber, paginationParams.PageSize);
-    }
-    public async Task<VaccinatedIndividualDetailsDto> GetByIdAsync(int id, CancellationToken ct = default)
-    {
-        var vaccinatedIndividual = await _unitOfWork.VaccinatedIndividualRepository.GetByIdAsync(id, ct);
-
-        return vaccinatedIndividual?.ToDetailsDto() ?? throw new NotFoundException("This individual was not found");
-    }
-
-    public async Task<VaccinatedIndividualDetailsDto> GetByCardNumberAsync(string cardNumber, CancellationToken ct = default)
-    {
-        var vaccinatedIndividual = await _unitOfWork.VaccinatedIndividualRepository.GetDetailsByCardNumber(cardNumber, ct);
-
-        return vaccinatedIndividual?.ToDetailsDto() ?? throw new NotFoundException("This individual was not found");
-    }
-
-    public async Task<VaccinatedIndividualReadDto> AddAsync(VaccinatedIndividualCreateDto entity, CancellationToken ct = default)
-    {
-
-        await _vaccinatedCreateValidator.ValidateAndThrowAsync(entity);
-
-
-        var person = (entity.PersonCreateDto == null) ? await _unitOfWork.PersonRepository.GetByIdAsync(entity.PersonId!.Value, ct) : await _unitOfWork
-            .PersonRepository
-            .GetByAsync(entity.PersonCreateDto.FirstName
-            , entity.PersonCreateDto.LastName
-            , entity.PersonCreateDto.PhoneNumber
-            , entity.PersonCreateDto.DateOfBirth
-            , ct);
-
-
-        var vaccinatedIndividual = entity.ToDomain();
-
-
-        if (person != null)
+        public VaccinatedIndividualService(IUnitOfWork unitOfWork, IIdentityService identityService)
         {
-            vaccinatedIndividual.AssignExistingPersonById(person.Id);
-        }
-        else
-        {
-            vaccinatedIndividual.AssignPerson(entity.PersonCreateDto!.ToDomain());
+            _unitOfWork = unitOfWork;
+            _identityService = identityService;
         }
 
-
-        ct.ThrowIfCancellationRequested();
-
-        await _unitOfWork.VaccinatedIndividualRepository.AddAsync(vaccinatedIndividual, ct);
-        await _unitOfWork.SaveChangesAsync(ct);
-
-        return vaccinatedIndividual.ToReadDto();
-    }
-    public async Task<bool> UpdateAsync(int id, VaccinatedIndividualCreateDto updatedEntity, CancellationToken ct = default)
-    {
-        await _vaccinatedCreateValidator.ValidateAndThrowAsync(updatedEntity);
-
-
-        var existingVaccinatedIndividual = await _unitOfWork.VaccinatedIndividualRepository.GetByIdAsync(id, ct);
-
-        if (existingVaccinatedIndividual == null)
-            throw new NotFoundException("This record was not found!");
-
-
-
-        if (existingVaccinatedIndividual.Person == null) throw new NotFoundException("Associated person not found.");
-
-
-        if (updatedEntity.PersonId.HasValue)
+        public async Task<PagedResult<VaccinatedIndividualReadDto>> GetAllAsync(PaginationParams paginationParams, CancellationToken ct = default)
         {
-            if (existingVaccinatedIndividual.PersonId != updatedEntity.PersonId.Value)
-                await AssignExsitingPersonAsync(existingVaccinatedIndividual, updatedEntity.PersonId.Value, ct);
+            var query = _unitOfWork.VaccinatedIndividualRepository.GetQueryable(false, ct)
+                .Select(vi => vi.ToReadDto());
+
+            return query.ApplyPagination(paginationParams.PageNumber, paginationParams.PageSize);
         }
 
-        if (updatedEntity.PersonCreateDto != null)
+        public async Task<VaccinatedIndividualDetailsDto> GetByIdAsync(int id, CancellationToken ct = default)
         {
-            existingVaccinatedIndividual.Person.UpdatePersonInfo(
-                updatedEntity.PersonCreateDto.FirstName,
-                updatedEntity.PersonCreateDto.SecondName,
-                updatedEntity.PersonCreateDto.ThirdName,
-                updatedEntity.PersonCreateDto.LastName,
-                updatedEntity.PersonCreateDto.Gender.FromStringToGenderEnum(),
-                updatedEntity.PersonCreateDto.DateOfBirth,
-                updatedEntity.PersonCreateDto.PhoneNumber);
-        }
-
-        existingVaccinatedIndividual.UpdateIndividualInfo(
-            updatedEntity.Directorate,
-            updatedEntity.Area,
-            updatedEntity.Neighborhood);
-
-        return await _unitOfWork.SaveChangesAsync(ct) > 0;
-    }
-    public async Task<bool> DeleteAsync(int id, CancellationToken ct = default)
-    {
-
-        var existingVaccinatedIndividual = await _unitOfWork.VaccinatedIndividualRepository.GetByIdAsync(id, ct);
-
-        if (existingVaccinatedIndividual == null || existingVaccinatedIndividual.Person.IsDeleted)
-            throw new NotFoundException("This record was not found!");
-
-
-        await _unitOfWork.VaccinatedIndividualRepository.DeleteAsync(existingVaccinatedIndividual, ct);
-
-        return await _unitOfWork.SaveChangesAsync() > 0;
-    }
-    public async Task<bool> GiveDose(ImmunizationRecordCreateDto dto, CancellationToken ct = default)
-    {
-        await _immunizationRecordCreateValidator.ValidateAndThrowAsync(dto);
-
-        var vaccinatedIndividual = await _unitOfWork.VaccinatedIndividualRepository.GetDetailsById(dto.IndividualId);
-
-        if (vaccinatedIndividual == null)
-            throw new NotFoundException("This record was not found!");
-
-        if (!await _unitOfWork.DoseRepository.ExistAsync(dto.DoseId))
-            throw new NotFoundException("The Dose Id was invalid or not found.");
-
-
-        vaccinatedIndividual.TakeDose(dto.DoseId, dto.VaccinationDate, dto.TakenIn, dto.FieldVisitId, dto.Notes);
-
-        return await _unitOfWork.SaveChangesAsync() > 0;
-    }
-
-    private async Task<bool> AssignExsitingPersonAsync(VaccinatedIndividual existingVaccinatedIndividual, int personId, CancellationToken ct = default)
-    {
-
-        var newPerson = await _unitOfWork.PersonRepository.GetByIdAsync(personId, ct);
-
-        if (newPerson == null) throw new NotFoundException("Person was not found");
-
-
-        existingVaccinatedIndividual.AssignExistingPersonById(newPerson.Id);
-        return true;
-    }
-
-    public async Task<BulkInsertResult> BulkInsertIndividualAsync(List<NewFieldVaccinatedIndividualDto> dtos,CancellationToken ct = default)
-    {
-        var result = new BulkInsertResult();
-
-        // 1. Validate and convert DTOs to Domain Entities
-        var (validIndividuals, entityToDtoMap) = await ProcessAndValidateDtosAsync(dtos, result);
-
-        if (!validIndividuals.Any())
-            return result; // Exit early if nothing passed validation
-
-        // 2. Persist valid entities to the database
-        await PersistToDatabaseAsync(validIndividuals, entityToDtoMap, result);
-
-        return result;
-    }
-
-    private async Task<(List<VaccinatedIndividual>, Dictionary<VaccinatedIndividual, NewFieldVaccinatedIndividualDto>)> ProcessAndValidateDtosAsync(
-        List<NewFieldVaccinatedIndividualDto> dtos,
-        BulkInsertResult result)
-    {
-        var validIndividuals = new List<VaccinatedIndividual>();
-        var entityToDtoMap = new Dictionary<VaccinatedIndividual, NewFieldVaccinatedIndividualDto>();
-
-        for (int i = 0; i < dtos.Count; i++)
-        {
-            var dto = dtos[i];
-
-            // STEP A: Fluent Validation
-            var validationResult = await _newFieldIndividualValidator.ValidateAsync(dto);
-            if (!validationResult.IsValid)
+            var individual = await _unitOfWork.VaccinatedIndividualRepository.GetDetailsById(id, ct);
+            if (individual == null)
             {
-                var errorMessages = string.Join(" | ", validationResult.Errors.Select(e => e.ErrorMessage));
-                result.Errors.Add($"Row {i + 1} Validation Failed: {errorMessages}");
-                continue;
+                throw new NotFoundException($"Individual with ID {id} not found.");
             }
 
-            // STEP B: Domain Creation
+            return individual.ToDetailsDto();
+        }
+
+        public async Task<VaccinatedIndividualDetailsDto> GetByCardNumberAsync(string cardNumber, CancellationToken ct = default)
+        {
+            var individual = await _unitOfWork.VaccinatedIndividualRepository.GetDetailsByCardNumber(cardNumber, ct);
+            if (individual == null)
+            {
+                throw new NotFoundException($"Individual with Card Number {cardNumber} not found.");
+            }
+
+            return individual.ToDetailsDto();
+        }
+
+        public async Task<VaccinatedIndividualReadDto> AddAsync(VaccinatedIndividualCreateDto vaccinatedIndividualCreateDto, CancellationToken ct = default)
+        {
+            int selectedPersonId;
+
+            if (vaccinatedIndividualCreateDto.PersonId.HasValue && vaccinatedIndividualCreateDto.PersonId.Value > 0)
+            {
+                var person = await _unitOfWork.PersonRepository.GetByIdAsync(vaccinatedIndividualCreateDto.PersonId.Value, ct);
+                if (person == null) throw new NotFoundException("This person was not found");
+                selectedPersonId = person.Id;
+            }
+            else
+            {
+                if (vaccinatedIndividualCreateDto.PersonCreateDto == null) throw new DomainException("Person details required to create new person.");
+                var newPerson = Person.Create(
+                    vaccinatedIndividualCreateDto.PersonCreateDto.FirstName,
+                    vaccinatedIndividualCreateDto.PersonCreateDto.SecondName,
+                    vaccinatedIndividualCreateDto.PersonCreateDto.ThirdName,
+                    vaccinatedIndividualCreateDto.PersonCreateDto.LastName,
+                    Enum.Parse<ICMS.Domain.Enums.Gender>(vaccinatedIndividualCreateDto.PersonCreateDto.Gender, true),
+                    vaccinatedIndividualCreateDto.PersonCreateDto.DateOfBirth,
+                    vaccinatedIndividualCreateDto.PersonCreateDto.PhoneNumber);
+
+                await _unitOfWork.PersonRepository.AddAsync(newPerson, ct);
+                await _unitOfWork.SaveChangesAsync(ct);
+                selectedPersonId = newPerson.Id;
+            }
+
+            var vaccinatedIndividual = VaccinatedIndividual.Create(
+                vaccinatedIndividualCreateDto.DirectorateId,
+                vaccinatedIndividualCreateDto.NeighborhoodId,
+                vaccinatedIndividualCreateDto.SubNeighborhoodId,
+                vaccinatedIndividualCreateDto.UserId);
+
+            vaccinatedIndividual.AssignExistingPersonById(selectedPersonId);
+
+            await ScheduleAllInitialVaccinesAsync(new List<VaccinatedIndividual> { vaccinatedIndividual }, ct);
+
+            ct.ThrowIfCancellationRequested();
+
+            await _unitOfWork.VaccinatedIndividualRepository.AddAsync(vaccinatedIndividual, ct);
+            await _unitOfWork.SaveChangesAsync(ct);
+
+            return vaccinatedIndividual.ToReadDto();
+        }
+
+        public async Task<bool> UpdateAsync(int id, VaccinatedIndividualCreateDto updatedEntity, CancellationToken ct = default)
+        {
+            var individual = await _unitOfWork.VaccinatedIndividualRepository.GetByIdAsync(id, ct);
+            if (individual == null)
+            {
+                throw new NotFoundException($"Individual with ID {id} not found.");
+            }
+
+            individual.UpdateIndividualInfo(updatedEntity.DirectorateId, updatedEntity.NeighborhoodId, updatedEntity.SubNeighborhoodId);
+
+            await _unitOfWork.VaccinatedIndividualRepository.UpdateAsync(individual, ct);
+            await _unitOfWork.SaveChangesAsync(ct);
+
+            return true;
+        }
+
+        public async Task<bool> DeleteAsync(int id, CancellationToken ct = default)
+        {
+            var individual = await _unitOfWork.VaccinatedIndividualRepository.GetByIdAsync(id, ct);
+            if (individual == null)
+                throw new NotFoundException($"Individual with ID {id} not found.");
+
+            await _unitOfWork.VaccinatedIndividualRepository.DeleteAsync(individual, ct);
+            await _unitOfWork.SaveChangesAsync(ct);
+
+            return true;
+        }
+
+        public async Task<bool> GiveDose(ImmunizationRecordCreateDto dto, CancellationToken ct = default)
+        {
+            var individual = await _unitOfWork.VaccinatedIndividualRepository.GetIndividualWithSchedulesAsync(dto.IndividualId, ct);
+            if (individual == null)
+                throw new NotFoundException($"Individual with ID {dto.IndividualId} not found.");
+
+            var dose = await _unitOfWork.DoseRepository.GetByIdAsync(dto.DoseId, ct);
+            if (dose == null)
+                throw new NotFoundException($"Dose with ID {dto.DoseId} not found.");
+
+            var allDoses = await _unitOfWork.DoseRepository.GetAllAsync(dose.VaccineId, ct);
+            var nextDose = allDoses.OrderBy(d => d.DoseOrder).FirstOrDefault(d => d.DoseOrder > dose.DoseOrder);
+
+            individual.AdministerDose(dose, dto.VaccinationDate, dto.TakenIn, nextDose, notes: dto.Notes);
+
+            await _unitOfWork.SaveChangesAsync(ct);
+            return true;
+        }
+
+        public async Task<BulkInsertResult> BulkInsertIndividualAsync(List<NewFieldVaccinatedIndividualDto> newFieldVaccinatedIndividuals, CancellationToken ct = default)
+        {
+            var result = new BulkInsertResult();
+            var validIndividuals = new List<VaccinatedIndividual>();
+            var entityToDtoMap = new Dictionary<VaccinatedIndividual, NewFieldVaccinatedIndividualDto>();
+
+            foreach (var dto in newFieldVaccinatedIndividuals)
+            {
+                try
+                {
+                    var personDto = dto.Person;
+                    var person = Person.Create(personDto.FirstName, personDto.SecondName, personDto.ThirdName, personDto.LastName, Enum.Parse<ICMS.Domain.Enums.Gender>(personDto.Gender, true), personDto.DateOfBirth, personDto.PhoneNumber);
+                    var individual = VaccinatedIndividual.Create(dto.DirectorateId, dto.NeighborhoodId, dto.SubNeighborhoodId);
+                    individual.AssignPerson(person);
+
+                    validIndividuals.Add(individual);
+                    entityToDtoMap.Add(individual, dto);
+                }
+                catch (Exception ex)
+                {
+                    result.Errors.Add($"Record for {dto.Person.PhoneNumber ?? "Unknown"}: {ex.Message}");
+                }
+            }
+
+            if (!validIndividuals.Any())
+                return result;
+
+            await PersistToDatabaseAsync(validIndividuals, entityToDtoMap, result, ct);
+
+            return result;
+        }
+
+        public async Task<BulkInsertResult> BulkUpdateFieldVisitIndividualAsync(List<UpdateFieldVisitIndividualDto> dtos, CancellationToken ct = default)
+        {
+            var result = new BulkInsertResult();
+            var ids = dtos.Select(d => d.IndividualId).ToList();
+            var individuals = await _unitOfWork.VaccinatedIndividualRepository.GetByIdsWithImmunizationRecordsAsync(ids, ct);
+
+            foreach (var dto in dtos)
+            {
+                var individual = individuals.FirstOrDefault(vi => vi.Id == dto.IndividualId);
+                if (individual == null)
+                {
+                    result.Errors.Add($"Individual ID {dto.IndividualId} not found.");
+                    continue;
+                }
+
+                try
+                {
+                    var dose = await _unitOfWork.DoseRepository.GetByIdAsync(dto.DoseId, ct);
+                    if (dose != null)
+                    {
+                        var allDoses = await _unitOfWork.DoseRepository.GetAllAsync(dose.VaccineId, ct);
+                        var nextDose = allDoses.OrderBy(d => d.DoseOrder).FirstOrDefault(d => d.DoseOrder > dose.DoseOrder);
+
+                        individual.AdministerDose(dose, dto.VaccinationDate, dto.TakenIn, nextDose, notes: dto.Note);
+                    }
+                    result.InsertedCount++;
+                }
+                catch (Exception ex)
+                {
+                    result.Errors.Add($"Individual ID {dto.IndividualId}: {ex.Message}");
+                }
+            }
+
+            await _unitOfWork.SaveChangesAsync(ct);
+            return result;
+        }
+
+        public async Task<GeneratedAccountDto> GenerateAccountAsync(int id, CancellationToken ct = default)
+        {
+            var individual = await _unitOfWork.VaccinatedIndividualRepository.GetIndividualWithSchedulesAsync(id, ct);
+            if (individual == null)
+                throw new NotFoundException($"Individual with ID {id} not found.");
+
+            if (individual.UserId.HasValue)
+            {
+                var existingUser = await _unitOfWork.UserRepository.GetByIdAsync(individual.UserId.Value, ct);
+                return new GeneratedAccountDto(existingUser?.UserName ?? "Unknown", "********", false);
+            }
+
+            string username = $"iv_{id}";
+            string password = PasswordHasher.GenerateSimplePassword();
+            string passwordHash = PasswordHasher.HashPassword(password);
+
+            var user = User.Create(username, passwordHash, individual.PersonId);
+            
+            await _unitOfWork.UserRepository.AddAsync(user, ct);
+            await _unitOfWork.SaveChangesAsync(ct);
+
+            // Assign Multi-Role using IdentityService
+            await _identityService.AssignRolesToUserAsync(user.Id, new[] { Roles.VaccinatedIndividual }, ct);
+
+            individual.AssignExistingUserById(user.Id);
+            await _unitOfWork.SaveChangesAsync(ct);
+
+            return new GeneratedAccountDto(username, password, true);
+        }
+
+        private async Task PersistToDatabaseAsync(
+            List<VaccinatedIndividual> validIndividuals,
+            Dictionary<VaccinatedIndividual, NewFieldVaccinatedIndividualDto> entityToDtoMap,
+            BulkInsertResult result,
+            CancellationToken ct = default)
+        {
             try
             {
-                var person = Person.Create(
-                    dto.FirstName, dto.SecondName, dto.ThirdName, dto.LastName,
-                    dto.Gender.FromStringToGenderEnum(), dto.DateOfBirth, dto.PhoneNumber);
+                await _unitOfWork.ExecuteInTransactionAsync(async () =>
+                {
+                    await _unitOfWork.VaccinatedIndividualRepository.BulkInsertAsync(validIndividuals, ct);
 
-                var individual = VaccinatedIndividual.Create(dto.Directorate, dto.Area, dto.Neighborhood);
+                    await ScheduleAllInitialVaccinesAsync(validIndividuals, ct);
 
-                individual.AssignPerson(person);
+                    var schedulesToInsert = validIndividuals.SelectMany(vi => vi.Schedules).ToList();
+                    if (schedulesToInsert.Any())
+                    {
+                        await _unitOfWork.VaccinationScheduleRepository.BulkInsertAsync(schedulesToInsert, ct);
+                    }
 
-                validIndividuals.Add(individual);
-                entityToDtoMap.Add(individual, dto);
+                    var recordsToInsert = new List<ImmunizationRecord>();
+
+                    foreach (var parent in validIndividuals)
+                    {
+                        var dto = entityToDtoMap[parent];
+                        var dose = await _unitOfWork.DoseRepository.GetByIdAsync(dto.DoseId, ct);
+                        if (dose != null)
+                        {
+                            var allDoses = await _unitOfWork.DoseRepository.GetAllAsync(dose.VaccineId, ct);
+                            var nextDose = allDoses.OrderBy(d => d.DoseOrder).FirstOrDefault(d => d.DoseOrder > dose.DoseOrder);
+
+                            parent.AdministerDose(dose, dto.VaccinationDate, dto.TakenIn, nextDose, notes: dto.Note);
+                        }
+
+                        recordsToInsert.AddRange(parent.ImmunizationRecords.Where(ir => ir.Id == Guid.Empty));
+                    }
+
+                    if (recordsToInsert.Any())
+                    {
+                        await _unitOfWork.ImmunizationRecordRepository.BulkInsertAsync(recordsToInsert, ct);
+                    }
+
+                    result.InsertedCount = validIndividuals.Count;
+                });
             }
             catch (Exception ex)
             {
-                result.Errors.Add($"Row {i + 1} Domain Error: {ex.Message}");
+                result.InsertedCount = 0;
+                result.Errors.Add($"Transaction failed: {ex.Message}");
             }
         }
 
-        return (validIndividuals, entityToDtoMap);
-    }
-
-    private async Task PersistToDatabaseAsync(
-        List<VaccinatedIndividual> validIndividuals,
-        Dictionary<VaccinatedIndividual, NewFieldVaccinatedIndividualDto> entityToDtoMap,
-        BulkInsertResult result)
-    {
-        try
+        private async Task ScheduleAllInitialVaccinesAsync(List<VaccinatedIndividual> individuals, CancellationToken ct)
         {
-            await _unitOfWork.ExecuteInTransactionAsync(async () =>
+            var allDoses = await _unitOfWork.DoseRepository.GetAllAsync(false, ct);
+            foreach (var individual in individuals)
             {
-                // Step A: Bulk insert Parents (and Persons via IncludeGraph)
-                await _unitOfWork.VaccinatedIndividualRepository.BulkInsertAsync(validIndividuals);
-
-                var recordsToInsert = new List<ImmunizationRecord>();
-
-                // Step B: Call TakeDose now that IDs exist
-                foreach (var parent in validIndividuals)
+                var dob = individual.Person?.DateOfBirth ?? (await _unitOfWork.PersonRepository.GetByIdAsync(individual.PersonId, ct))?.DateOfBirth;
+                
+                if (dob.HasValue)
                 {
-                    var dto = entityToDtoMap[parent];
-
-                    try
-                    {
-                        parent.TakeDose(dto.DoseId, dto.VaccinationDate, dto.TakenIn, dto.FieldVisitId, dto.Note);
-                        recordsToInsert.AddRange(parent.ImmunizationRecords);
-                    }
-                    catch (Exception ex)
-                    {
-                        result.Errors.Add($"Row '{dto.FirstName} {dto.LastName}' Dose Failed: {ex.Message}");
-                    }
+                    individual.ScheduleInitialVaccines(allDoses, dob.Value);
                 }
-
-                // Step C: Bulk Insert Children
-                if (recordsToInsert.Any())
-                {
-                    await _unitOfWork.ImmunizationRecordRepository.BulkInsertAsync(recordsToInsert);
-                }
-            });
-
-            // Transaction successful
-            result.InsertedCount = validIndividuals.Count;
-        }
-        catch (Exception ex)
-        {
-            // Transaction failed and rolled back
-            result.Errors.Add($"Database Transaction Failed and Rolled Back: {ex.Message}");
-            result.InsertedCount = 0;
+            }
         }
     }
-
 }

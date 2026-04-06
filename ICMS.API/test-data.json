@@ -1,0 +1,252 @@
+{
+  "doses": {
+    "create": {
+      "vaccineId": 1,
+      "doseName": "First Dose",
+      "doseOrder": 1,
+      "recommendedAgeInMonths": 0,
+      "recommendedAgeGroup": "Infant",
+      "notes": "Initial vaccination"
+    },
+    "update": {
+      "vaccineId": 1,
+      "doseName": "First Dose Updated",
+      "doseOrder": 1,
+      "recommendedAgeInMonths": 1,
+      "recommendedAgeGroup": "Infant",
+      "notes": "Updated recommended age"
+    }
+  },
+  "vaccines": {
+    "create": {
+      "vaccineName": "BCG",
+      "vaccineCode": "BCG-001",
+      "description": "Tuberculosis vaccine",
+      "isActive": true,
+      "totalDosages": 1
+    },
+    "update": {
+      "vaccineName": "BCG Updated",
+      "vaccineCode": "BCG-001-A",
+      "description": "Updated description",
+      "isActive": true,
+      "totalDosages": 2
+    }
+  },
+  "people": {
+    "create": {
+      "firstName": "Ahmed",
+      "secondName": "Ali",
+      "thirdName": "Mohammed",
+      "lastName": "Saleh",
+      "gender": "Male",
+      "dateOfBirth": "1990-05-15",
+      "phoneNumber": "777123456"
+    },
+    "update": {
+      "firstName": "Ahmed",
+      "secondName": "Ali",
+      "thirdName": "Mohammed",
+      "lastName": "Saleh",
+      "gender": "Male",
+      "dateOfBirth": "1990-05-15",
+      "phoneNumber": "777654321"
+    }
+  },
+  "vaccinatedIndividuals": {
+    "create": {
+      "directorateId": 1,
+      "neighborhoodId": 1,
+      "subNeighborhoodId": 1,
+      "personId": 1,
+      "userId": 1,
+      "personCreateDto": null
+    },
+    "createWithNewPerson": {
+      "directorateId": 1,
+      "neighborhoodId": 1,
+      "subNeighborhoodId": 1,
+      "userId": 1,
+      "personId": null,
+      "personCreateDto": {
+        "firstName": "Fatima",
+        "secondName": "Hassan",
+        "thirdName": "Ali",
+        "lastName": "Yahya",
+        "gender": "Female",
+        "dateOfBirth": "1995-10-20",
+        "phoneNumber": "733987654"
+      }
+    },
+    "update": {
+      "directorateId": 2,
+      "neighborhoodId": 2,
+      "subNeighborhoodId": 2,
+      "personId": 1,
+      "userId": 1,
+      "personCreateDto": null
+    },
+    "vaccinations/create": {
+      "individualId": 1,
+      "doseId": 1,
+      "fieldVisitId": 1,
+      "vaccinationDate": "2024-03-31",
+      "takenIn": "Health Center",
+      "notes": "Administered during field visit"
+    },
+    "bulk/create": [
+      {
+        "directorateId": 1,
+        "neighborhoodId": 1,
+        "subNeighborhoodId": 1,
+        "person": {
+          "firstName": "Saeed",
+          "secondName": "Omar",
+          "thirdName": "Salem",
+          "lastName": "Bin Ali",
+          "gender": "Male",
+          "dateOfBirth": "2023-01-10",
+          "phoneNumber": "000000000"
+        },
+        "doseId": 1,
+        "vaccinationDate": "2024-03-31",
+        "takenIn": "Field",
+        "fieldVisitId": 1,
+        "note": "Mobile clinic"
+      }
+    ],
+    "bulk/update": [
+      {
+        "individualId": 1,
+        "doseId": 2,
+        "fieldVisitId": 1,
+        "vaccinationDate": "2024-03-31",
+        "takenIn": "Field",
+        "note": "Follow up dose"
+      }
+    ]
+  },
+  "fieldVisits": {
+    "create": {
+      "visitDate": "2024-04-01",
+      "targetedLocation": "Sana'a - District A",
+      "fieldWorkerUserIds": [1, 2, 3]
+    },
+    "update": {
+      "visitDate": "2024-04-02",
+      "targetedLocation": "Sana'a - District B",
+      "fieldWorkerUserIds": [1, 4]
+    }
+  },
+  "maternal": {
+    "create": {
+      "ageRange": "From 20 To 39",
+      "pregnancyCount": 3,
+      "bloodGroup": 1,
+      "rhFactor": 1,
+      "personId": 2,
+      "userId": 1,
+      "personCreateDto": null
+    },
+    "createWithNewPerson": {
+      "ageRange": "From 20 To 39",
+      "pregnancyCount": 1,
+      "bloodGroup": 1,
+      "rhFactor": 1,
+      "userId": 1,
+      "personId": null,
+      "personCreateDto": {
+        "firstName": "Amina",
+        "secondName": "Saleh",
+        "thirdName": "Abdullah",
+        "lastName": "Al-Kibsi",
+        "gender": "Female",
+        "dateOfBirth": "1998-05-12",
+        "phoneNumber": "778899000"
+      }
+    },
+    "update": {
+      "ageRange": "From 20 To 39",
+      "pregnancyCount": 4,
+      "bloodGroup": 1,
+      "rhFactor": 1,
+      "personId": 2,
+      "userId": 1,
+      "personCreateDto": null
+    },
+    "pregnancies/create": {
+      "personId": 2,
+      "lmp": "2023-12-01",
+      "edd": "2024-09-07",
+      "previousPregnancyComplications": null,
+      "previousPregnancyDeliveryComplications": null,
+      "previousPostpartumComplications": null
+    },
+    "pregnancies/create/withHistory": {
+      "personId": 2,
+      "lmp": "2023-12-01",
+      "edd": "2024-09-07",
+      "previousPregnancyComplications": {
+        "vaginalBleeding": false,
+        "recurrentMiscarriage": false,
+        "diabetes": true,
+        "epilepsy": false,
+        "heartDisease": false,
+        "preeclampsia": false,
+        "pretermBirth": false
+      },
+      "previousPregnancyDeliveryComplications": {
+        "cesareanSection": true,
+        "assistedDelivery": false,
+        "stillbirthOrMultipleDeaths": false
+      },
+      "previousPostpartumComplications": {
+        "vaginalBleeding": false,
+        "placentaRetention": false,
+        "vaginalFistula": false,
+        "puerperalSepsis": false,
+        "neonatalDeath": false
+      }
+    },
+    "visits/create": {
+      "visitDate": "2024-03-15",
+      "pregnancyDurationInWeeks": 15,
+      "weightInKilo": 65.5,
+      "bloodPressure": "120/80",
+      "tetanusDoseNumber": 1,
+      "tetanusDoseId": 10,
+      "doctorSuggestedNextVisit": "2024-04-15",
+      "appInUrineTest": "Negative",
+      "ogttInUrineTest": "Negative",
+      "fetalHeartbeat": "Normal",
+      "fetalMovement": "Active",
+      "fetalPosition": "Cephalic",
+      "anaemiaOrHemoglobinType": "12.5 g/dL"
+    },
+    "pregnancies/conclude": {
+      "deliveryDate": "2024-09-08",
+      "birthNature": 1,
+      "birthLocationType": 3,
+      "birthLocationDetails": "Sana'a General Hospital",
+      "intrapartumComplications": "None",
+      "postpartumComplications": "None",
+      "newborns": [
+        {
+          "status": 0,
+          "weight": 3200,
+          "gender": 1
+        }
+      ]
+    }
+  },
+  "immunizationRecords": {
+    "update": {
+      "individualId": 1,
+      "doseId": 1,
+      "fieldVisitId": 1,
+      "vaccinationDate": "2024-03-31",
+      "takenIn": "Updated Center",
+      "notes": "Corrected entry"
+    }
+  }
+}

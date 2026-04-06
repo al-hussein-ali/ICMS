@@ -1,9 +1,10 @@
 using FluentValidation;
 using ICMS.Application.DTOs.User;
+using System.Linq;
 
 namespace ICMS.Application.Validators.User
 {
-    internal class UserCreateValidator : AbstractValidator<UserCreateDto>
+    public class UserCreateValidator : AbstractValidator<UserCreateDto>
     {
         public UserCreateValidator()
         {
@@ -22,6 +23,10 @@ namespace ICMS.Application.Validators.User
             RuleFor(x => x.PersonId)
                 .GreaterThanOrEqualTo(1)
                 .WithMessage("Person Id is required.");
+
+            RuleFor(x => x.Roles)
+                .Must(roles => roles == null || roles.All(r => !string.IsNullOrWhiteSpace(r)))
+                .WithMessage("Role names cannot be empty.");
         }
     }
 }

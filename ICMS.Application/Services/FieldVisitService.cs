@@ -1,39 +1,103 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using ICMS.Application.DTOs;
+using ICMS.Application.DTOs.FieldVisit;
 using ICMS.Application.DTOs.Pagination;
+using ICMS.Application.Interfaces;
+using ICMS.Application.Interfaces.Repositories;
 using ICMS.Application.Interfaces.Services;
+using ICMS.Application.Extensions;
+using ICMS.Domain.Entites.Visits;
+using ICMS.Domain.Exceptions;
+using ICMS.Domain.ValueObjects;
 
 namespace ICMS.Application.Services
 {
     public class FieldVisitService : IFieldVisitService
     {
-        public Task<IReadOnlyList<TempDto>> GetAllAsync(PaginationParams paginationParams, CancellationToken ct = default)
+        private readonly IUnitOfWork _unitOfWork;
+
+        public FieldVisitService(IUnitOfWork unitOfWork)
         {
-            throw new NotImplementedException();
+            _unitOfWork = unitOfWork;
         }
 
-        public Task<TempDto?> GetByIdAsync(int id, CancellationToken ct = default)
+        public async Task<PagedResult<FieldVisitReadDto>> GetAllAsync(PaginationParams paginationParams, CancellationToken ct = default)
         {
-            throw new NotImplementedException();
-        }
-        public Task<TempDto> AddAsync(TempDto entity, CancellationToken ct = default)
-        {
-            throw new NotImplementedException();
-        }
+            var query = _unitOfWork.FieldVisitRepository.GetQueryable()
+                .Select(fv => fv.ToReadDto());
 
-        public Task<bool> DeleteAsync(TempDto entity, CancellationToken ct = default)
-        {
-            throw new NotImplementedException();
+            return query.ApplyPagination(paginationParams.PageNumber, paginationParams.PageSize);
         }
 
-
-        public Task<bool> UpdateAsync(TempDto updatedEntity, CancellationToken ct = default)
+        public async Task<FieldVisitDetailsDto> GetByIdAsync(int id, CancellationToken ct = default)
         {
-            throw new NotImplementedException();
+            var fieldVisit = await _unitOfWork.FieldVisitRepository.GetByIdWithDetailsAsync(id, ct);
+
+            if (fieldVisit == null)
+                throw new NotFoundException($"Field visit with ID {id} not found.");
+
+            return fieldVisit.ToDetailsDto();
+        }
+
+        public async Task<FieldVisitReadDto> AddAsync(FieldVisitCreateDto dto, CancellationToken ct = default)
+        {
+            var fieldVisit = FieldVisit.Create(dto.VisitDate, dto.TargetedLocation);
+
+            // Add field workers if provided
+            if (dto.FieldWorkerUserIds != null && dto.FieldWorkerUserIds.Any())
+            {
+                await _unitOfWork.FieldVisitRepository.AddAsync(fieldVisit, ct);
+                await _unitOfWork.SaveChangesAsync(ct);
+
+                foreach (var userId in dto.FieldWorkerUserIds)
+                {
+                    var fvu = FieldVisitUser.Create(fieldVisit.Id, userId);
+                    fieldVisit.AddFieldWorker(fvu);
+                }
+
+                await _unitOfWork.SaveChangesAsync(ct);
+            }
+            else
+            {
+                await _unitOfWork.FieldVisitRepository.AddAsync(fieldVisit, ct);
+                await _unitOfWork.SaveChangesAsync(ct);
+            }
+
+            return fieldVisit.ToReadDto();
+        }
+
+        public async Task<bool> UpdateAsync(int id, FieldVisitCreateDto dto, CancellationToken ct = default)
+        {
+            var fieldVisit = await _unitOfWork.FieldVisitRepository.GetByIdAsync(id, ct);
+
+            if (fieldVisit == null)
+                throw new NotFoundException($"Field visit with ID {id} not found.");
+
+            fieldVisit.UpdateVisitInfo(dto.VisitDate, dto.TargetedLocation);
+
+            return await _unitOfWork.SaveChangesAsync(ct) > 0;
+        }
+
+        public async Task<bool> DeleteAsync(int id, CancellationToken ct = default)
+        {
+            var fieldVisit = await _unitOfWork.FieldVisitRepository.GetByIdAsync(id, ct);
+
+            if (fieldVisit == null)
+                throw new NotFoundException($"Field visit with ID {id} not found.");
+
+            await _unitOfWork.FieldVisitRepository.DeleteAsync(fieldVisit, ct);
+
+            return await _unitOfWork.SaveChangesAsync(ct) > 0;
+        }
+
+        public async Task<bool> MarkCompletedAsync(int id, CancellationToken ct = default)
+        {
+            var fieldVisit = await _unitOfWork.FieldVisitRepository.GetByIdAsync(id, ct);
+
+            if (fieldVisit == null)
+                throw new NotFoundException($"Field visit with ID {id} not found.");
+
+            fieldVisit.MarkCompleted();
+
+            return await _unitOfWork.SaveChangesAsync(ct) > 0;
         }
     }
 }

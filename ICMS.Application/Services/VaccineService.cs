@@ -1,4 +1,4 @@
-﻿using FluentValidation;
+using FluentValidation;
 using ICMS.Application.DTOs;
 using ICMS.Application.DTOs.Pagination;
 using ICMS.Application.DTOs.Vaccine;
@@ -56,7 +56,8 @@ public class VaccineService(IUnitOfWork unitOfWork,IValidator<VaccineCreateDto> 
             updatedEntity.VaccineCode,
             updatedEntity.Description,
             updatedEntity.IsActive,
-            updatedEntity.TotalDosages);
+            updatedEntity.TotalDosages,
+            updatedEntity.Audience);
 
 
         return await unitOfWork.SaveChangesAsync() > 0;

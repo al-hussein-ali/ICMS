@@ -461,7 +461,7 @@ namespace ICMS.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "PreviousPostartumComplications",
+                name: "PreviousPostpartumComplications",
                 columns: table => new
                 {
                     PreviousPostartumComplicationsId = table.Column<int>(type: "integer", nullable: false)
@@ -676,7 +676,7 @@ namespace ICMS.Infrastructure.Migrations
 
             migrationBuilder.CreateIndex(
                 name: "IX_PreviousPostartumComplications_PregnancyDetailId",
-                table: "PreviousPostartumComplications",
+                table: "PreviousPostpartumComplications",
                 column: "PregnancyDetailId",
                 unique: true);
 
@@ -773,7 +773,7 @@ namespace ICMS.Infrastructure.Migrations
                 name: "Newborns");
 
             migrationBuilder.DropTable(
-                name: "PreviousPostartumComplications");
+                name: "PreviousPostpartumComplications");
 
             migrationBuilder.DropTable(
                 name: "PreviousPregnancyComplications");

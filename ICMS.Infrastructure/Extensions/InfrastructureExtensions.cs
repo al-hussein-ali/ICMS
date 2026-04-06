@@ -1,4 +1,4 @@
-﻿using EntityFramework.Exceptions.PostgreSQL;
+using EntityFramework.Exceptions.PostgreSQL;
 using ICMS.Application.Interfaces;
 using ICMS.Application.Interfaces.Repositories;
 using ICMS.Application.Interfaces.Services;
@@ -12,12 +12,15 @@ namespace ICMS.Infrastructure.Extensions
 {
     public static class InfrastructureExtensions
     {
-        public static IServiceCollection AddInfrastructure(this IServiceCollection services,string connectionString)
+        public static IServiceCollection AddInfrastructure(this IServiceCollection services, string connectionString, bool isTesting = false)
         {
-            services.AddDbContextPool<AppDbContext>(options =>  {
-                
-                options.UseNpgsql(connectionString).UseExceptionProcessor();
-            });
+            if (!isTesting)
+            {
+                services.AddDbContextPool<AppDbContext>(options =>
+                {
+                    options.UseNpgsql(connectionString).UseExceptionProcessor();
+                });
+            }
 
 
             services.AddScoped(typeof(IRepository<,>), typeof(Repository<,>));
@@ -31,7 +34,14 @@ namespace ICMS.Infrastructure.Extensions
             services.AddScoped<IVaccineService, VaccineService>();
             services.AddScoped<IDoseService, DoseService>();
             services.AddScoped<IImmunizationRecordService, ImmunizationRecordService>();
-
+            services.AddScoped<IImmunizationService, ImmunizationService>();
+            services.AddScoped<IFieldVisitService, FieldVisitService>();
+            services.AddScoped<ILocationService, LocationService>();
+            services.AddScoped<IReproductiveHealthService, ReproductiveHealthService>();
+            services.AddScoped<ISchedulesService, SchedulesService>();
+            services.AddScoped<IIdentityService, IdentityService>();
+            services.AddScoped<IUserService, UserService>();
+            services.AddScoped<IRoleService, RoleService>();
 
             return services;
         }

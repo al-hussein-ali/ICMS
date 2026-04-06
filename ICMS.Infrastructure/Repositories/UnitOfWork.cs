@@ -1,11 +1,14 @@
-﻿using ICMS.Application.Interfaces;
+using ICMS.Application.Interfaces;
 using ICMS.Application.Interfaces.Repositories;
 using ICMS.Infrastructure.Persistence.Data;
-using Microsoft.EntityFrameworkCore;
+using ICMS.Infrastructure.Repositories.Clinical;
+using ICMS.Infrastructure.Repositories.Geography;
+using ICMS.Infrastructure.Repositories.Identity;
+using ICMS.Infrastructure.Repositories.Maternal;
+using ICMS.Infrastructure.Repositories.Visits;
+using ICMS.Infrastructure.Repositories.Audit; // Assuming TransactionRepository might be here
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace ICMS.Infrastructure.Repositories
@@ -15,44 +18,30 @@ namespace ICMS.Infrastructure.Repositories
         private readonly AppDbContext _context;
 
         public IBatchRepository BatchRepository { get; }
-
         public IDoseReportRepository DoseReportRepository { get; }
-
         public IDoseRepository DoseRepository { get; }
-
         public IFieldVisitRepository FieldVisitRepository { get; }
-
         public IHealthAdvisoryRepository HealthAdvisoryRepository { get; }
-
         public IImmunizationRecordRepository ImmunizationRecordRepository { get; }
-
         public INewbornRepository NewbornRepository { get; }
-
         public IPersonRepository PersonRepository { get; }
-
         public IPregnancyDetailsRepository PregnancyDetailsRepository { get; }
-
         public IPregnantWomanRepository PregnantWomanRepository { get; }
-
         public IPreviousPregnancyComplicationsRepository PreviousPregnancyComplicationsRepository { get; }
-
-        public IPreviousPostartumComplicationsRepository PreviousPostartumComplicationsRepository { get; }
-
+        public IPreviousPostpartumComplicationsRepository PreviousPostpartumComplicationsRepository { get; }
         public IPreviousPregnancyDeliveryComplicationsRepository PreviousPregnancyDeliveryComplicationsRepository { get; }
-
         public IRoleRepository RoleRepository { get; }
-
         public ITransactionRepository TransactionRepository { get; }
-
         public IUserRepository UserRepository { get; }
-
+        public IUserRoleRepository UserRoleRepository { get; }
         public IVaccinatedIndividualRepository VaccinatedIndividualRepository { get; }
-
         public IVaccineRepository VaccineRepository { get; }
-
+        public IGovernorateRepository GovernorateRepository { get; }
+        public IDirectorateRepository DirectorateRepository { get; }
+        public INeighborhoodRepository NeighborhoodRepository { get; }
+        public ISubNeighborhoodRepository SubNeighborhoodRepository { get; }
         public IVisitDetailsRepository VisitDetailsRepository { get; }
-
-
+        public IVaccinationScheduleRepository VaccinationScheduleRepository { get; }
 
         public UnitOfWork(AppDbContext context)
         {
@@ -61,7 +50,6 @@ namespace ICMS.Infrastructure.Repositories
             BatchRepository = new BatchRepository(_context);
             DoseRepository = new DoseRepository(_context);
             DoseReportRepository = new DoseReportRepository(_context);
-            DoseRepository = new DoseRepository(_context);
             FieldVisitRepository = new FieldVisitRepository(_context);
             HealthAdvisoryRepository = new HealthAdvisoryRepository(_context);
             ImmunizationRecordRepository = new ImmunizationRecordRepository(_context);
@@ -70,49 +58,49 @@ namespace ICMS.Infrastructure.Repositories
             PregnancyDetailsRepository = new PregnancyDetailsRepository(_context);
             PregnantWomanRepository = new PregnantWomanRepository(_context);
             PreviousPregnancyComplicationsRepository = new PreviousPregnancyComplicationsRepository(_context);
-            PreviousPostartumComplicationsRepository = new PreviousPostartumComplicationsRepository(_context);
+            PreviousPostpartumComplicationsRepository = new PreviousPostpartumComplicationsRepository(_context);
             PreviousPregnancyDeliveryComplicationsRepository = new PreviousPregnancyDeliveryComplicationsRepository(_context);
             RoleRepository = new RoleRepository(_context);
             TransactionRepository = new TransactionRepository(_context);
             UserRepository = new UserRepository(_context);
+            UserRoleRepository = new UserRoleRepository(_context);
             VaccinatedIndividualRepository = new VaccinatedIndividualRepository(_context);
             VaccineRepository = new VaccineRepository(_context);
+            GovernorateRepository = new GovernorateRepository(_context);
+            DirectorateRepository = new DirectorateRepository(_context);
+            NeighborhoodRepository = new NeighborhoodRepository(_context);
+            SubNeighborhoodRepository = new SubNeighborhoodRepository(_context);
             VisitDetailsRepository = new VisitDetailsRepository(_context);
+            VaccinationScheduleRepository = new VaccinationScheduleRepository(_context);
         }
-
 
         public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
-
-            return await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            return await _context.SaveChangesAsync(cancellationToken);
         }
 
         public async Task ExecuteInTransactionAsync(Func<Task> action)
         {
-            if (_context.Database.CurrentTransaction != null)
+            var isInMemory = _context.Database.ProviderName == "Microsoft.EntityFrameworkCore.InMemory";
+            if (isInMemory || _context.Database.CurrentTransaction != null)
             {
-                await action().ConfigureAwait(false);
+                await action();
+                await _context.SaveChangesAsync();
                 return;
             }
 
             await using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {
-                await action().ConfigureAwait(false);
-                await _context.SaveChangesAsync().ConfigureAwait(false);
-                await transaction.CommitAsync().ConfigureAwait(false);
+                await action();
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
             }
             catch
             {
-                await transaction.RollbackAsync().ConfigureAwait(false);
+                await transaction.RollbackAsync();
                 throw;
-            }
-            finally
-            {
-
-                await transaction.DisposeAsync().ConfigureAwait(false);
-                await DisposeAsync();
             }
         }
 
@@ -125,7 +113,7 @@ namespace ICMS.Infrastructure.Repositories
         public async ValueTask DisposeAsync()
         {
             if (_context != null)
-                await _context.DisposeAsync().ConfigureAwait(false);
+                await _context.DisposeAsync();
 
             GC.SuppressFinalize(this);
         }

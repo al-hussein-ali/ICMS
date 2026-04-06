@@ -1,103 +1,41 @@
-﻿using FluentValidation;
+using FluentValidation;
 using ICMS.Application.DTOs.VaccinatedIndividual;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ICMS.Application.Validators.VaccinatedIndividual
 {
     internal class NewFieldVaccinatedIndividualCreateValidator : AbstractValidator<NewFieldVaccinatedIndividualDto>
     {
-        public NewFieldVaccinatedIndividualCreateValidator()
+        public NewFieldVaccinatedIndividualCreateValidator(IValidator<ICMS.Application.DTOs.Person.PersonCreateDto> personValidator)
         {
-
-
-            RuleFor(x => x.Area)
-                .NotEmpty()
-                .WithMessage("The Area is required")
-                .MaximumLength(100)
-                .WithMessage("The Area must be at most 100 characters.");
-
-            RuleFor(x => x.Neighborhood)
-                .NotEmpty()
-                .WithMessage("The Neighborhood is required")
-                .MaximumLength(100)
-                .WithMessage("The Neighborhood must be at most 100 characters.");
-
-            RuleFor(x => x.Directorate)
+            RuleFor(x => x.DirectorateId)
                 .NotEmpty()
                 .WithMessage("The Directorate is required")
-                .MaximumLength(60)
-                .WithMessage("The Directorate must be at most 100 characters.");
+                .GreaterThan(0)
+                .WithMessage("DirectorateId must be greater than 0.");
 
-
-            RuleFor(x => x.FirstName)
+            RuleFor(x => x.NeighborhoodId)
                 .NotEmpty()
-                .WithMessage("The First Name is required")
-                .MaximumLength(20)
-                .WithMessage("First Name must be at most 20 characters.");
+                .WithMessage("The Neighborhood is required")
+                .GreaterThan(0)
+                .WithMessage("NeighborhoodId must be greater than 0.");
 
-            RuleFor(x => x.SecondName)
-                .NotEmpty()
-                .WithMessage("The Second Name is required")
-                .MaximumLength(20)
-                .WithMessage("Second Name must be at most 20 characters.");
 
-            When(x => x.ThirdName != null, () =>
-            {
-                RuleFor(x => x.ThirdName)
-                    .MaximumLength(20)
-                    .WithMessage("Third Name must be at most 20 characters.");
-            });
-
-            RuleFor(x => x.LastName)
-                .NotEmpty()
-                .WithMessage("The Last Name is required")
-                .MaximumLength(20)
-                .WithMessage("Last Name must be at most 20 characters.");
-
-            RuleFor(x => x.DateOfBirth)
+            RuleFor(x => x.Person)
                 .NotNull()
-                .WithMessage("The Date of Birth is required");
-
-            RuleFor(x => x.PhoneNumber)
-                .NotEmpty()
-                .WithMessage("The Phone Number is required");
-
-            RuleFor(x => x.Gender)
-                .NotEmpty()
-                .WithMessage("The Gender value is required.");
-
+                .WithMessage("Person details are required.")
+                .SetValidator(personValidator);
 
             RuleFor(x => x.DoseId)
-                .GreaterThanOrEqualTo(1)
-                .WithMessage("Dose Id is required.");
-
-
-            RuleFor(x => x.FieldVisitId)
-                .GreaterThanOrEqualTo(1)
-                .WithMessage("FieldVisitId must be greater than 0 when provided.");
-
+                .GreaterThan(0)
+                .WithMessage("Valid DoseId is required.");
 
             RuleFor(x => x.VaccinationDate)
-                .Must(d => d != default)
                 .NotEmpty()
                 .WithMessage("Vaccination date is required.");
 
             RuleFor(x => x.TakenIn)
                 .NotEmpty()
-                .WithMessage("Taken In is required.")
-                .MaximumLength(200)
-                .WithMessage("TakenIn must be at most 200 characters.");
-
-            When(x => x.Note != null, () =>
-            {
-                RuleFor(x => x.Note)
-                    .MaximumLength(500)
-                    .WithMessage("Note must be at most 500 characters.");
-            });
+                .WithMessage("TakenIn (location) is required.");
         }
     }
 }

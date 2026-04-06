@@ -1,6 +1,4 @@
-using System;
-
 namespace ICMS.Application.DTOs.VaccinatedIndividual
 {
-    public record VaccinatedIndividualReadDto(int Id, string CardNumber, string Directorate, string Area, string Neighborhood, int PersonId);
+    public record VaccinatedIndividualReadDto(int Id, string CardNumber, int DirectorateId, int NeighborhoodId, int? SubNeighborhoodId, int PersonId, int? UserId);
 }

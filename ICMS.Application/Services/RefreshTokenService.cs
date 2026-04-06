@@ -1,6 +1,12 @@
-﻿using ICMS.Application.Interfaces.Repositories;
+using ICMS.Application.Interfaces.Repositories;
 using ICMS.Application.Interfaces.Services;
-using ICMS.Domain.Entites;
+using ICMS.Domain.Entites.Common;
+using ICMS.Domain.Entites.Identity;
+using ICMS.Domain.Entites.Clinical;
+using ICMS.Domain.Entites.Maternal;
+using ICMS.Domain.Entites.Visits;
+using ICMS.Domain.Entites.Audit;
+using ICMS.Domain.Entites.Geography;
 using System.Security.Cryptography;
 
 namespace ICMS.Application.Services

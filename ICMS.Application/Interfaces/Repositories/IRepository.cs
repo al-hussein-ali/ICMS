@@ -1,4 +1,4 @@
-﻿using FluentValidation;
+using FluentValidation;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,6 +24,9 @@ namespace ICMS.Application.Interfaces.Repositories
 
         Task<bool> ExistAsync(TKey id, CancellationToken cancellationToken = default);
         Task<bool> ExistAsync(Expression<Func<TEntity, bool>> predicate, CancellationToken cancellationToken = default);
+        Task<TEntity?> FirstOrDefaultAsync(Expression<Func<TEntity, bool>> predicate, CancellationToken cancellationToken = default);
+
+        Task<IReadOnlyList<TEntity>> GetPagedAsync(int pageNumber, int pageSize, bool track = false, CancellationToken cancellationToken = default, params Expression<Func<TEntity, object>>[] includes);
 
         IQueryable<TEntity> GetQueryable(bool track = false, CancellationToken cancellationToken = default, params Expression<Func<TEntity, object>>[] includes);
 

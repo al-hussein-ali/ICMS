@@ -1,7 +1,11 @@
-﻿using ICMS.Domain.Entites;
+using ICMS.Domain.Entites.Common;
+using ICMS.Domain.Entites.Identity;
+using ICMS.Domain.Entites.Clinical;
+using ICMS.Domain.Entites.Maternal;
+using ICMS.Domain.Entites.Visits;
+using ICMS.Domain.Entites.Audit;
+using ICMS.Domain.Entites.Geography;
 using ICMS.Infrastructure.Persistence.Config;
-
-//using ICMS.Infrastructure.Persistence.Config;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -17,6 +21,12 @@ namespace ICMS.Infrastructure.Persistence.Data
         {
         }
 
+        public DbSet<Governorate> Governorates { get; set; }
+        public DbSet<Directorate> Directorates { get; set; }
+        public DbSet<Neighborhood> Neighborhoods { get; set; }
+        public DbSet<SubNeighborhood> SubNeighborhoods { get; set; }
+        public DbSet<VaccinationSchedule> VaccinationSchedules { get; set; }
+
         public DbSet<Batch> Batches { get; set; }
         public DbSet<Dose> Doses { get; set; }
         public DbSet<DoseReport> DoseReports { get; set; }
@@ -28,7 +38,7 @@ namespace ICMS.Infrastructure.Persistence.Data
         public DbSet<Person> People { get; set; }
         public DbSet<PregnancyDetails> PregnancyDetails { get; set; }
         public DbSet<PregnantWoman> PregnantWomen { get; set; }
-        public DbSet<PreviousPostartumComplications> PreviousPostartumComplications { get; set; }
+        public DbSet<PreviousPostpartumComplications> PreviousPostpartumComplications { get; set; }
         public DbSet<PreviousPregnancyComplications> PreviousPregnancyComplications { get; set; }
         public DbSet<PreviousPregnancyDeliveryComplications> PreviousPregnancyDeliveryComplications { get; set; }
         public DbSet<Role> Roles { get; set; }
@@ -44,7 +54,10 @@ namespace ICMS.Infrastructure.Persistence.Data
         {
             base.OnModelCreating(modelBuilder);
 
-            modelBuilder.ApplyConfigurationsFromAssembly(typeof(PersonConfig).Assembly);
+            modelBuilder.ApplyConfigurationsFromAssembly(typeof(ICMS.Infrastructure.Persistence.Config.Identity.PersonConfig).Assembly);
+            modelBuilder.SeedGeographicalData();
+
         }
+
     }
 }

@@ -1,4 +1,4 @@
-﻿using FluentValidation;
+using FluentValidation;
 using ICMS.Application.DTOs.Person;
 using ICMS.Application.DTOs.VaccinatedIndividual;
 
@@ -8,28 +8,17 @@ namespace ICMS.Application.Validators.VaccinatedIndividual
     {
         public  VaccinatedIndividualCreateValidator(IValidator<PersonCreateDto> personCreateValidator)
         {
-
-
-
-            RuleFor(x => x.Area)
-                .NotEmpty()
-                .WithMessage("The Area is required")
-                .MaximumLength(100)
-                .WithMessage("The Area must be at most 100 characters.");
-
-            RuleFor(x => x.Neighborhood)
-                .NotEmpty()
-                .WithMessage("The Neighborhood is required")
-                .MaximumLength(100)
-                .WithMessage("The Neighborhood must be at most 100 characters.");
-
-            RuleFor(x => x.Directorate)
+            RuleFor(x => x.DirectorateId)
                 .NotEmpty()
                 .WithMessage("The Directorate is required")
-                .MaximumLength(60)
-                .WithMessage("The Directorate must be at most 100 characters.");
-     
+                .GreaterThan(0)
+                .WithMessage("DirectorateId must be greater than 0.");
 
+            RuleFor(x => x.NeighborhoodId)
+                .NotEmpty()
+                .WithMessage("The Neighborhood is required")
+                .GreaterThan(0)
+                .WithMessage("NeighborhoodId must be greater than 0.");
 
             RuleFor(x => x)
                 .Must(x => x.PersonId != null || x.PersonCreateDto != null)
@@ -46,7 +35,7 @@ namespace ICMS.Application.Validators.VaccinatedIndividual
             When(x => x.PersonCreateDto != null, () =>
             {
                 RuleFor(x => x.PersonCreateDto)
-                    .SetValidator(personCreateValidator);
+                    .SetValidator(personCreateValidator!);
             });
 
         }

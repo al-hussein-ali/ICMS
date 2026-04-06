@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,7 +8,14 @@ using ICMS.Application.DTOs.BulkResult;
 using ICMS.Application.DTOs.ImmunizationRecord;
 using ICMS.Application.DTOs.Pagination;
 using ICMS.Application.DTOs.VaccinatedIndividual;
-using ICMS.Domain.Entites;
+using ICMS.Application.DTOs.Account;
+using ICMS.Domain.Entites.Common;
+using ICMS.Domain.Entites.Identity;
+using ICMS.Domain.Entites.Clinical;
+using ICMS.Domain.Entites.Maternal;
+using ICMS.Domain.Entites.Visits;
+using ICMS.Domain.Entites.Audit;
+using ICMS.Domain.Entites.Geography;
 using ICMS.Domain.ValueObjects;
 
 namespace ICMS.Application.Interfaces.Services
@@ -29,5 +36,7 @@ namespace ICMS.Application.Interfaces.Services
 
         Task<bool> GiveDose(ImmunizationRecordCreateDto dto, CancellationToken ct = default);
         Task<BulkInsertResult> BulkInsertIndividualAsync(List<NewFieldVaccinatedIndividualDto> newFieldVaccinatedIndividuals, CancellationToken ct = default);
+        Task<BulkInsertResult> BulkUpdateFieldVisitIndividualAsync(List<UpdateFieldVisitIndividualDto> dtos, CancellationToken ct = default);
+        Task<GeneratedAccountDto> GenerateAccountAsync(int id, CancellationToken ct = default);
     }
 }

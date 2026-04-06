@@ -1,15 +1,13 @@
-﻿using ICMS.Application.DTOs.ImmunizationRecord;
+using ICMS.Application.DTOs.ImmunizationRecord;
 using ICMS.Application.DTOs.Pagination;
 using ICMS.Application.DTOs.VaccinatedIndividual;
 using ICMS.Application.Interfaces.Services;
 using ICMS.Domain.ValueObjects;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using System.Runtime.InteropServices;
 
 namespace ICMS.API.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/vaccinated-individuals")]
     [ApiController]
     public class VaccinatedIndividualsController(IVaccinatedIndividualService vaccinatedIndividualService) : ControllerBase
     {
@@ -22,7 +20,7 @@ namespace ICMS.API.Controllers
             return Ok(individuals);
         }
 
-        [HttpGet("byId/{id}", Name = "GetVaccintedIndividualById")]
+        [HttpGet("{id}", Name = "GetVaccinatedIndividualById")]
         public async Task<ActionResult<VaccinatedIndividualDetailsDto>> GetByIdAsync([FromRoute] int id)
         {
             var existingIndividual = await vaccinatedIndividualService.GetByIdAsync(id);
@@ -31,33 +29,33 @@ namespace ICMS.API.Controllers
         }
 
 
-        [HttpGet("byCardNumber/{cardNumber}",Name = "GetVaccinatedIndividualByCardNumber")]
+        [HttpGet("card/{cardNumber}", Name = "GetVaccinatedIndividualByCardNumber")]
         public async Task<ActionResult<VaccinatedIndividualDetailsDto>> GetByCardNumberAsync([FromRoute] string cardNumber)
         {
             var vaccinatedIndividual = await vaccinatedIndividualService.GetByCardNumberAsync(cardNumber);
 
             return Ok(vaccinatedIndividual);
         }
-   
 
-        [HttpPost]
+
+        [HttpPost("create")]
         public async Task<IActionResult> AddAsync([FromBody] VaccinatedIndividualCreateDto vaccinatedIndividualCreateDto)
         {
             var newIndividual = await vaccinatedIndividualService.AddAsync(vaccinatedIndividualCreateDto);
 
-            return CreatedAtRoute("GetVaccintedIndividualById", new { id = newIndividual.Id }, newIndividual);
+            return CreatedAtRoute("GetVaccinatedIndividualById", new { id = newIndividual.Id }, newIndividual);
         }
 
 
-        [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateAsync([FromRoute] int id,VaccinatedIndividualCreateDto vaccinatedIndividualCreateDto)
+        [HttpPut("update/{id}")]
+        public async Task<IActionResult> UpdateAsync([FromRoute] int id, VaccinatedIndividualCreateDto vaccinatedIndividualCreateDto)
         {
             await vaccinatedIndividualService.UpdateAsync(id, vaccinatedIndividualCreateDto);
 
             return NoContent();
         }
 
-        [HttpDelete("{id}")]
+        [HttpDelete("delete/{id}")]
         public async Task<IActionResult> DeleteAsync([FromRoute] int id)
         {
             await vaccinatedIndividualService.DeleteAsync(id);
@@ -65,22 +63,46 @@ namespace ICMS.API.Controllers
             return NoContent();
         }
 
-        [HttpPost("/takeDose")]
-        public async Task<IActionResult> TakeDose([FromBody] ImmunizationRecordCreateDto dto)
+        [HttpPost("{individualId}/vaccinations/create")]
+        public async Task<IActionResult> TakeDose([FromRoute] int individualId, [FromBody] ImmunizationRecordCreateDto dto)
         {
+            // Ensure ID from route matches body or just use route ID
+            if (individualId != dto.IndividualId)
+            {
+                return BadRequest("ID mismatch");
+            }
+
             await vaccinatedIndividualService.GiveDose(dto);
 
             return Accepted();
         }
 
-        [HttpPost("new-Individuals")]
+        [HttpPost("bulk/create")]
         public async Task<IActionResult> BulkInsertNewIndividuals([FromBody] List<NewFieldVaccinatedIndividualDto> newFieldVaccinatedIndividuals)
         {
-            if (newFieldVaccinatedIndividuals == null || !newFieldVaccinatedIndividuals.Any())
+            if (!newFieldVaccinatedIndividuals.Any())
                 return BadRequest("No records were found.");
 
             var result = await vaccinatedIndividualService.BulkInsertIndividualAsync(newFieldVaccinatedIndividuals);
 
+            return Ok(result);
+        }
+
+        [HttpPost("bulk/update")]
+        public async Task<IActionResult> BulkUpdateFieldVisitIndividuals([FromBody] List<UpdateFieldVisitIndividualDto> updateFieldVisitIndividuals)
+        {
+            if (!updateFieldVisitIndividuals.Any())
+                return BadRequest("No records were found.");
+
+            var result = await vaccinatedIndividualService.BulkUpdateFieldVisitIndividualAsync(updateFieldVisitIndividuals);
+
+            return Ok(result);
+        }
+
+        [HttpPost("{id}/account")]
+        public async Task<IActionResult> GenerateAccount([FromRoute] int id)
+        {
+            var result = await vaccinatedIndividualService.GenerateAccountAsync(id);
             return Ok(result);
         }
     }

@@ -15,8 +15,7 @@ namespace ICMS.Application.DTOs.VisitDetails
         int PregnancyDurationInWeeks,
         string AnaemiaOrHemoglobinType,
         bool LegsSwelling,
-        bool VaginalBleeding,
-        byte TetanusDoseNumber
+        bool VaginalBleeding
         );
 
 

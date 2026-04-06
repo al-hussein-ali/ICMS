@@ -1,0 +1,54 @@
+using ICMS.Domain.Entites.Common;
+using ICMS.Domain.Entites.Identity;
+using ICMS.Domain.Entites.Clinical;
+using ICMS.Domain.Entites.Maternal;
+using ICMS.Domain.Entites.Visits;
+using ICMS.Domain.Entites.Audit;
+using ICMS.Domain.Entites.Geography;
+using ICMS.Domain.Enums;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection.Emit;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace ICMS.Infrastructure.Persistence.Config.Identity
+{
+    public class PersonConfig : IEntityTypeConfiguration<Person>
+    {
+        private string[] _genders = { "???", "????" };
+        public void Configure(EntityTypeBuilder<Person> builder)
+        {
+            builder.HasKey(p => p.Id);
+            builder.Property(p => p.Id).HasColumnName("PersonId");
+
+            builder.Ignore(p => p.FullName);
+
+            builder.Property(p => p.FirstName).HasMaxLength(20).IsUnicode(true).IsRequired();
+            builder.Property(p => p.SecondName).HasMaxLength(20).IsUnicode(true).IsRequired();
+            builder.Property(p => p.ThirdName).HasMaxLength(20).IsUnicode(true).IsRequired(false);
+            builder.Property(p => p.LastName).HasMaxLength(20).IsUnicode(true).IsRequired();
+
+
+            builder.HasIndex(p => new {p.PhoneNumber,p.FirstName,p.LastName,p.DateOfBirth}).IsUnique().HasFilter("\"IsDeleted\" = false");
+
+    ;
+
+            builder.Property(p => p.DateOfBirth).IsRequired();
+
+            builder.Property(p => p.Gender).HasConversion( v => v == Gender.Male ? _genders[0] : _genders[1], v => v.Equals(_genders[0]) ? Gender.Male : Gender.Female);
+
+            builder.Property(p => p.CreatedAt).HasDefaultValueSql("TIMEZONE('utc', NOW())").ValueGeneratedOnAdd();
+
+            builder.Property(p => p.IsDeleted).HasDefaultValue(false);
+
+
+
+
+
+        }
+    }
+}

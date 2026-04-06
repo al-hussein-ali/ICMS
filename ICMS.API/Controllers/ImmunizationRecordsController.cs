@@ -1,4 +1,4 @@
-﻿using ICMS.Application.DTOs.ImmunizationRecord;
+using ICMS.Application.DTOs.ImmunizationRecord;
 using ICMS.Application.DTOs.Pagination;
 using ICMS.Application.Interfaces.Services;
 using ICMS.Domain.ValueObjects;
@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace ICMS.API.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/immunization-records")]
     [ApiController]
     public class ImmunizationRecordsController : ControllerBase
     {
@@ -32,7 +32,7 @@ namespace ICMS.API.Controllers
             return Ok(immunizationRecord);
         }
 
-        [HttpPut("{id}")]
+        [HttpPut("update/{id}")]
         public async Task<IActionResult> UpdateAsync([FromRoute] Guid id, [FromBody] ImmunizationRecordCreateDto dto)
         {
             await _immunizationRecordService.UpdateAsync(id, dto);
@@ -40,7 +40,7 @@ namespace ICMS.API.Controllers
             return NoContent();
         }
 
-        [HttpDelete("{id}")]
+        [HttpDelete("delete/{id}")]
         public async Task<IActionResult> DeleteAsync([FromRoute] Guid id)
         {
             await _immunizationRecordService.DeleteAsync(id);

@@ -1,23 +1,21 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using ICMS.Application.DTOs;
+using ICMS.Application.DTOs.FieldVisit;
 using ICMS.Application.DTOs.Pagination;
+using ICMS.Domain.ValueObjects;
 
 namespace ICMS.Application.Interfaces.Services
 {
     public interface IFieldVisitService
     {
-        Task<IReadOnlyList<TempDto>> GetAllAsync(PaginationParams paginationParams, CancellationToken ct = default);
+        Task<PagedResult<FieldVisitReadDto>> GetAllAsync(PaginationParams paginationParams, CancellationToken ct = default);
 
-        Task<TempDto?> GetByIdAsync(int id, CancellationToken ct = default);
+        Task<FieldVisitDetailsDto> GetByIdAsync(int id, CancellationToken ct = default);
 
-        Task<TempDto> AddAsync(TempDto entity, CancellationToken ct = default);
+        Task<FieldVisitReadDto> AddAsync(FieldVisitCreateDto dto, CancellationToken ct = default);
 
-        Task<bool> UpdateAsync(TempDto updatedEntity, CancellationToken ct = default);
+        Task<bool> UpdateAsync(int id, FieldVisitCreateDto dto, CancellationToken ct = default);
 
-        Task<bool> DeleteAsync(TempDto entity, CancellationToken ct = default);
+        Task<bool> DeleteAsync(int id, CancellationToken ct = default);
+
+        Task<bool> MarkCompletedAsync(int id, CancellationToken ct = default);
     }
 }
