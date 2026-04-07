@@ -19,7 +19,11 @@ namespace ICMS.Infrastructure.Persistence.Config.Visits
             builder.Property(fv => fv.Id).HasColumnName("FieldVisitId");
 
             builder.Property(fv => fv.VisitDate).IsRequired();
-            builder.Property(fv => fv.TargetedLocation).HasMaxLength(250).IsUnicode(true).IsRequired();
+            builder.HasOne(fv => fv.SubNeighborhood)
+                   .WithMany()
+                   .HasForeignKey(fv => fv.SubNeighborhoodId)
+                   .OnDelete(DeleteBehavior.Restrict);
+                   
             builder.Property(fv => fv.IsCompleted).HasDefaultValue(false);
 
 

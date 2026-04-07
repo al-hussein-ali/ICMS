@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using FluentValidation;
 using ICMS.Application.DTOs.FieldVisit;
 
@@ -14,9 +15,8 @@ namespace ICMS.Application.Validators.FieldVisit
                 .GreaterThanOrEqualTo(DateOnly.FromDateTime(DateTime.Today))
                 .WithMessage("Visit date cannot be in the past.");
 
-            RuleFor(x => x.TargetedLocation)
-                .NotEmpty().WithMessage("Targeted location is required.")
-                .MaximumLength(200).WithMessage("Targeted location must be at most 200 characters.");
+            RuleFor(x => x.SubNeighborhoodId)
+                .GreaterThan(0).WithMessage("A valid SubNeighborhood ID is required.");
 
             RuleFor(x => x.FieldWorkerUserIds)
                 .Must(ids => ids == null || ids.Count > 0)

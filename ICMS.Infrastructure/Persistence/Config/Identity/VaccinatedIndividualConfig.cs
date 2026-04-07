@@ -44,6 +44,11 @@ namespace ICMS.Infrastructure.Persistence.Config.Identity
                 .HasForeignKey<VaccinatedIndividual>(vi => vi.UserId)
                 .OnDelete(DeleteBehavior.SetNull);
 
+            builder.HasOne(vi => vi.Directorate)
+                .WithMany()
+                .HasForeignKey(vi => vi.DirectorateId)
+                .OnDelete(DeleteBehavior.Restrict);
+
             builder.Navigation(nameof(VaccinatedIndividual.ImmunizationRecords))?
                 .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasField("_immunizationRecords");

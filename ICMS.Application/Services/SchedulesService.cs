@@ -31,5 +31,13 @@ namespace ICMS.Application.Services
 
             return individual.Schedules.Select(s => s.ToReadDto()).ToList();
         }
+
+        public async Task<IEnumerable<MissedScheduleReadDto>> GetMissedSchedulesDetailedAsync(MissedScheduleQueryDto query, CancellationToken ct = default)
+        {
+            var toDate = query.ToDate ?? DateOnly.FromDateTime(DateTime.UtcNow.AddHours(3));
+
+            return await _unitOfWork.VaccinationScheduleRepository
+                .GetMissedSchedulesDetailedAsync(query.FromDate, toDate, ct);
+        }
     }
 }

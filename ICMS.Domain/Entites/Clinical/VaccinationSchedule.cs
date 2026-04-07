@@ -50,5 +50,10 @@ namespace ICMS.Domain.Entites.Clinical
             ScheduledDate = newScheduledDate;
             Status = ScheduleStatus.Pending;
         }
+
+        public void MarkAsMissed()
+        {
+            Status = ScheduleStatus.Missed;
+        }
     }
 }

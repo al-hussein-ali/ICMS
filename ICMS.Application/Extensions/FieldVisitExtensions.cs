@@ -11,7 +11,8 @@ namespace ICMS.Application.Extensions
             return new FieldVisitReadDto(
                 fv.Id,
                 fv.VisitDate,
-                fv.TargetedLocation,
+                fv.SubNeighborhoodId,
+                fv.SubNeighborhood?.Name ?? string.Empty,
                 fv.IsCompleted
             );
         }
@@ -21,7 +22,8 @@ namespace ICMS.Application.Extensions
             return new FieldVisitDetailsDto(
                 fv.Id,
                 fv.VisitDate,
-                fv.TargetedLocation,
+                fv.SubNeighborhoodId,
+                fv.SubNeighborhood?.Name ?? string.Empty,
                 fv.IsCompleted,
                 fv.FieldVisitUsers.Select(fvu => new FieldWorkerDto(fvu.UserId, fvu.FieldVisitId)).ToList(),
                 fv.ImmunizationRecords.Count

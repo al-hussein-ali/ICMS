@@ -42,6 +42,7 @@ namespace ICMS.Infrastructure.Extensions
             services.AddScoped<IIdentityService, IdentityService>();
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<IRoleService, RoleService>();
+            services.AddScoped<IMissedDoseTrackerService, MissedDoseTrackerService>();
 
             return services;
         }

@@ -1,5 +1,6 @@
 using ICMS.Domain.Entites.Clinical;
 using ICMS.Domain.Entites.Common;
+using ICMS.Domain.Entites.Geography;
 using ICMS.Domain.Enums;
 using ICMS.Domain.Exceptions;
 
@@ -22,6 +23,7 @@ namespace ICMS.Domain.Entites.Identity
         public int PersonId { get; private set; }
         public User? User { get; private set; }
         public Person Person { get; private set; }
+        public Directorate Directorate { get; private set; } = null!;
 
 
         private VaccinatedIndividual()

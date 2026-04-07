@@ -23,7 +23,8 @@ namespace ICMS.Domain.Entites.Visits
         public IReadOnlyList<FieldVisitUser> FieldVisitUsers => _fieldVisitUsers.AsReadOnly();
         public IReadOnlyList<ImmunizationRecord> ImmunizationRecords => _immunizationRecords.AsReadOnly();
         public DateOnly VisitDate { get; private set; }
-        public string TargetedLocation { get; private set; } = string.Empty;
+        public int SubNeighborhoodId { get; private set; }
+        public SubNeighborhood SubNeighborhood { get; private set; } = null!;
         public bool IsCompleted { get; private set; }
 
 
@@ -31,11 +32,11 @@ namespace ICMS.Domain.Entites.Visits
         {
         }
 
-        public static FieldVisit Create(DateOnly visitDate, string targetedLocation, bool isCompleted = false)
+        public static FieldVisit Create(DateOnly visitDate, int subNeighborhoodId, bool isCompleted = false)
         {
-            if (string.IsNullOrWhiteSpace(targetedLocation)) throw new DomainException("Targeted location is required");
+            if (subNeighborhoodId <= 0) throw new DomainException("Valid SubNeighborhoodId is required");
 
-            return new FieldVisit { VisitDate = visitDate, TargetedLocation = targetedLocation, IsCompleted = isCompleted };
+            return new FieldVisit { VisitDate = visitDate, SubNeighborhoodId = subNeighborhoodId, IsCompleted = isCompleted };
         }
 
         public void AddFieldWorker(FieldVisitUser fvu)
@@ -59,12 +60,12 @@ namespace ICMS.Domain.Entites.Visits
             IsCompleted = true;
         }
 
-        public void UpdateVisitInfo(DateOnly visitDate, string targetedLocation)
+        public void UpdateVisitInfo(DateOnly visitDate, int subNeighborhoodId)
         {
-            if (string.IsNullOrWhiteSpace(targetedLocation)) throw new DomainException("Targeted location is required");
+            if (subNeighborhoodId <= 0) throw new DomainException("Valid SubNeighborhoodId is required");
 
             VisitDate = visitDate;
-            TargetedLocation = targetedLocation;
+            SubNeighborhoodId = subNeighborhoodId;
         }
 
     }

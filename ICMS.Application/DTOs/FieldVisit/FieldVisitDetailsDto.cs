@@ -3,7 +3,8 @@ namespace ICMS.Application.DTOs.FieldVisit
     public record FieldVisitDetailsDto(
         int Id,
         DateOnly VisitDate,
-        string TargetedLocation,
+        int SubNeighborhoodId,
+        string SubNeighborhoodName,
         bool IsCompleted,
         List<FieldWorkerDto> FieldWorkers,
         int ImmunizationRecordsCount);

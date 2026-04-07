@@ -39,7 +39,7 @@ namespace ICMS.Application.Services
 
         public async Task<FieldVisitReadDto> AddAsync(FieldVisitCreateDto dto, CancellationToken ct = default)
         {
-            var fieldVisit = FieldVisit.Create(dto.VisitDate, dto.TargetedLocation);
+            var fieldVisit = FieldVisit.Create(dto.VisitDate, dto.SubNeighborhoodId);
 
             // Add field workers if provided
             if (dto.FieldWorkerUserIds != null && dto.FieldWorkerUserIds.Any())
@@ -71,7 +71,7 @@ namespace ICMS.Application.Services
             if (fieldVisit == null)
                 throw new NotFoundException($"Field visit with ID {id} not found.");
 
-            fieldVisit.UpdateVisitInfo(dto.VisitDate, dto.TargetedLocation);
+            fieldVisit.UpdateVisitInfo(dto.VisitDate, dto.SubNeighborhoodId);
 
             return await _unitOfWork.SaveChangesAsync(ct) > 0;
         }

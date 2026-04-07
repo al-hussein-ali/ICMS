@@ -1,4 +1,6 @@
 using FluentValidation;
+using Hangfire;
+using Hangfire.PostgreSql;
 using ICMS.API.Handlers;
 using ICMS.Application.Validators;
 using ICMS.Infrastructure.Extensions;
@@ -13,6 +15,15 @@ builder.Configuration.AddJsonFile("appsettings.json");
 
 builder.Services.AddInfrastructure(builder.Configuration.GetConnectionString("DefaultConnection")!,
     builder.Environment.IsEnvironment("Testing"));
+
+builder.Services.AddHangfire(configuration => configuration
+    .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+    .UseSimpleAssemblyNameTypeSerializer()
+    .UseRecommendedSerializerSettings()
+    .UsePostgreSqlStorage(c =>
+        c.UseNpgsqlConnection(builder.Configuration.GetConnectionString("DefaultConnection"))));
+
+builder.Services.AddHangfireServer();
 
 builder.Services.AddControllers();
 
@@ -45,6 +56,19 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UseAuthorization();
+
+app.UseHangfireDashboard("/hangfire");
+
+using (var scope = app.Services.CreateScope())
+{
+    var recurringJobManager = scope.ServiceProvider.GetRequiredService<IRecurringJobManager>();
+
+    // Register the missed dose tracker to run daily at midnight
+    recurringJobManager.AddOrUpdate<ICMS.Application.Interfaces.Services.IMissedDoseTrackerService>(
+        "DailyMissedDoseTracker",
+        service => service.MarkMissedDosesAsync(default),
+        Cron.Daily);
+}
 
 app.MapControllers();
 
