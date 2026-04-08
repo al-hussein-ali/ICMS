@@ -1,6 +1,7 @@
 using ICMS.Application.DTOs.Pagination;
 using ICMS.Application.DTOs.User;
 using ICMS.Application.Interfaces.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -9,6 +10,7 @@ namespace ICMS.API.Controllers
 {
     [Route("api/users")]
     [ApiController]
+    [Authorize(Roles = "Admin")]
     public class UsersController(IUserService userService) : ControllerBase
     {
         [HttpGet]
@@ -39,6 +41,30 @@ namespace ICMS.API.Controllers
             if (id != userReadDto.Id) return BadRequest("ID mismatch");
 
             await userService.UpdateAsync(userReadDto);
+            return NoContent();
+        }
+
+        [HttpPut("activate/{id}")]
+        public async Task<IActionResult> ActivateAsync([FromRoute] int id)
+        {
+            var success = await userService.ActivateAsync(id);
+            if (!success) return NotFound();
+            return NoContent();
+        }
+
+        [HttpPut("deactivate/{id}")]
+        public async Task<IActionResult> DeactivateAsync([FromRoute] int id)
+        {
+            var success = await userService.DeactivateAsync(id);
+            if (!success) return NotFound();
+            return NoContent();
+        }
+
+        [HttpPut("change-password/{id}")]
+        public async Task<IActionResult> ChangePasswordAsync([FromRoute] int id, [FromBody] UserChangePasswordDto changePasswordDto)
+        {
+            var success = await userService.ChangePasswordAsync(id, changePasswordDto.NewPassword);
+            if (!success) return NotFound();
             return NoContent();
         }
 

@@ -48,6 +48,11 @@ namespace ICMS.Infrastructure.Persistence.Config.Visits
                 .WithMany(pd => pd.VisitDetails)
                 .HasForeignKey(vd => vd.PregnancyDetailsId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasOne(vd => vd.User)
+                .WithMany()
+                .HasForeignKey(vd => vd.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

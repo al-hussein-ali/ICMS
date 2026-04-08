@@ -6,6 +6,6 @@ namespace ICMS.Application.Interfaces.Services
 {
     public interface IImmunizationService
     {
-        Task AdministerDoseAsync(AdministerDoseDto request, CancellationToken ct = default);
+        Task AdministerDoseAsync(AdministerDoseDto request, int userId, CancellationToken ct = default);
     }
 }

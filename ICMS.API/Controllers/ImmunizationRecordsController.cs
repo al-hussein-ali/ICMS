@@ -32,6 +32,15 @@ namespace ICMS.API.Controllers
             return Ok(immunizationRecord);
         }
 
+        [HttpPost("create")]
+        public async Task<IActionResult> AddAsync([FromBody] ImmunizationRecordCreateDto dto)
+        {
+            var userId = ICMS.API.Extensions.ClaimsPrincipalExtensions.GetUserId(User);
+            var record = await _immunizationRecordService.AddAsync(dto, userId);
+
+            return CreatedAtRoute("GetImmunizationRecordById", new { id = record.Id }, record);
+        }
+
         [HttpPut("update/{id}")]
         public async Task<IActionResult> UpdateAsync([FromRoute] Guid id, [FromBody] ImmunizationRecordCreateDto dto)
         {

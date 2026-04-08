@@ -1,74 +1,66 @@
-using ICMS.Application.Interfaces.Repositories;
+using ICMS.Application.Interfaces;
 using ICMS.Application.Interfaces.Services;
-using ICMS.Domain.Entites.Common;
 using ICMS.Domain.Entites.Identity;
-using ICMS.Domain.Entites.Clinical;
-using ICMS.Domain.Entites.Maternal;
-using ICMS.Domain.Entites.Visits;
-using ICMS.Domain.Entites.Audit;
-using ICMS.Domain.Entites.Geography;
+using System;
+using System.Collections.Generic;
 using System.Security.Cryptography;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace ICMS.Application.Services
 {
-    public class RefreshTokenService : IRefreshTokenService
+    public class RefreshTokenService(IUnitOfWork unitOfWork) : IRefreshTokenService
     {
-        private readonly IRefreshTokenRepository _refreshTokenRepository;
-
-        public RefreshTokenService(IRefreshTokenRepository refreshTokenRepository)
-        {
-            _refreshTokenRepository = refreshTokenRepository; 
-        }
-
         public async Task<RefreshToken> GenerateRefreshTokenAsync(int userId, CancellationToken cancellationToken = default)
         {
-            var refreshToken = new RefreshToken();
-
-            refreshToken.UserId = userId;
-
-            refreshToken.TokenId = Guid.CreateVersion7();
-            refreshToken.Token = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64));
-            refreshToken.CreatedAt = DateTime.UtcNow;
+            var refreshToken = new RefreshToken
+            {
+                UserId = userId,
+                TokenId = Guid.CreateVersion7(),
+                Token = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64)),
+                CreatedAt = DateTime.UtcNow,
+                IsRevoked = false
+            };
             refreshToken.ExpirationDate = refreshToken.CreatedAt.AddDays(7);
-            refreshToken.IsRevoked = false;
 
-
-            await _refreshTokenRepository.AddAsync(refreshToken, cancellationToken).ConfigureAwait(false);
+            await unitOfWork.RefreshTokenRepository.AddAsync(refreshToken, cancellationToken);
+            await unitOfWork.SaveChangesAsync(cancellationToken);
             return refreshToken;
         }
 
-
         public async Task InvalidateRefreshTokenAsync(RefreshToken token, CancellationToken cancellationToken = default)
         {
-            await _refreshTokenRepository.InvalidateRefreshTokenAsync(token,cancellationToken).ConfigureAwait(false);
+            token.IsRevoked = true;
+            await unitOfWork.RefreshTokenRepository.InvalidateRefreshTokenAsync(token, cancellationToken);
+            await unitOfWork.SaveChangesAsync(cancellationToken);
         }
 
         public async Task InvalidateUserRefreshTokensAsync(int userId, CancellationToken cancellationToken = default)
         {
-            var tokens =  await _refreshTokenRepository.GetUserRefreshTokensAsync(userId, cancellationToken);
+            var tokens = await unitOfWork.RefreshTokenRepository.GetUserRefreshTokensAsync(userId, cancellationToken);
+            var tokenList = tokens.ToList();
             
-            foreach (var refreshToken in tokens)
+            foreach (var refreshToken in tokenList)
             {
                 refreshToken.IsRevoked = true;
             }
-            
-            
-            
-            await _refreshTokenRepository.InvalidateUserTokensAsync(tokens, cancellationToken).ConfigureAwait(false);
+
+            await unitOfWork.RefreshTokenRepository.InvalidateUserTokensAsync(tokenList, cancellationToken);
+            await unitOfWork.SaveChangesAsync(cancellationToken);
         }
 
         public async Task<RefreshToken?> GetRefreshTokenAsync(string token, CancellationToken cancellationToken = default)
         {
-            return await _refreshTokenRepository.GetByTokenAsync(token, cancellationToken).ConfigureAwait(false);
+            return await unitOfWork.RefreshTokenRepository.GetByTokenAsync(token, cancellationToken);
         }
 
         public async Task<bool> IsValidRefreshTokenAsync(string token, CancellationToken cancellationToken = default)
         {
-            var refreshToken = await _refreshTokenRepository.GetByTokenAsync(token, cancellationToken: cancellationToken);
+            var refreshToken = await unitOfWork.RefreshTokenRepository.GetByTokenAsync(token, cancellationToken);
 
-            if(refreshToken is null) return false;
+            if (refreshToken is null) return false;
 
-            return refreshToken.IsRevoked || refreshToken.ExpirationDate <= DateTime.UtcNow;
+            return !refreshToken.IsRevoked && refreshToken.ExpirationDate > DateTime.UtcNow;
         }
     }
 }

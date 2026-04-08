@@ -35,6 +35,7 @@ namespace ICMS.Application.Interfaces
         ISubNeighborhoodRepository SubNeighborhoodRepository { get; }
         IVisitDetailsRepository VisitDetailsRepository { get; }
         IVaccinationScheduleRepository VaccinationScheduleRepository { get; }
+        IRefreshTokenRepository RefreshTokenRepository { get; }
 
 
         Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);

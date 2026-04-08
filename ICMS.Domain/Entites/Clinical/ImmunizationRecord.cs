@@ -23,17 +23,21 @@ namespace ICMS.Domain.Entites.Clinical
         public FieldVisit? FieldVisit { get; private set; }
 
 
+        public int UserId { get; private set; }
+        public User? User { get; private set; }
+
         private ImmunizationRecord()
         {
         }
 
-        public static ImmunizationRecord Create(int individualId, int doseId, DateOnly vaccinationDate, string takenIn, int? fieldVisitId = null, string? notes = null)
+        public static ImmunizationRecord Create(int individualId, int doseId, DateOnly vaccinationDate, string takenIn, int userId, int? fieldVisitId = null, string? notes = null)
         {
             if (individualId <= 0) throw new DomainException("Invalid individual id");
             if (doseId <= 0) throw new DomainException("Invalid dose id");
+            if (userId <= 0) throw new DomainException("Invalid user id");
             if (string.IsNullOrWhiteSpace(takenIn)) throw new DomainException("TakenIn is required");
 
-            return new ImmunizationRecord { IndividualId = individualId, DoseId = doseId, FieldVisitId = fieldVisitId, VaccinationDate = vaccinationDate, TakenIn = takenIn, Notes = notes };
+            return new ImmunizationRecord { IndividualId = individualId, DoseId = doseId, FieldVisitId = fieldVisitId, VaccinationDate = vaccinationDate, TakenIn = takenIn, UserId = userId, Notes = notes };
         }
 
         public void UpdateRecordInfo(int individualId, int doseId, DateOnly vaccinationDate, string takenIn, int? fieldVisitId = null, string? notes = null)

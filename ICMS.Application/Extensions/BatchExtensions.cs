@@ -17,7 +17,7 @@ namespace ICMS.Application.Extensions
         public static BatchDetailsDto ToDetailsDto(this Batch b)
             => new(b.Id, b.DoseId, b.UserId, b.ExpiryDate, b.TotalQuantity, b.CountryOfOrigin, b.CookNumber, b.Notes);
 
-        public static Batch ToDomain(this BatchCreateDto dto)
-            => Batch.Create(dto.DoseId, dto.UserId, dto.ExpiryDate, dto.TotalQuantity, dto.Notes ?? string.Empty, null, dto.Notes);
+        public static Batch ToDomain(this BatchCreateDto dto, int userId)
+            => Batch.Create(dto.DoseId, userId, dto.ExpiryDate, dto.TotalQuantity, dto.Notes ?? string.Empty, null, dto.Notes);
     }
 }

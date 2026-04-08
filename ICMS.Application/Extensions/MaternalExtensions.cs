@@ -103,13 +103,14 @@ namespace ICMS.Application.Extensions
             );
         }
 
-        public static Newborn ToDomain(this NewbornDto dto, int pregnancyDetailsId)
+        public static Newborn ToDomain(this NewbornDto dto, int pregnancyDetailsId, int userId)
         {
             return Newborn.Create(
                 pregnancyDetailsId: pregnancyDetailsId,
                 newbornStatus: dto.Status,
                 newbornWeightInGrams: dto.Weight,
-                newbornGender: dto.Gender
+                newbornGender: dto.Gender,
+                userId: userId
             );
         }
     }

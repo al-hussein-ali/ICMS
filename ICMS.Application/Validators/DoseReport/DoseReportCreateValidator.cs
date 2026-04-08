@@ -11,10 +11,6 @@ namespace ICMS.Application.Validators.DoseReport
                 .GreaterThanOrEqualTo(1)
                 .WithMessage("Batch Id is required.");
 
-            RuleFor(x => x.UserId)
-                .GreaterThanOrEqualTo(1)
-                .WithMessage("User Id is required.");
-
             When(x => x.Description != null, () =>
             {
                 RuleFor(x => x.Description)

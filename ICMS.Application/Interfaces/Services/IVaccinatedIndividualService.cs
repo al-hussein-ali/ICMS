@@ -34,9 +34,9 @@ namespace ICMS.Application.Interfaces.Services
 
         Task<bool> DeleteAsync(int id, CancellationToken ct = default);
 
-        Task<bool> GiveDose(ImmunizationRecordCreateDto dto, CancellationToken ct = default);
-        Task<BulkInsertResult> BulkInsertIndividualAsync(List<NewFieldVaccinatedIndividualDto> newFieldVaccinatedIndividuals, CancellationToken ct = default);
-        Task<BulkInsertResult> BulkUpdateFieldVisitIndividualAsync(List<UpdateFieldVisitIndividualDto> dtos, CancellationToken ct = default);
+        Task<bool> GiveDose(ImmunizationRecordCreateDto dto, int userId, CancellationToken ct = default);
+        Task<BulkInsertResult> BulkInsertIndividualAsync(List<NewFieldVaccinatedIndividualDto> newFieldVaccinatedIndividuals, int userId, CancellationToken ct = default);
+        Task<BulkInsertResult> BulkUpdateFieldVisitIndividualAsync(List<UpdateFieldVisitIndividualDto> dtos, int userId, CancellationToken ct = default);
         Task<GeneratedAccountDto> GenerateAccountAsync(int id, CancellationToken ct = default);
     }
 }

@@ -14,11 +14,11 @@ namespace ICMS.Application.Validators.User
                 .MaximumLength(50)
                 .WithMessage("User name must be at most 50 characters.");
 
-            RuleFor(x => x.PasswordHash)
+            RuleFor(x => x.Password)
                 .NotEmpty()
-                .WithMessage("Password hash is required.")
+                .WithMessage("Password is required.")
                 .MaximumLength(256)
-                .WithMessage("Password hash must be at most 256 characters.");
+                .WithMessage("Password must be at most 256 characters.");
 
             RuleFor(x => x.PersonId)
                 .GreaterThanOrEqualTo(1)

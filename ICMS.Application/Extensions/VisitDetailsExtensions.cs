@@ -11,7 +11,7 @@ namespace ICMS.Application.Extensions
         public static VisitDetailsDetailsDto ToDetailsDto(this VisitDetails vd)
             => new(vd.Id, vd.PregnancyDetailsId, vd.VisitDate, vd.NextVisitDate, vd.WeightInKilo);
 
-        public static VisitDetails ToDomain(this VisitDetailsCreateDto dto)
+        public static VisitDetails ToDomain(this VisitDetailsCreateDto dto, int userId)
             => VisitDetails.Create(
                 dto.PregnancyDetailsId, 
                 dto.VisitDate, 
@@ -23,7 +23,8 @@ namespace ICMS.Application.Extensions
                 dto.FetalHeartbeat,
                 dto.FetalMovement, 
                 dto.FetalPosition,
-                dto.AnaemiaOrHemoglobinType, 
+                dto.AnaemiaOrHemoglobinType,
+                userId,
                 dto.LegsSwelling,
                 dto.VaginalBleeding, 
                 dto.ClinicalExaminationAndObservation, 

@@ -23,14 +23,18 @@ namespace ICMS.Domain.Entites.Visits
         public bool VaginalBleeding { get; private set; }
         public Maternal.PregnancyDetails? PregnancyDetails { get; private set; }
 
+        public int UserId { get; private set; }
+        public ICMS.Domain.Entites.Identity.User? User { get; private set; }
+
 
         private VisitDetails()
         {
         }
 
-        public static VisitDetails Create(int pregnancyDetailsId, DateOnly visitDate, decimal weightInKilo, int pregnancyDurationInWeeks, string bloodPressure, string appInUrineTest, string ogttInUrineTest, string fetalHeartbeat, string fetalMovement, string fetalPosition, string anaemiaOrHemoglobinType, bool legsSwelling = false, bool vaginalBleeding = false, string? clinicalExaminationAndObservation = null, DateOnly? nextVisitDate = null)
+        public static VisitDetails Create(int pregnancyDetailsId, DateOnly visitDate, decimal weightInKilo, int pregnancyDurationInWeeks, string bloodPressure, string appInUrineTest, string ogttInUrineTest, string fetalHeartbeat, string fetalMovement, string fetalPosition, string anaemiaOrHemoglobinType, int userId, bool legsSwelling = false, bool vaginalBleeding = false, string? clinicalExaminationAndObservation = null, DateOnly? nextVisitDate = null)
         {
             if (pregnancyDetailsId <= 0) throw new DomainException("Invalid pregnancy details id");
+            if (userId <= 0) throw new DomainException("Invalid user id");
             if (weightInKilo <= 0) throw new DomainException("Invalid weight");
             if (pregnancyDurationInWeeks < 0) throw new DomainException("Invalid pregnancy duration");
             if (string.IsNullOrWhiteSpace(bloodPressure)) throw new DomainException("Blood pressure is required");
@@ -50,6 +54,7 @@ namespace ICMS.Domain.Entites.Visits
                 FetalPosition = fetalPosition,
                 PregnancyDurationInWeeks = pregnancyDurationInWeeks,
                 AnaemiaOrHemoglobinType = anaemiaOrHemoglobinType,
+                UserId = userId,
                 LegsSwelling = legsSwelling,
                 VaginalBleeding = vaginalBleeding
             };

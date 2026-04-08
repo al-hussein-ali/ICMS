@@ -44,6 +44,11 @@ namespace ICMS.Infrastructure.Persistence.Config.Clinical
                 .WithMany(fv => fv.ImmunizationRecords)
                 .HasForeignKey(ir => ir.FieldVisitId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasOne(ir => ir.User)
+                .WithMany()
+                .HasForeignKey(ir => ir.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

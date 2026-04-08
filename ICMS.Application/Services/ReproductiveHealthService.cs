@@ -107,7 +107,7 @@ namespace ICMS.Application.Services
             return true;
         }
 
-        public async Task StartPregnancyAsync(StartPregnancyDto request, CancellationToken ct = default)
+        public async Task StartPregnancyAsync(StartPregnancyDto request, int userId, CancellationToken ct = default)
         {
             var pregnantWoman = await _unitOfWork.PregnantWomanRepository.GetByPersonIdWithDetailsAsync(request.PersonId, ct);
 
@@ -137,12 +137,12 @@ namespace ICMS.Application.Services
                 postComps = PreviousPostpartumComplications.CreateForNewPregnancy(r.VaginalBleeding, r.PlacentaRetention, r.VaginalFistula, r.PuerperalSepsis, r.NeonatalDeath);
             }
 
-            pregnantWoman.StartNewPregnancy(request.LMP, request.EDD, pregComps, delivComps, postComps);
+            pregnantWoman.StartNewPregnancy(request.LMP, request.EDD, userId, pregComps, delivComps, postComps);
 
             await _unitOfWork.SaveChangesAsync(ct);
         }
 
-        public async Task AddAncVisitAsync(int pregnancyId, AddAncVisitDto request, CancellationToken ct = default)
+        public async Task AddAncVisitAsync(int pregnancyId, AddAncVisitDto request, int userId, CancellationToken ct = default)
         {
             var pregnancy = await _unitOfWork.PregnancyDetailsRepository.GetPregnancyWithDetailsAsync(pregnancyId, ct);
 
@@ -156,6 +156,7 @@ namespace ICMS.Application.Services
                 pregnancyDurationInWeeks: request.PregnancyDurationInWeeks,
                 weight: request.WeightInKilo,
                 bloodPressure: request.BloodPressure,
+                userId: userId,
                 doctorSuggestedNextVisit: request.DoctorSuggestedNextVisit,
                 appInUrineTest: request.AppInUrineTest,
                 ogttInUrineTest: request.OgttInUrineTest,
@@ -182,7 +183,7 @@ namespace ICMS.Application.Services
                     Notes: "ANC Immunization"
                 );
 
-                await _immunizationService.AdministerDoseAsync(doseDto, ct);
+                await _immunizationService.AdministerDoseAsync(doseDto, userId, ct);
             }
 
             await _unitOfWork.SaveChangesAsync(ct);
@@ -196,7 +197,7 @@ namespace ICMS.Application.Services
             return pw.PregnancyDetails.Select(p => p.ToReadDto()).ToList();
         }
 
-        public async Task ConcludePregnancyAsync(int pregnancyId, ConcludePregnancyDto request, CancellationToken ct = default)
+        public async Task ConcludePregnancyAsync(int pregnancyId, ConcludePregnancyDto request, int userId, CancellationToken ct = default)
         {
             var pregnancy = await _unitOfWork.PregnancyDetailsRepository.GetPregnancyWithDetailsAsync(pregnancyId, ct);
 
@@ -205,7 +206,7 @@ namespace ICMS.Application.Services
                 throw new DomainException("Pregnancy details not found.");
             }
 
-            var newborns = request.Newborns?.Select(n => n.ToDomain(pregnancyId)).ToList();
+            var newborns = request.Newborns?.Select(n => n.ToDomain(pregnancyId, userId)).ToList();
 
             pregnancy.ConcludePregnancy(
                 deliveryDate: request.DeliveryDate,

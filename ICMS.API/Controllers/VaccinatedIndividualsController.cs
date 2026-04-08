@@ -72,7 +72,8 @@ namespace ICMS.API.Controllers
                 return BadRequest("ID mismatch");
             }
 
-            await vaccinatedIndividualService.GiveDose(dto);
+            var userId = ICMS.API.Extensions.ClaimsPrincipalExtensions.GetUserId(User);
+            await vaccinatedIndividualService.GiveDose(dto, userId);
 
             return Accepted();
         }
@@ -83,7 +84,8 @@ namespace ICMS.API.Controllers
             if (!newFieldVaccinatedIndividuals.Any())
                 return BadRequest("No records were found.");
 
-            var result = await vaccinatedIndividualService.BulkInsertIndividualAsync(newFieldVaccinatedIndividuals);
+            var userId = ICMS.API.Extensions.ClaimsPrincipalExtensions.GetUserId(User);
+            var result = await vaccinatedIndividualService.BulkInsertIndividualAsync(newFieldVaccinatedIndividuals, userId);
 
             return Ok(result);
         }
@@ -94,7 +96,8 @@ namespace ICMS.API.Controllers
             if (!updateFieldVisitIndividuals.Any())
                 return BadRequest("No records were found.");
 
-            var result = await vaccinatedIndividualService.BulkUpdateFieldVisitIndividualAsync(updateFieldVisitIndividuals);
+            var userId = ICMS.API.Extensions.ClaimsPrincipalExtensions.GetUserId(User);
+            var result = await vaccinatedIndividualService.BulkUpdateFieldVisitIndividualAsync(updateFieldVisitIndividuals, userId);
 
             return Ok(result);
         }

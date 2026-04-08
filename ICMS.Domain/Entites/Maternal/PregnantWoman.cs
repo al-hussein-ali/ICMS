@@ -97,6 +97,7 @@ public class PregnantWoman : BaseEntity<int>
     public PregnancyDetails StartNewPregnancy(
         DateOnly lmp,
         DateOnly edd,
+        int userId,
         PreviousPregnancyComplications? prevPreg,
         PreviousPregnancyDeliveryComplications? prevDeliv,
         PreviousPostpartumComplications? prevPost)
@@ -122,7 +123,7 @@ public class PregnantWoman : BaseEntity<int>
             prevPost = null;
         }
 
-        var newPregnancy = ICMS.Domain.Entites.Maternal.PregnancyDetails.CreateForNewPregnancy(lmp, edd, this.Id);
+        var newPregnancy = ICMS.Domain.Entites.Maternal.PregnancyDetails.CreateForNewPregnancy(lmp, edd, this.Id, userId);
 
         if (prevPreg != null) newPregnancy.AssignPreviousPregnancyComplications(prevPreg);
         if (prevDeliv != null) newPregnancy.AssignPreviousPregnancyDeliveryComplications(prevDeliv);

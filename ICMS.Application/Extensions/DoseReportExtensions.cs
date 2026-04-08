@@ -17,7 +17,7 @@ namespace ICMS.Application.Extensions
         public static DoseReportDetailsDto ToDetailsDto(this DoseReport dr)
             => new(dr.Id, dr.BatchId, dr.UserId, dr.CreatedAt, dr.Description);
 
-        public static DoseReport ToDomain(this DoseReportCreateDto dto)
-            => DoseReport.Create(dto.BatchId,dto.UserId,dto.Description); // factory not implemented
+        public static DoseReport ToDomain(this DoseReportCreateDto dto, int userId)
+            => DoseReport.Create(dto.BatchId, userId, dto.Description); // factory not implemented
     }
 }

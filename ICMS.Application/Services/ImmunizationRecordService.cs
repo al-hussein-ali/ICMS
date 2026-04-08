@@ -1,4 +1,4 @@
-﻿using FluentValidation;
+using FluentValidation;
 using ICMS.Application.DTOs;
 using ICMS.Application.DTOs.ImmunizationRecord;
 using ICMS.Application.DTOs.Pagination;
@@ -6,6 +6,7 @@ using ICMS.Application.Extensions;
 using ICMS.Application.Interfaces;
 using ICMS.Application.Interfaces.Services;
 using ICMS.Domain.Exceptions;
+using ICMS.Domain.Entites.Clinical;
 using ICMS.Domain.ValueObjects;
 using System;
 using System.Collections.Generic;
@@ -42,15 +43,31 @@ namespace ICMS.Application.Services
             return immunizationRecord?.ToReadDto() ?? throw new NotFoundException("This record was not found");
         }
 
-        //public async Task<ImmunizationRecordReadDto> AddAsync(ImmunizationRecordCreateDto entity, CancellationToken ct = default)
-        //{
-        //    await immunizationCreateValidator.ValidateAndThrowAsync(entity);
+        public async Task<ImmunizationRecordReadDto> AddAsync(ImmunizationRecordCreateDto entity, int userId, CancellationToken ct = default)
+        {
+            await immunizationCreateValidator.ValidateAndThrowAsync(entity);
 
-        //    var immunizationRecord = entity.ToDomain();
+            if (!await unitOfWork.DoseRepository.ExistAsync(entity.DoseId))
+                throw new NotFoundException($"The dose with Id {entity.DoseId} was not found!");
 
+            if (!await unitOfWork.VaccinatedIndividualRepository.ExistAsync(entity.IndividualId))
+                throw new NotFoundException($"The Vaccinated Individual with Id {entity.IndividualId} was not found!");
 
+            var immunizationRecord = ImmunizationRecord.Create(
+                entity.IndividualId,
+                entity.DoseId,
+                entity.VaccinationDate,
+                entity.TakenIn,
+                userId,
+                entity.FieldVisitId,
+                entity.Notes
+            );
 
-        //}
+            await unitOfWork.ImmunizationRecordRepository.AddAsync(immunizationRecord);
+            await unitOfWork.SaveChangesAsync(ct);
+
+            return immunizationRecord.ToReadDto();
+        }
         public async Task<bool> UpdateAsync(Guid id, ImmunizationRecordCreateDto updatedEntity, CancellationToken ct = default)
         {
             await immunizationCreateValidator.ValidateAndThrowAsync(updatedEntity);

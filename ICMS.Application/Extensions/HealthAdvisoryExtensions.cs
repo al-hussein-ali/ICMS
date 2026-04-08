@@ -17,7 +17,7 @@ namespace ICMS.Application.Extensions
         public static HealthAdvisoryDetailsDto ToDetailsDto(this HealthAdvisory ha)
             => new(ha.Id, ha.Title, ha.Content, ha.Target, ha.CreationDate, ha.UserId);
 
-        public static HealthAdvisory ToDomain(this HealthAdvisoryCreateDto dto)
-            => HealthAdvisory.Create(dto.Title,dto.Content,dto.Target,dto.UserId); // factory not implemented
+        public static HealthAdvisory ToDomain(this HealthAdvisoryCreateDto dto, int userId)
+            => HealthAdvisory.Create(dto.Title, dto.Content, dto.Target, userId); // factory not implemented
     }
 }

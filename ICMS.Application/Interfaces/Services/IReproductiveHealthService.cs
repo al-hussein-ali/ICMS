@@ -14,9 +14,9 @@ namespace ICMS.Application.Interfaces.Services
         Task<bool> UpdatePregnantWomanAsync(int id, PregnantWomanCreateDto request, CancellationToken ct = default);
         Task<bool> DeletePregnantWomanAsync(int id, CancellationToken ct = default);
 
-        Task StartPregnancyAsync(StartPregnancyDto request, CancellationToken ct = default);
-        Task AddAncVisitAsync(int pregnancyId, AddAncVisitDto request, CancellationToken ct = default);
-        Task ConcludePregnancyAsync(int pregnancyId, ConcludePregnancyDto request, CancellationToken ct = default);
+        Task StartPregnancyAsync(StartPregnancyDto request, int userId, CancellationToken ct = default);
+        Task AddAncVisitAsync(int pregnancyId, AddAncVisitDto request, int userId, CancellationToken ct = default);
+        Task ConcludePregnancyAsync(int pregnancyId, ConcludePregnancyDto request, int userId, CancellationToken ct = default);
         
         Task<GeneratedAccountDto> GenerateAccountAsync(int id, CancellationToken ct = default);
         Task<List<PregnancyDetailsReadDto>> GetPregnancyHistoryAsync(int pregnantWomanId, CancellationToken ct = default);

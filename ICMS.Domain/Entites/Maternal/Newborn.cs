@@ -22,18 +22,21 @@ namespace ICMS.Domain.Entites.Maternal
         public decimal NewbornWeightInGrams { get; private set; }
         public Gender NewbornGender { get; private set; }
         public PregnancyDetails? PregnancyDetails { get; private set; }
+        public int UserId { get; private set; }
+        public ICMS.Domain.Entites.Identity.User? User { get; private set; }
 
 
         private Newborn()
         {
         }
 
-        public static Newborn Create(int pregnancyDetailsId, NewbornStatus newbornStatus, decimal newbornWeightInGrams, Gender newbornGender)
+        public static Newborn Create(int pregnancyDetailsId, NewbornStatus newbornStatus, decimal newbornWeightInGrams, Gender newbornGender, int userId)
         {
             if (pregnancyDetailsId <= 0) throw new DomainException("Invalid pregnancy details id");
+            if (userId <= 0) throw new DomainException("Invalid user id");
             if (newbornWeightInGrams <= 0) throw new DomainException("Invalid newborn weight");
 
-            return new Newborn { PregnancyDetailsId = pregnancyDetailsId, NewbornStatus = newbornStatus, NewbornWeightInGrams = newbornWeightInGrams, NewbornGender = newbornGender };
+            return new Newborn { PregnancyDetailsId = pregnancyDetailsId, NewbornStatus = newbornStatus, NewbornWeightInGrams = newbornWeightInGrams, NewbornGender = newbornGender, UserId = userId };
         }
 
         public void AssignPregnancyDetails(PregnancyDetails pd)

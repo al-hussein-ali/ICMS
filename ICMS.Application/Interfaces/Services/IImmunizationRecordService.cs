@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -15,6 +15,8 @@ namespace ICMS.Application.Interfaces.Services
         Task<PagedResult<ImmunizationRecordReadDto>> GetAllAsync(PaginationParams paginationParams, CancellationToken ct = default);
 
         Task<ImmunizationRecordReadDto> GetByIdAsync(Guid id, CancellationToken ct = default);
+
+        Task<ImmunizationRecordReadDto> AddAsync(ImmunizationRecordCreateDto dto, int userId, CancellationToken ct = default);
 
         Task<bool> UpdateAsync(Guid id,ImmunizationRecordCreateDto updatedEntity, CancellationToken ct = default);
 

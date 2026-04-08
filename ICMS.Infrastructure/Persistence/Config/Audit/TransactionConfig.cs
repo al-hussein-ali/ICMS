@@ -37,6 +37,11 @@ namespace ICMS.Infrastructure.Persistence.Config.Audit
                 .WithMany(b => b.Transactions)
                 .HasForeignKey(t => t.BatchId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasOne(t => t.User)
+                .WithMany()
+                .HasForeignKey(t => t.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

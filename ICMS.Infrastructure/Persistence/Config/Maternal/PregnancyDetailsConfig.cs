@@ -109,6 +109,11 @@ namespace ICMS.Infrastructure.Persistence.Config.Maternal
 
             builder.Metadata.FindNavigation(nameof(PregnancyDetails.Newborns))?
                 .SetPropertyAccessMode(PropertyAccessMode.Field);
+
+            builder.HasOne(pd => pd.User)
+                .WithMany()
+                .HasForeignKey(pd => pd.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

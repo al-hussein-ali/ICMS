@@ -16,7 +16,7 @@ namespace ICMS.Application.Services
             _unitOfWork = unitOfWork;
         }
 
-        public async Task AdministerDoseAsync(AdministerDoseDto request, CancellationToken ct = default)
+        public async Task AdministerDoseAsync(AdministerDoseDto request, int userId, CancellationToken ct = default)
         {
             // 1. Load Aggregate Root with Includes (_schedules, _immunizationRecords)
             var individual = await _unitOfWork.VaccinatedIndividualRepository
@@ -42,6 +42,7 @@ namespace ICMS.Application.Services
                 currentDose, 
                 request.Date, 
                 request.TakenIn, 
+                userId,
                 nextDose, 
                 request.FieldVisitId, 
                 request.Notes);

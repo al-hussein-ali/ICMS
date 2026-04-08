@@ -134,7 +134,7 @@ namespace ICMS.Application.Services
             return true;
         }
 
-        public async Task<bool> GiveDose(ImmunizationRecordCreateDto dto, CancellationToken ct = default)
+        public async Task<bool> GiveDose(ImmunizationRecordCreateDto dto, int userId, CancellationToken ct = default)
         {
             var individual = await _unitOfWork.VaccinatedIndividualRepository.GetIndividualWithSchedulesAsync(dto.IndividualId, ct);
             if (individual == null)
@@ -147,13 +147,13 @@ namespace ICMS.Application.Services
             var allDoses = await _unitOfWork.DoseRepository.GetAllAsync(dose.VaccineId, ct);
             var nextDose = allDoses.OrderBy(d => d.DoseOrder).FirstOrDefault(d => d.DoseOrder > dose.DoseOrder);
 
-            individual.AdministerDose(dose, dto.VaccinationDate, dto.TakenIn, nextDose, notes: dto.Notes);
+            individual.AdministerDose(dose, dto.VaccinationDate, dto.TakenIn, userId, nextDose, notes: dto.Notes);
 
             await _unitOfWork.SaveChangesAsync(ct);
             return true;
         }
 
-        public async Task<BulkInsertResult> BulkInsertIndividualAsync(List<NewFieldVaccinatedIndividualDto> newFieldVaccinatedIndividuals, CancellationToken ct = default)
+        public async Task<BulkInsertResult> BulkInsertIndividualAsync(List<NewFieldVaccinatedIndividualDto> newFieldVaccinatedIndividuals, int userId, CancellationToken ct = default)
         {
             var result = new BulkInsertResult();
             var validIndividuals = new List<VaccinatedIndividual>();
@@ -180,12 +180,12 @@ namespace ICMS.Application.Services
             if (!validIndividuals.Any())
                 return result;
 
-            await PersistToDatabaseAsync(validIndividuals, entityToDtoMap, result, ct);
+            await PersistToDatabaseAsync(validIndividuals, entityToDtoMap, result, userId, ct);
 
             return result;
         }
 
-        public async Task<BulkInsertResult> BulkUpdateFieldVisitIndividualAsync(List<UpdateFieldVisitIndividualDto> dtos, CancellationToken ct = default)
+        public async Task<BulkInsertResult> BulkUpdateFieldVisitIndividualAsync(List<UpdateFieldVisitIndividualDto> dtos, int userId, CancellationToken ct = default)
         {
             var result = new BulkInsertResult();
             var ids = dtos.Select(d => d.IndividualId).ToList();
@@ -208,7 +208,7 @@ namespace ICMS.Application.Services
                         var allDoses = await _unitOfWork.DoseRepository.GetAllAsync(dose.VaccineId, ct);
                         var nextDose = allDoses.OrderBy(d => d.DoseOrder).FirstOrDefault(d => d.DoseOrder > dose.DoseOrder);
 
-                        individual.AdministerDose(dose, dto.VaccinationDate, dto.TakenIn, nextDose, notes: dto.Note);
+                        individual.AdministerDose(dose, dto.VaccinationDate, dto.TakenIn, userId, nextDose, notes: dto.Note);
                     }
                     result.InsertedCount++;
                 }
@@ -256,6 +256,7 @@ namespace ICMS.Application.Services
             List<VaccinatedIndividual> validIndividuals,
             Dictionary<VaccinatedIndividual, NewFieldVaccinatedIndividualDto> entityToDtoMap,
             BulkInsertResult result,
+            int userId,
             CancellationToken ct = default)
         {
             try
@@ -283,7 +284,7 @@ namespace ICMS.Application.Services
                             var allDoses = await _unitOfWork.DoseRepository.GetAllAsync(dose.VaccineId, ct);
                             var nextDose = allDoses.OrderBy(d => d.DoseOrder).FirstOrDefault(d => d.DoseOrder > dose.DoseOrder);
 
-                            parent.AdministerDose(dose, dto.VaccinationDate, dto.TakenIn, nextDose, notes: dto.Note);
+                            parent.AdministerDose(dose, dto.VaccinationDate, dto.TakenIn, userId, nextDose, notes: dto.Note);
                         }
 
                         recordsToInsert.AddRange(parent.ImmunizationRecords.Where(ir => ir.Id == Guid.Empty));

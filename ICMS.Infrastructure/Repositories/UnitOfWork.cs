@@ -42,6 +42,7 @@ namespace ICMS.Infrastructure.Repositories
         public ISubNeighborhoodRepository SubNeighborhoodRepository { get; }
         public IVisitDetailsRepository VisitDetailsRepository { get; }
         public IVaccinationScheduleRepository VaccinationScheduleRepository { get; }
+        public IRefreshTokenRepository RefreshTokenRepository { get; }
 
         public UnitOfWork(AppDbContext context)
         {
@@ -72,6 +73,7 @@ namespace ICMS.Infrastructure.Repositories
             SubNeighborhoodRepository = new SubNeighborhoodRepository(_context);
             VisitDetailsRepository = new VisitDetailsRepository(_context);
             VaccinationScheduleRepository = new VaccinationScheduleRepository(_context);
+            RefreshTokenRepository = new RefreshTokenRepository(_context);
         }
 
         public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)

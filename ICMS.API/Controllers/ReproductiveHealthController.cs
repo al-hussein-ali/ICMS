@@ -19,21 +19,24 @@ namespace ICMS.API.Controllers
         [HttpPost("new-pregnancy")]
         public async Task<IActionResult> StartPregnancyAsync([FromBody] StartPregnancyDto request)
         {
-            await _reproductiveHealthService.StartPregnancyAsync(request);
+            var userId = ICMS.API.Extensions.ClaimsPrincipalExtensions.GetUserId(User);
+            await _reproductiveHealthService.StartPregnancyAsync(request, userId);
             return Created(string.Empty, new { message = "Pregnancy started successfully." });
         }
 
         [HttpPost("{pregnancyId}/visits/create")]
         public async Task<IActionResult> AddAncVisitAsync([FromRoute] int pregnancyId, [FromBody] AddAncVisitDto request)
         {
-            await _reproductiveHealthService.AddAncVisitAsync(pregnancyId, request);
+            var userId = ICMS.API.Extensions.ClaimsPrincipalExtensions.GetUserId(User);
+            await _reproductiveHealthService.AddAncVisitAsync(pregnancyId, request, userId);
             return Created(string.Empty, new { message = "ANC visit recorded successfully." });
         }
 
         [HttpPut("{pregnancyId}/conclude")]
         public async Task<IActionResult> ConcludePregnancyAsync([FromRoute] int pregnancyId, [FromBody] ConcludePregnancyDto request)
         {
-            await _reproductiveHealthService.ConcludePregnancyAsync(pregnancyId, request);
+            var userId = ICMS.API.Extensions.ClaimsPrincipalExtensions.GetUserId(User);
+            await _reproductiveHealthService.ConcludePregnancyAsync(pregnancyId, request, userId);
             return Ok(new { message = "Pregnancy concluded successfully." });
         }
 

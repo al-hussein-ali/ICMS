@@ -110,7 +110,7 @@ namespace ICMS.Domain.Entites.Identity
         /// to maintain the recommended minimum interval.
         /// </summary>
         public void AdministerDose(Dose currentDose, DateOnly administrationDate, string takenIn,
-            Dose? nextSequenceDose = null, int? fieldVisitId = null, string? notes = null)
+            int userId, Dose? nextSequenceDose = null, int? fieldVisitId = null, string? notes = null)
         {
             if (currentDose == null || currentDose.Id <= 0)
                 throw new DomainException("Invalid Dose!");
@@ -126,7 +126,7 @@ namespace ICMS.Domain.Entites.Identity
                 throw new InvalidDoubleDoseException($"Dose {currentDose.DoseName} has already been administered.");
 
             // 1. Record the immunization
-            var newRecord = ImmunizationRecord.Create(this.Id, currentDose.Id, administrationDate, takenIn,
+            var newRecord = ImmunizationRecord.Create(this.Id, currentDose.Id, administrationDate, takenIn, userId,
                 fieldVisitId, notes);
             _immunizationRecords.Add(newRecord);
 

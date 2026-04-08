@@ -17,5 +17,11 @@ namespace ICMS.Application.Interfaces.Services
         Task<bool> UpdateAsync(UserReadDto updatedEntity, CancellationToken ct = default);
 
         Task<bool> DeleteAsync(int id, CancellationToken ct = default);
+
+        Task<bool> ActivateAsync(int id, CancellationToken ct = default);
+
+        Task<bool> DeactivateAsync(int id, CancellationToken ct = default);
+
+        Task<bool> ChangePasswordAsync(int id, string newPassword, CancellationToken ct = default);
     }
 }

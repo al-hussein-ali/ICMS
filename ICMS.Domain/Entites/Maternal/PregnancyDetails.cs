@@ -45,10 +45,12 @@ namespace ICMS.Domain.Entites.Maternal
         public int? PreviousPregnancyComplicationsId { get; private set; }
         public int? PreviousPostpartumComplicationsId { get; private set; }
         public int? PreviousPregnancyDeliveryComplicationsId { get; private set; }
+        public int UserId { get; private set; }
         public PregnantWoman? PregnantWoman { get; private set; }
         public PreviousPregnancyComplications? PreviousPregnancyComplications { get; private set; }
         public PreviousPostpartumComplications? PreviousPostpartumComplications { get; private set; }
         public PreviousPregnancyDeliveryComplications? PreviousPregnancyDeliveryComplications { get; private set; }
+        public User? User { get; private set; }
 
         private PregnancyDetails()
         {
@@ -59,9 +61,11 @@ namespace ICMS.Domain.Entites.Maternal
             PregnancyType pregnancyType,
             BirthNature birthNature,
             BirthLocationType birthLocationType,
-            int pregnantWomanId)
+            int pregnantWomanId,
+            int userId)
         {
             if (pregnantWomanId <= 0) throw new DomainException("Invalid pregnant woman id");
+            if (userId <= 0) throw new DomainException("Invalid user id");
             if (expectedDeliveryDate < lastMenstrualPeriodDate)
                 throw new DomainException("Expected delivery date cannot be before last menstrual period date");
 
@@ -141,9 +145,10 @@ namespace ICMS.Domain.Entites.Maternal
             this.PreviousPregnancyDeliveryComplicationsId = p.Id;
         }
 
-        public static PregnancyDetails CreateForNewPregnancy(DateOnly lmp, DateOnly edd, int pregnantWomanId)
+        public static PregnancyDetails CreateForNewPregnancy(DateOnly lmp, DateOnly edd, int pregnantWomanId, int userId)
         {
             if (pregnantWomanId <= 0) throw new DomainException("Invalid pregnant woman id");
+            if (userId <= 0) throw new DomainException("Invalid user id");
             if (edd < lmp)
                 throw new DomainException("Expected delivery date cannot be before last menstrual period date");
 
@@ -152,6 +157,7 @@ namespace ICMS.Domain.Entites.Maternal
                 LastMenstrualPeriodDate = lmp,
                 ExpectedDeliveryDate = edd,
                 PregnantWomanId = pregnantWomanId,
+                UserId = userId,
                 IsPregnancyDone = false,
                 VisitsCount = 0,
                 NewbornCount = 0
@@ -163,6 +169,7 @@ namespace ICMS.Domain.Entites.Maternal
             int pregnancyDurationInWeeks,
             decimal weight,
             string bloodPressure,
+            int userId,
             DateOnly? doctorSuggestedNextVisit = null,
             string appInUrineTest = "N/A",
             string ogttInUrineTest = "N/A",
@@ -173,6 +180,7 @@ namespace ICMS.Domain.Entites.Maternal
         {
             if (IsPregnancyDone)
                 throw new InvalidOperationException("Cannot add visit: Pregnancy is already marked as done.");
+            if (userId <= 0) throw new DomainException("Invalid user id");
 
             DateOnly nextVisitDate;
 
@@ -204,7 +212,8 @@ namespace ICMS.Domain.Entites.Maternal
                 fetalMovement: fetalMovement,
                 fetalPosition: fetalPosition,
                 anaemiaOrHemoglobinType: anaemiaOrHemoglobinType,
-                nextVisitDate: nextVisitDate
+                nextVisitDate: nextVisitDate,
+                userId: userId
             );
 
             _visitDetails.Add(visit);

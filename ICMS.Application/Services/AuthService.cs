@@ -1,0 +1,65 @@
+using ICMS.Application.DTOs.Auth;
+using ICMS.Application.Interfaces;
+using ICMS.Application.Interfaces.Services;
+using ICMS.Domain.Exceptions;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+
+namespace ICMS.Application.Services
+{
+    public class AuthService(
+        IUnitOfWork unitOfWork,
+        IIdentityService identityService,
+        ITokenService tokenService,
+        IRefreshTokenService refreshTokenService) : IAuthService
+    {
+        public async Task<AuthResponseDto> LoginAsync(LoginDto loginDto, CancellationToken ct = default)
+        {
+            var user = await unitOfWork.UserRepository.FirstOrDefaultAsync(u => u.UserName == loginDto.UserName, ct);
+            if (user == null || !user.IsActive)
+            {
+                throw new DomainException("Invalid username or password");
+            }
+
+            if (!BCrypt.Net.BCrypt.Verify(loginDto.Password, user.PasswordHash))
+            {
+                throw new DomainException("Invalid username or password");
+            }
+
+            var roles = (await identityService.GetUserRolesAsync(user.Id, ct)).ToList();
+            
+            var accessToken = tokenService.GenerateAccessToken(user, roles);
+            var refreshToken = await tokenService.GenerateRefreshToken(user.Id, ct);
+            await unitOfWork.SaveChangesAsync(ct); // Ensure refresh token is persisted
+
+            return new AuthResponseDto(accessToken, refreshToken);
+        }
+
+        public async Task<AuthResponseDto> RefreshTokenAsync(RefreshTokenRequestDto refreshDto, CancellationToken ct = default)
+        {
+            var isValid = await refreshTokenService.IsValidRefreshTokenAsync(refreshDto.RefreshToken, ct);
+            if (!isValid)
+            {
+                throw new DomainException("Invalid or expired refresh token");
+            }
+
+            var tokenEntity = await refreshTokenService.GetRefreshTokenAsync(refreshDto.RefreshToken, ct);
+
+            // Get user to generate new token
+            var user = await unitOfWork.UserRepository.GetByIdAsync(tokenEntity.UserId, ct);
+            if (user == null || !user.IsActive)
+            {
+                throw new DomainException("Invalid or inactive user");
+            }
+
+            var roles = (await identityService.GetUserRolesAsync(user.Id, ct)).ToList();
+
+            var accessToken = tokenService.GenerateAccessToken(user, roles);
+            var newRefreshToken = await tokenService.GenerateRefreshToken(user.Id, ct);
+            await unitOfWork.SaveChangesAsync(ct);
+
+            return new AuthResponseDto(accessToken, newRefreshToken);
+        }
+    }
+}

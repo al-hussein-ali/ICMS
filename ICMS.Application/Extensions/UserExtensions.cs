@@ -12,7 +12,7 @@ namespace ICMS.Application.Extensions
         public static UserDetailsDto ToDetailsDto(this User u)
             => new(u.Id, u.UserName, u.IsActive, u.PersonId, u.CreatedAt);
 
-        public static User ToDomain(this UserCreateDto dto)
-            => User.Create(dto.UserName, dto.PasswordHash, dto.PersonId, dto.IsActive);
+        public static User ToDomain(this UserCreateDto dto, string hashedPassword)
+            => User.Create(dto.UserName, hashedPassword, dto.PersonId, dto.IsActive);
     }
 }

@@ -11,10 +11,6 @@ namespace ICMS.Application.Validators.Batch
                 .GreaterThanOrEqualTo(1)
                 .WithMessage("The Dose Id is required and must be greater than 0.");
 
-            RuleFor(x => x.UserId)
-                .GreaterThanOrEqualTo(1)
-                .WithMessage("The User Id is required and must be greater than 0.");
-
             RuleFor(x => x.CountryOfOrigin)
                 .NotEmpty()
                 .WithMessage("Country of origin is required.")

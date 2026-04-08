@@ -16,7 +16,8 @@ namespace ICMS.Application.Services
         IUnitOfWork unitOfWork, 
         IIdentityService identityService,
         IValidator<UserCreateDto> userCreateValidator,
-        IValidator<UserReadDto> userUpdateValidator) : IUserService
+        IValidator<UserReadDto> userUpdateValidator,
+        IRefreshTokenService refreshTokenService) : IUserService
     {
         public async Task<IReadOnlyList<UserReadDto>> GetAllAsync(PaginationParams paginationParams, CancellationToken ct = default)
         {
@@ -45,7 +46,8 @@ namespace ICMS.Application.Services
         {
             await userCreateValidator.ValidateAndThrowAsync(entity, ct);
 
-            var user = entity.ToDomain();
+            string hashedPassword = BCrypt.Net.BCrypt.HashPassword(entity.Password);
+            var user = entity.ToDomain(hashedPassword);
             
             await unitOfWork.UserRepository.AddAsync(user, ct);
             await unitOfWork.SaveChangesAsync(ct);
@@ -102,6 +104,41 @@ namespace ICMS.Application.Services
             await unitOfWork.UserRepository.DeleteAsync(user, ct);
             await unitOfWork.SaveChangesAsync(ct);
 
+            return true;
+        }
+
+        public async Task<bool> ActivateAsync(int id, CancellationToken ct = default)
+        {
+            var user = await unitOfWork.UserRepository.GetByIdAsync(id, ct);
+            if (user == null) return false;
+
+            user.ActivateUser();
+            await unitOfWork.UserRepository.UpdateAsync(user, ct);
+            await unitOfWork.SaveChangesAsync(ct);
+            return true;
+        }
+
+        public async Task<bool> DeactivateAsync(int id, CancellationToken ct = default)
+        {
+            var user = await unitOfWork.UserRepository.GetByIdAsync(id, ct);
+            if (user == null) return false;
+
+            user.DeactivateUser();
+            await unitOfWork.UserRepository.UpdateAsync(user, ct);
+            await refreshTokenService.InvalidateUserRefreshTokensAsync(id, ct);
+            await unitOfWork.SaveChangesAsync(ct);
+            return true;
+        }
+
+        public async Task<bool> ChangePasswordAsync(int id, string newPassword, CancellationToken ct = default)
+        {
+            var user = await unitOfWork.UserRepository.GetByIdAsync(id, ct);
+            if (user == null) return false;
+
+            user.ChangePassword(BCrypt.Net.BCrypt.HashPassword(newPassword));
+            await unitOfWork.UserRepository.UpdateAsync(user, ct);
+            await refreshTokenService.InvalidateUserRefreshTokensAsync(id, ct);
+            await unitOfWork.SaveChangesAsync(ct);
             return true;
         }
     }

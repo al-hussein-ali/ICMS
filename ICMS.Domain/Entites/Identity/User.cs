@@ -69,6 +69,14 @@ namespace ICMS.Domain.Entites.Identity
             IsActive = false;
         }
 
+        public void ActivateUser()
+        {
+            if (IsActive)
+                return;
+
+            IsActive = true;
+        }
+
         public void ChangePassword(string newPasswordHash)
         {
             if (string.IsNullOrEmpty(newPasswordHash))
