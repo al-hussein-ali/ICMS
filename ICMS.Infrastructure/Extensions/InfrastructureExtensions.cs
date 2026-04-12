@@ -46,6 +46,8 @@ namespace ICMS.Infrastructure.Extensions
             services.AddScoped<ITokenService, TokenService>();
             services.AddScoped<IRefreshTokenService, RefreshTokenService>();
             services.AddScoped<IAuthService, AuthService>();
+            services.AddScoped<IBatchService, BatchService>();
+            services.AddScoped<ITransactionService, TransactionService>();
 
             return services;
         }

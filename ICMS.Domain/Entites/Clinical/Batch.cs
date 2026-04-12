@@ -6,6 +6,7 @@ using ICMS.Domain.Entites.Clinical;
 using ICMS.Domain.Entites.Identity;
 using ICMS.Domain.Entites.Common;
 using ICMS.Domain.Exceptions;
+using ICMS.Domain.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,7 +22,7 @@ namespace ICMS.Domain.Entites.Clinical
         public int DoseId { get; private set; }
         public int UserId { get; private set; }
         public string CountryOfOrigin { get; private set; } = string.Empty;
-        public string? CookNumber { get; private set; }
+        public string CookNumber { get; private set; } = string.Empty;
         public DateOnly ExpiryDate { get; private set; }
         public int TotalQuantity { get; private set; }
         public string? Notes { get; private set; }
@@ -33,12 +34,13 @@ namespace ICMS.Domain.Entites.Clinical
         {
         }
 
-        public static Batch Create(int doseId, int userId, DateOnly expiryDate, int totalQuantity, string countryOfOrigin, string? cookNumber = null, string? notes = null)
+        public static Batch Create(int doseId, int userId, DateOnly expiryDate, int totalQuantity, string countryOfOrigin, string cookNumber, string? notes = null)
         {
             if (doseId <= 0) throw new DomainException("Invalid dose id");
             if (userId <= 0) throw new DomainException("Invalid user id");
             if (totalQuantity < 0) throw new DomainException("Total quantity cannot be negative");
             if (string.IsNullOrWhiteSpace(countryOfOrigin)) throw new DomainException("Country of origin is required");
+            if (string.IsNullOrWhiteSpace(cookNumber)) throw new DomainException("Cook number is required");
 
             return new Batch
             {
@@ -50,6 +52,41 @@ namespace ICMS.Domain.Entites.Clinical
                 CookNumber = cookNumber,
                 Notes = notes
             };
+        }
+
+        public void AddInventory(int quantity, string permissionNumber, string source, int userId, DateTime? date = null)
+        {
+            if (quantity <= 0) throw new DomainException("Added quantity must be positive");
+            
+            var transaction = Transaction.Create(
+                this.Id, 
+                TransactionType.In, 
+                date ?? DateTime.UtcNow, 
+                quantity, 
+                permissionNumber, 
+                source, 
+                userId);
+
+            _transactions.Add(transaction);
+            TotalQuantity += quantity;
+        }
+
+        public void RemoveInventory(int quantity, string permissionNumber, string destination, int userId, DateTime? date = null)
+        {
+            if (quantity <= 0) throw new DomainException("Removed quantity must be positive");
+            if (TotalQuantity < quantity) throw new DomainException("Insufficient inventory in batch");
+
+            var transaction = Transaction.Create(
+                this.Id, 
+                TransactionType.Out, 
+                date ?? DateTime.UtcNow, 
+                quantity, 
+                permissionNumber, 
+                destination, 
+                userId);
+
+            _transactions.Add(transaction);
+            TotalQuantity -= quantity;
         }
 
         public void AssignDose(Dose dose)

@@ -1,24 +1,53 @@
+using ICMS.Application.DTOs.Batch;
+using ICMS.Application.DTOs.Pagination;
 using ICMS.Application.Interfaces.Repositories;
-using ICMS.Domain.Entites.Common;
-using ICMS.Domain.Entites.Identity;
 using ICMS.Domain.Entites.Clinical;
-using ICMS.Domain.Entites.Maternal;
-using ICMS.Domain.Entites.Visits;
-using ICMS.Domain.Entites.Audit;
-using ICMS.Domain.Entites.Geography;
+using ICMS.Domain.ValueObjects;
 using ICMS.Infrastructure.Persistence.Data;
-using System;
-using System.Collections.Generic;
+using Microsoft.EntityFrameworkCore;
 using System.Linq;
-using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace ICMS.Infrastructure.Repositories.Clinical
 {
-    public class BatchRepository : Repository<Batch,int>, IBatchRepository
+    public class BatchRepository : Repository<Batch, int>, IBatchRepository
     {
         public BatchRepository(AppDbContext context) : base(context)
         {
         }
-}
+
+        public async Task<PagedResult<Batch>> GetAllAsync(BatchFilterDto filter, PaginationParams paginationParams, CancellationToken ct = default)
+        {
+            var query = _context.Batches
+                .Include(b => b.Dose)
+                .AsNoTracking();
+
+            if (filter.DoseId.HasValue)
+            {
+                query = query.Where(b => b.DoseId == filter.DoseId.Value);
+            }
+
+            if (filter.ExpiryDate.HasValue)
+            {
+                query = query.Where(b => b.ExpiryDate == filter.ExpiryDate.Value);
+            }
+
+            var totalCount = await query.CountAsync(ct);
+            var items = await query
+                .Skip((paginationParams.PageNumber - 1) * paginationParams.PageSize)
+                .Take(paginationParams.PageSize)
+                .ToListAsync(ct);
+
+            return new PagedResult<Batch>(items, totalCount, paginationParams.PageNumber, paginationParams.PageSize);
+        }
+
+        public async Task<Batch?> GetByIdWithDetailsAsync(int id, CancellationToken ct = default)
+        {
+            return await _context.Batches
+                .Include(b => b.Dose)
+                .Include(b => b.User)
+                .FirstOrDefaultAsync(b => b.Id == id, ct);
+        }
+    }
 }

@@ -1,19 +1,15 @@
-using ICMS.Domain.Entites.Common;
-using ICMS.Domain.Entites.Identity;
+using ICMS.Application.DTOs.Batch;
+using ICMS.Application.DTOs.Pagination;
 using ICMS.Domain.Entites.Clinical;
-using ICMS.Domain.Entites.Maternal;
-using ICMS.Domain.Entites.Visits;
-using ICMS.Domain.Entites.Audit;
-using ICMS.Domain.Entites.Geography;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using ICMS.Domain.ValueObjects;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace ICMS.Application.Interfaces.Repositories
 {
-    public interface IBatchRepository : IRepository<Batch,int>
+    public interface IBatchRepository : IRepository<Batch, int>
     {
+        Task<PagedResult<Batch>> GetAllAsync(BatchFilterDto filter, PaginationParams paginationParams, CancellationToken ct = default);
+        Task<Batch?> GetByIdWithDetailsAsync(int id, CancellationToken ct = default);
     }
 }

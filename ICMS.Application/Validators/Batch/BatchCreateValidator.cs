@@ -17,12 +17,11 @@ namespace ICMS.Application.Validators.Batch
                 .MaximumLength(150)
                 .WithMessage("Country of origin must be at most 150 characters.");
 
-            When(x => x.CookNumber != null, () =>
-            {
-                RuleFor(x => x.CookNumber)
-                    .MaximumLength(200)
-                    .WithMessage("Cook number must be at most 200 characters.");
-            });
+            RuleFor(x => x.CookNumber)
+                .NotEmpty()
+                .WithMessage("Cook number is required.")
+                .MaximumLength(200)
+                .WithMessage("Cook number must be at most 200 characters.");
 
             RuleFor(x => x.ExpiryDate)
                 .Must(d => d != default)
