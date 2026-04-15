@@ -31,7 +31,6 @@ namespace ICMS.Infrastructure.Persistence.Data
         public DbSet<Dose> Doses { get; set; }
         public DbSet<DoseReport> DoseReports { get; set; }
         public DbSet<FieldVisit> FieldVisits { get; set; }
-        public DbSet<FieldVisitUser> FieldVisitUsers { get; set; }
         public DbSet<HealthAdvisory> HealthAdvisories { get; set; }
         public DbSet<ImmunizationRecord> ImmunizationRecords { get; set; }
         public DbSet<Newborn> Newborns { get; set; }

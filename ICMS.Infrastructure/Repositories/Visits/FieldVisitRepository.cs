@@ -14,7 +14,6 @@ namespace ICMS.Infrastructure.Repositories.Visits
         public async Task<FieldVisit?> GetByIdWithDetailsAsync(int id, CancellationToken ct = default)
         {
             return await _dbSet
-                .Include(fv => fv.FieldVisitUsers)
                 .Include(fv => fv.ImmunizationRecords)
                 .FirstOrDefaultAsync(fv => fv.Id == id, ct);
         }

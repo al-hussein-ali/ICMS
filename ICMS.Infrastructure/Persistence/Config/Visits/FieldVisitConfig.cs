@@ -31,9 +31,7 @@ namespace ICMS.Infrastructure.Persistence.Config.Visits
                 .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasField("_immunizationRecords");
 
-            builder.Navigation(nameof(FieldVisit.FieldVisitUsers))?
-                .UsePropertyAccessMode(PropertyAccessMode.Field)
-                .HasField("_fieldVisitUsers");
+    
 
             builder.HasMany(fv => fv.ImmunizationRecords)
                 .WithOne(ir => ir.FieldVisit)
@@ -41,10 +39,7 @@ namespace ICMS.Infrastructure.Persistence.Config.Visits
                 .OnDelete(DeleteBehavior.Restrict);
 
 
-            builder.HasMany(fv => fv.FieldVisitUsers)
-                   .WithOne(fvu => fvu.FieldVisit)
-                   .HasForeignKey(fvu => fvu.FieldVisitId)
-                   .OnDelete(DeleteBehavior.Restrict);
+    
         }
     }
 }

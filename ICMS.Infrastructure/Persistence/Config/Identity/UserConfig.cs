@@ -36,21 +36,13 @@ public class UserConfig : IEntityTypeConfiguration<User>
             .HasForeignKey(ur => ur.UserId)
             .OnDelete(DeleteBehavior.Cascade);
 
-
-     
-
-        builder.HasMany(u => u.FieldVisitUsers)
-            .WithOne(fvu => fvu.FieldWorker)
-            .HasForeignKey(fvu => fvu.UserId)
-            .OnDelete(DeleteBehavior.Restrict);
+    
 
         builder.Navigation(nameof(User.UserRoles))?
             .UsePropertyAccessMode(PropertyAccessMode.Field)
             .HasField("_userRoles");
 
-        builder.Navigation(nameof(User.FieldVisitUsers))?
-            .UsePropertyAccessMode(PropertyAccessMode.Field)
-            .HasField("_fieldVisitUsers");
+    
 
 
 

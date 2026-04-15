@@ -18,10 +18,7 @@ namespace ICMS.Domain.Entites.Identity
     {
         private readonly List<UserRole> _userRoles = new();
 
-        private readonly List<FieldVisitUser> _fieldVisitUsers = new();
-
         public IReadOnlyList<UserRole> UserRoles => _userRoles.AsReadOnly();
-        public IReadOnlyList<FieldVisitUser> FieldVisitUsers => _fieldVisitUsers.AsReadOnly();
         public string UserName { get; private set; } = string.Empty;
         public string PasswordHash { get; private set; } = string.Empty;
         public bool IsActive { get; private set; }
@@ -109,12 +106,5 @@ namespace ICMS.Domain.Entites.Identity
             _userRoles.Clear();
         }
 
-        public void AddFieldVisitUser(FieldVisitUser fvu)
-        {
-            if (fvu == null) throw new DomainException("Field Visit User is required");
-            if (_fieldVisitUsers.Any(x => x.UserId == fvu.UserId && x.FieldVisitId == fvu.FieldVisitId)) throw new DomainException("Field Visit User already added");
-
-            _fieldVisitUsers.Add(fvu);
-        }
     }
 }

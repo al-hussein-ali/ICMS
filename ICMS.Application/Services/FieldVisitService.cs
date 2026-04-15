@@ -41,25 +41,8 @@ namespace ICMS.Application.Services
         {
             var fieldVisit = FieldVisit.Create(dto.VisitDate, dto.SubNeighborhoodId);
 
-            // Add field workers if provided
-            if (dto.FieldWorkerUserIds != null && dto.FieldWorkerUserIds.Any())
-            {
-                await _unitOfWork.FieldVisitRepository.AddAsync(fieldVisit, ct);
-                await _unitOfWork.SaveChangesAsync(ct);
-
-                foreach (var userId in dto.FieldWorkerUserIds)
-                {
-                    var fvu = FieldVisitUser.Create(fieldVisit.Id, userId);
-                    fieldVisit.AddFieldWorker(fvu);
-                }
-
-                await _unitOfWork.SaveChangesAsync(ct);
-            }
-            else
-            {
-                await _unitOfWork.FieldVisitRepository.AddAsync(fieldVisit, ct);
-                await _unitOfWork.SaveChangesAsync(ct);
-            }
+            await _unitOfWork.FieldVisitRepository.AddAsync(fieldVisit, ct);
+            await _unitOfWork.SaveChangesAsync(ct);
 
             return fieldVisit.ToReadDto();
         }

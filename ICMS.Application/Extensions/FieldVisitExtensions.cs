@@ -25,7 +25,6 @@ namespace ICMS.Application.Extensions
                 fv.SubNeighborhoodId,
                 fv.SubNeighborhood?.Name ?? string.Empty,
                 fv.IsCompleted,
-                fv.FieldVisitUsers.Select(fvu => new FieldWorkerDto(fvu.UserId, fvu.FieldVisitId)).ToList(),
                 fv.ImmunizationRecords.Count
             );
         }

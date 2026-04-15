@@ -17,10 +17,8 @@ namespace ICMS.Domain.Entites.Visits
 {
     public class FieldVisit : BaseEntity<int>
     {
-        private readonly List<FieldVisitUser> _fieldVisitUsers = new();
         private readonly List<ImmunizationRecord> _immunizationRecords = new();
 
-        public IReadOnlyList<FieldVisitUser> FieldVisitUsers => _fieldVisitUsers.AsReadOnly();
         public IReadOnlyList<ImmunizationRecord> ImmunizationRecords => _immunizationRecords.AsReadOnly();
         public DateOnly VisitDate { get; private set; }
         public int SubNeighborhoodId { get; private set; }
@@ -37,14 +35,6 @@ namespace ICMS.Domain.Entites.Visits
             if (subNeighborhoodId <= 0) throw new DomainException("Valid SubNeighborhoodId is required");
 
             return new FieldVisit { VisitDate = visitDate, SubNeighborhoodId = subNeighborhoodId, IsCompleted = isCompleted };
-        }
-
-        public void AddFieldWorker(FieldVisitUser fvu)
-        {
-            if (fvu == null) throw new DomainException("FieldVisitUser is required");
-            if (_fieldVisitUsers.Any(x => x.UserId == fvu.UserId && x.FieldVisitId == fvu.FieldVisitId)) throw new DomainException("Field worker already added");
-
-            _fieldVisitUsers.Add(fvu);
         }
 
         public void AddImmunizationRecord(ImmunizationRecord ir)

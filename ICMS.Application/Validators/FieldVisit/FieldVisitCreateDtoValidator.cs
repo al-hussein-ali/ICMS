@@ -17,12 +17,6 @@ namespace ICMS.Application.Validators.FieldVisit
 
             RuleFor(x => x.SubNeighborhoodId)
                 .GreaterThan(0).WithMessage("A valid SubNeighborhood ID is required.");
-
-            RuleFor(x => x.FieldWorkerUserIds)
-                .Must(ids => ids == null || ids.Count > 0)
-                .WithMessage("At least one field worker must be assigned if providing a list.")
-                .Must(ids => ids == null || !ids.Any(id => id <= 0))
-                .WithMessage("Invalid User Id found in field workers list.");
         }
     }
 }
