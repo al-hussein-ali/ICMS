@@ -80,11 +80,45 @@ namespace ICMS.Application.Services
             });
         }
 
-        public async Task<PagedResult<TransactionReadDto>> GetTransactionsAsync(int batchId, PaginationParams paginationParams, CancellationToken ct = default)
+        public async Task RemoveStockByDoseAsync(InventoryRemoveByDoseDto dto, int userId, CancellationToken ct = default)
+        {
+            await _unitOfWork.ExecuteInTransactionAsync(async () =>
+            {
+                var batches = _unitOfWork.BatchRepository.GetQueryable(track: true)
+                    .Where(b => b.DoseId == dto.DoseId && b.TotalQuantity > 0)
+                    .OrderBy(b => b.ExpiryDate)
+                    .ToList(); // ToList because we need to iterate and modify
+
+                int remainingToSubtract = dto.Quantity;
+                int totalAvailable = batches.Sum(b => b.TotalQuantity);
+
+                if (totalAvailable < dto.Quantity)
+                    throw new DomainException($"Insufficient total inventory for Dose {dto.DoseId}. Available: {totalAvailable}, Requested: {dto.Quantity}");
+
+                foreach (var batch in batches)
+                {
+                    if (remainingToSubtract <= 0) break;
+
+                    int toSubtractFromThisBatch = Math.Min(batch.TotalQuantity, remainingToSubtract);
+                    batch.RemoveInventory(toSubtractFromThisBatch, dto.PermissionNumber, dto.Destination, userId);
+                    remainingToSubtract -= toSubtractFromThisBatch;
+                }
+
+                await _unitOfWork.SaveChangesAsync(ct);
+            });
+        }
+
+        public async Task<PagedResult<TransactionReadDto>> GetTransactionsAsync(int batchId, TransactionFilterDto filter, PaginationParams paginationParams, CancellationToken ct = default)
         {
             var query = _unitOfWork.TransactionRepository.GetQueryable()
-                .Where(t => t.BatchId == batchId)
-                .OrderByDescending(t => t.TransactionDate);
+                .Where(t => t.BatchId == batchId);
+
+            if (filter.TransactionType.HasValue)
+            {
+                query = query.Where(t => t.TransactionType == filter.TransactionType.Value);
+            }
+
+            query = query.OrderByDescending(t => t.TransactionDate);
 
             var totalCount = query.Count();
             var items = query.Skip((paginationParams.PageNumber - 1) * paginationParams.PageSize)

@@ -48,6 +48,7 @@ namespace ICMS.Infrastructure.Extensions
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IBatchService, BatchService>();
             services.AddScoped<ITransactionService, TransactionService>();
+            services.AddScoped<IDoseReportService, DoseReportService>();
 
             return services;
         }

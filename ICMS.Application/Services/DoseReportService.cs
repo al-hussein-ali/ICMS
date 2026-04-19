@@ -1,40 +1,58 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using ICMS.Application.DTOs;
+using ICMS.Application.DTOs.DoseReport;
 using ICMS.Application.DTOs.Pagination;
+using ICMS.Application.Extensions;
+using ICMS.Application.Interfaces;
 using ICMS.Application.Interfaces.Services;
+using ICMS.Domain.Exceptions;
+using ICMS.Domain.ValueObjects;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace ICMS.Application.Services
 {
-    public class DoseReportService : IDoseReportService
+    public class DoseReportService(IUnitOfWork unitOfWork) : IDoseReportService
     {
-
-        public Task<IReadOnlyList<TempDto>> GetAllAsync(PaginationParams paginationParams, CancellationToken ct = default)
+        public async Task<PagedResult<DoseReportReadDto>> GetAllAsync(PaginationParams paginationParams, CancellationToken ct = default)
         {
-            throw new NotImplementedException();
+            var query = unitOfWork.DoseReportRepository.GetQueryable()
+                .Select(r => r.ToReadDto());
+            
+            return query.ApplyPagination(paginationParams.PageNumber, paginationParams.PageSize);
         }
 
-        public Task<TempDto?> GetByIdAsync(int id, CancellationToken ct = default)
+        public async Task<DoseReportReadDto?> GetByIdAsync(int id, CancellationToken ct = default)
         {
-            throw new NotImplementedException();
+            var report = await unitOfWork.DoseReportRepository.GetByIdAsync(id, ct);
+            return report?.ToReadDto();
         }
 
-        public Task<TempDto> AddAsync(TempDto entity, CancellationToken ct = default)
+        public async Task<DoseReportReadDto> AddAsync(DoseReportCreateDto dto, int userId, CancellationToken ct = default)
         {
-            throw new NotImplementedException();
+            var batch = await unitOfWork.BatchRepository.GetByIdAsync(dto.BatchId, ct);
+            if (batch == null) throw new NotFoundException($"Batch {dto.BatchId} not found");
+
+            // Automatically zero out stock for reported batches to prevent further use
+            if (batch.TotalQuantity > 0)
+            {
+                batch.RemoveInventory(batch.TotalQuantity, "REPORTED", "DISCARDED", userId);
+            }
+
+            var report = dto.ToDomain(userId);
+            
+            await unitOfWork.DoseReportRepository.AddAsync(report, ct);
+            await unitOfWork.SaveChangesAsync(ct);
+            
+            return report.ToReadDto();
         }
 
-        public Task<bool> DeleteAsync(TempDto entity, CancellationToken ct = default)
+        public async Task<bool> DeleteAsync(int id, CancellationToken ct = default)
         {
-            throw new NotImplementedException();
-        }
+            var report = await unitOfWork.DoseReportRepository.GetByIdAsync(id, ct);
+            if (report == null) return false;
 
-        public Task<bool> UpdateAsync(TempDto updatedEntity, CancellationToken ct = default)
-        {
-            throw new NotImplementedException();
+            await unitOfWork.DoseReportRepository.DeleteAsync(report, ct);
+            return await unitOfWork.SaveChangesAsync(ct) > 0;
         }
     }
 }

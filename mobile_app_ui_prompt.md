@@ -1,88 +1,97 @@
-# Mobile App UI Prompt
+# Mobile App UI Prompt – ICMS Offline Field Visit Operations App
 
-This is a comprehensive prompt you can copy-paste to any AI UI/UX generator or AI coding assistant (like Flutter/React Native code generators) to generate screens that match your requirements.
+This document serves as a comprehensive system prompt for any AI UI/UX generator (e.g., v0.dev, UIzard) or AI coding assistant (like Flutter/React Native code generators). Copy the text below to generate the exact UI screens required for the system.
 
 ---
 **Copy the text below:**
 ---
 
-Please generate the UI screens and components for an offline-first Mobile Field Visit App used by authorized medical staff (`FieldVisitWorker`). I need high-quality, modern, and highly responsive screens following a specific design language.
+Please act as an Expert Mobile App UI/UX Designer and Frontend Engineer. Generate high-fidelity, modern, offline-first mobile app screens and components for a "Field Visit Tracker" used by authorized medical staff. The code you generate (Flutter Widgets / React Native / React TS) must be production-ready, beautiful, and highly responsive.
 
-## Design Aesthetic & Color Palette
-The app must have a modern, "Premium" feel using the following exact colors for both Light and Dark modes:
+## 1. App Context & Core Behaviors
+*   **The Problem:** Workers visit remote areas to administer vaccinations. Internet connectivity is highly unreliable.
+*   **The Paradigm:** The app is **Offline-First**. Any action the user takes is saved locally immediately. When the connection is restored, the app bulk-syncs data to the server.
+*   **Worker Freedom:** Admins do *not* assign visits. Instead, any authorized worker can browse a pool of "Open Visits", select one, download the target lists, and start contributing offline.
+*   **Core UI Feedback:** Every screen should gracefully handle being offline without throwing errors. The user must always know if they are working offline and how many items are waiting to be synced.
 
-### Core Colors
-*   **Brand Blue (Primary):** `#2586C7` - Use for branding, main buttons, and prominent headers.
-*   **Teal/Cyan (Secondary):** `#02A3A9` - Use for secondary actions, accents, and active states.
-*   **Navy Accent (Dark):** `#145E8F` - Use for dark backgrounds, footer elements, and deep gradients.
+## 2. Design Aesthetic & The "Premium" Vibe
+The app must not look generic. It requires a modern, smooth, and energetic design.
 
-### Backgrounds & Surfaces
-*   **Canvas BG (General Background):** `#F4F7F6` (Very light grey with a tint of green). In Dark Mode: `#121212`
-*   **Surface/Card (White Background):** `#FFFFFF`. In Dark Mode: `#1E1E1E`
+### Color Palette (Light / Dark Mode Support)
+*   **Primary Brand:** `#2586C7` (Electric Blue) - Headers, Primary buttons.
+*   **Secondary Accent:** `#02A3A9` (Teal) - Floating Action Buttons, active tabs.
+*   **Backgrounds (Canvas):** `#F8FAFC` (Light Mode - Slate 50) / `#0F172A` (Dark Mode - Slate 900).
+*   **Surface/Cards:** `#FFFFFF` (Light Mode) / `#1E293B` (Dark Mode).
+*   **Status Indicators:** Success (`#10B981` Emerald), Warning (`#F59E0B` Amber), Danger/Reject (`#EF4444` Red).
+*   **Gradients:** Use a subtle 135-degree gradient blending `#2586C7` to `#145E8F` for prominent elements like login buttons and hero banners.
 
-### Typography (Google Fonts like Inter or Roboto)
-*   **Primary Text:** `#000000` (Light Mode) / `#FFFFFF` (Dark Mode)
-*   **Muted Text:** `#666666` (Light Mode) / `#B3B3B3` (Dark Mode)
+### Typography & Structure
+*   **Font:** Use a clean, modern san-serif (e.g., Inter, Outfit, or Poppins).
+*   **Borders & Shadows:** Generous border-radius on cards (`12px` to `16px`). Soft, diffuse drop shadows rather than harsh dark shadows. Ensure clean spacing (padding inside cards).
+*   **Micro-interactions:** Include skeleton loaders for fetching data, ripple effects on cards, and smooth bottom-sheet sliding animations. 
 
-### Status Colors
-*   **Success (Success/Done):** `#388E3C`
-*   **Danger (Error/Delete/Rejected):** `#D32F2F`
-*   **Warning (Alert/Pending):** `#F59E0B`
+---
 
-### Modern Gradients (Critical for Premium Look)
-*   **Primary Gradient:** From `#2586C7` to `#145E8F` at a 135-degree angle.
-*   **Secondary Gradient:** From `#02A3A9` to `#017A7E` at a 135-degree angle.
+## 3. Required App Screens & Components
 
-*Micro-animations, smooth transitions, and glassmorphism (where applicable without losing contrast) should be included.*
+### A. The Global AppBar / Persistent Offline Header
+*   Across most screens (except Login), the top app bar must include a **Sync Status Badge**.
+*   **States:** "Online", "Offline (Working Locally)", "Syncing...", and "X Pending Items".
+*   If there are Rejected Items, show a small red warning icon in the App Bar.
 
-## Required Screens
+### B. Login & Splash Screen
+*   Clean, centered form: Username, Password. 
+*   **Action Button:** Full-width gradient Login button.
+*   **Visual Check:** Show an animated spinner during auth. Show an offline alert if logging in without prior cached credentials while offline.
 
-### 1. Login Screen
-*   A clean, centered form.
-*   **Fields:** Username, Password.
-*   **Action:** A beautifully styled "Login" button utilizing the **Primary Gradient**.
-*   **State:** Show a spinner while authenticating.
+### C. Worker Dashboard (Home Screen)
+*   **Hero Section:** A card displaying quick stats: "Completed Today: 45", "Pending Sync: 12".
+*   **Main Navigation Cards (Grid or Large List):**
+    1.  **Browse Open Campaigns:** Arrow icon, blue tint.
+    2.  **Continue Active Visit:** Teal tint (Shows current downloaded visit, if any).
+    3.  **Sync Center:** Amber tint if items pending or red if rejected data requires attention.
 
-### 2. Pending Field Visits Screen
-*   A scrollable list of available, non-completed field visits assigned to the worker.
-*   **Cards:** Each visit should be displayed as a card on the canvas background. Cards must have a slight shadow and border-radius.
-*   **Action:** When clicked, the visit is selected, stored locally as the "Current Visit", and navigates to the Details Screen.
+### D. Browse Available Field Visits (The "Pool")
+*   A searchable, scrollable list of all active field visits happening locally (since workers select their own work now).
+*   **Filters:** Filter chips for `Directorate`, `Neighborhood`, and `Date`.
+*   **Card UI:** Visit Name, Location tags, Progress bar, Start/End Dates.
+*   **Action:** When a visit is clicked, show a bottom sheet with a prominent **"Download & Start Contributing"** button. This simulate fetching the local cache.
 
-### 3. Field Visit Details Screen (Target List & Missed Doses)
-*   **Header:** Shows the details of the selected Field Visit.
-*   **Tabs / Sections:**
-    1.  **Target Individuals:** List of individuals scheduled for this visit based on dates.
-    2.  **Missed Doses:** List of sub-neighborhoods containing individuals who missed a dose.
-*   **Floating Action Button (FAB) / Main Button:** "Add New Individual" (uses the **Secondary Gradient**).
-*   **Offline Indicator:** A small UI element (e.g., cloud with slash) in the corner indicating that current operations are offline.
+### E. Offline Workspace: Active Field Visit Details
+*   This is the primary offline workspace for the worker.
+*   **Sticky Header:** Visit Title, and location breadcrumbs.
+*   **Horizontal Tabs:**
+    1.  **Target List:** Individuals due for vaccines today. **Crucial Layout:** Group these cards by **Sub-Neighborhood** using collapsible headers (accordions).
+    2.  **Missed Doses:** Individuals in the area who missed a past dose. Highlight these cards with an amber tint or warning icon.
+    3.  **Newly Registered:** People the worker met on the field and added today.
+*   **List Item Card Elements:** Name, Age, Target Dose (e.g., "OPV-1"), Status indicator (Pending vs. Done).
+*   **Action:** Floating Action Button (FAB) -> "Add Unregistered Person".
 
-### 4. Register Dose Form (Existing Individual)
-*   When a worker clicks on an individual in the Target List, this form slides up or opens.
-*   **Fields (Matching `UpdateFieldVisitIndividualDto`):**
-    *   Individual ID (Hidden/Read-only)
-    *   Dose (Dropdown/Selection)
-    *   Vaccination Date (Date Picker)
-    *   Taken In (String/Dropdown)
-    *   Note (Optional Text Area)
-*   **Action:** "Save offline" button.
+### F. Quick Vaccination Form (For Existing Targets)
+*   Triggered when a worker taps an individual on the Target or Missed lists. It should slide up gracefully from the bottom (Bottom Sheet Modal).
+*   **Fields required:**
+    *   Dose (Dropdown, prepopulated with expected dose).
+    *   Vaccination Date (Default to today).
+    *   Note (Optional text area).
+*   **Action:** Large "Save Offline" button with a success checkmark animation.
 
-### 5. Add New Individual Form
-*   Opened from the FAB in the Details Screen.
-*   **Fields (Matching `NewFieldVaccinatedIndividualDto` and `PersonCreateDto`):**
-    *   First Name, Second Name, Third Name (Optional), Last Name.
-    *   Gender (Dropdown/Radio).
-    *   Date of Birth (Date Picker).
-    *   Phone Number.
-    *   Directorate, Neighborhood, Sub-Neighborhood (Dropdowns).
-    *   Dose (Dropdown).
-    *   Vaccination Date (Date Picker).
-    *   Taken In (Text).
-    *   Note (Optional Text).
-*   **Action:** "Save New Record" (Success colored button).
+### G. Comprehensive Registration Form (The Ad-Hoc Form)
+*   Triggered from the FAB. Used when encountering someone not on the Target List.
+*   **Layout:** A smooth scrolling or multi-step wizard form. 
+*   **Sections:**
+    *   **Personal:** First, Second, Last Name, Gender, Date of Birth.
+    *   **Contact:** Phone Number.
+    *   **Location:** Linked Dropdowns for Directorate -> Neighborhood -> Sub-Neighborhood. (Must support offline selection).
+    *   **Clinical:** Administered Dose, Date.
+*   **Action:** "Save New Record locally".
 
-### 6. Rejected Records Screen
-*   A dedicated warning-styled screen for data that failed synchronization logic on the server.
-*   **List Items:** Show Individual's Full Name, the Field Visit ID/Name, and the **Rejection Reason**.
-*   **Styling:** Make use of the **Danger** (`#D32F2F`) and **Warning** (`#F59E0B`) colors. Card borders could have a subtle red tint.
+### H. Sync Center & Conflict Resolution Screen
+*   Dedicated screen for managing data traffic between local and server.
+*   **Two Tabs:**
+    1.  **Pending Queue:** List of operations waiting for internet (e.g., "Registered Dose for Ali", "Added New Person: Sara"). Shows a "Sync All Now" button at the bottom.
+    2.  **Rejected Records:** Items the server rejected during a bulk sync (e.g., Duplicates, Validation fail).
+*   **Conflict Card UI:** Shows the person's name, the field visit name, and a prominent red box explaining the **Rejection Reason** from the backend. Include a "Tap to Edit" button opening the form again to fix errors, and a "Delete" button.
 
-Please provide the layout and styling code (e.g., Widget trees for Flutter, or JSX/Tailwind for React Native) implementing these exact specifications.
+---
+**Instructions for the AI:** 
+Please begin by generating the generic App Shell (Navigation, Offline Status App Bar), followed by the Dashboard, Active Field Visit view with its sub-tabs, and then the sync conflict resolution screen. Provide extensive layout code (State management hooks/setup is secondary to having the component structure, styling, and styling tokens correct). Use mock data showing Sub-Neighborhood groupings.

@@ -56,9 +56,9 @@ namespace ICMS.API.Controllers
         }
 
         [HttpGet("{batchId}/transactions")]
-        public async Task<ActionResult<PagedResult<TransactionReadDto>>> GetTransactionsAsync([FromRoute] int batchId, [FromQuery] PaginationParams paginationParams)
+        public async Task<ActionResult<PagedResult<TransactionReadDto>>> GetTransactionsAsync([FromRoute] int batchId, [FromQuery] TransactionFilterDto filter, [FromQuery] PaginationParams paginationParams)
         {
-            var result = await batchService.GetTransactionsAsync(batchId, paginationParams);
+            var result = await batchService.GetTransactionsAsync(batchId, filter, paginationParams);
             return Ok(result);
         }
     }

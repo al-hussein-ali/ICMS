@@ -13,7 +13,7 @@ namespace ICMS.Infrastructure.Persistence.Config.Audit
 {
     public  class TransactionConfig : IEntityTypeConfiguration<Transaction>
     {
-        private string[] _transactionTypes = { "????", "????" };
+        private string[] _transactionTypes = { "In", "Out" };
 
         public void Configure(EntityTypeBuilder<Transaction> builder)
         {
