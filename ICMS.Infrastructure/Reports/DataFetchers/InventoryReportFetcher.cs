@@ -2,20 +2,13 @@ using ICMS.Application.DTOs.Reports;
 using ICMS.Application.Enums;
 using ICMS.Application.Interfaces;
 using ICMS.Application.Interfaces.Reports;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using ICMS.Domain.Enums;
 
 namespace ICMS.Infrastructure.Reports.DataFetchers
 {
-    public class InventoryReportFetcher : IReportDataFetcher
+    public class InventoryReportFetcher(IUnitOfWork unitOfWork) : IReportDataFetcher
     {
-        private readonly IUnitOfWork _unitOfWork;
-
-        public InventoryReportFetcher(IUnitOfWork unitOfWork) => _unitOfWork = unitOfWork;
 
         public ReportType ReportType => ReportType.Inventory;
 
@@ -24,20 +17,25 @@ namespace ICMS.Infrastructure.Reports.DataFetchers
             var startDateTime = startDate.ToDateTime(TimeOnly.MinValue);
             var endDateTime   = endDate.ToDateTime(TimeOnly.MaxValue);
 
-            var batches = await _unitOfWork.BatchRepository
-                .GetQueryable(false, ct, b => b.Dose, b => b.Transactions)
+            var queryable = unitOfWork.BatchRepository
+                .GetQueryable(false, ct, b => b.Dose, b => b.Transactions);
+
+            if (queryable == null)
+                throw new InvalidOperationException("Failed to get queryable from repository.");
+
+            var batches = await queryable
                 .Where(b => b.Transactions.Any(t =>
                     t.TransactionDate >= startDateTime && t.TransactionDate <= endDateTime))
                 .ToListAsync(ct);
 
             int totalIn  = batches.SelectMany(b => b.Transactions)
                 .Where(t => t.TransactionDate >= startDateTime && t.TransactionDate <= endDateTime
-                         && t.TransactionType == ICMS.Domain.Enums.TransactionType.In)
+                         && t.TransactionType == TransactionType.In)
                 .Sum(t => t.Quantity);
 
             int totalOut = batches.SelectMany(b => b.Transactions)
                 .Where(t => t.TransactionDate >= startDateTime && t.TransactionDate <= endDateTime
-                         && t.TransactionType == ICMS.Domain.Enums.TransactionType.Out)
+                         && t.TransactionType == TransactionType.Out)
                 .Sum(t => t.Quantity);
 
             var rows = batches.Select(b => new ReportRow
@@ -51,11 +49,11 @@ namespace ICMS.Infrastructure.Reports.DataFetchers
                     ["Current Stock"]     = b.TotalQuantity.ToString(),
                     ["Total In (Period)"] = b.Transactions
                         .Where(t => t.TransactionDate >= startDateTime && t.TransactionDate <= endDateTime
-                                 && t.TransactionType == ICMS.Domain.Enums.TransactionType.In)
+                                 && t.TransactionType == TransactionType.In)
                         .Sum(t => t.Quantity).ToString(),
                     ["Total Out (Period)"] = b.Transactions
                         .Where(t => t.TransactionDate >= startDateTime && t.TransactionDate <= endDateTime
-                                 && t.TransactionType == ICMS.Domain.Enums.TransactionType.Out)
+                                 && t.TransactionType == TransactionType.Out)
                         .Sum(t => t.Quantity).ToString(),
                 }
             }).ToList();

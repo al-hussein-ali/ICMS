@@ -1,30 +1,20 @@
-using FluentValidation;
+using ICMS.Domain.Constants;
 using ICMS.Application.DTOs.Reports;
 using ICMS.Application.Interfaces.Services;
+using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.IO;
-using System.Security.Claims;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.RateLimiting;
+using System.Security.Claims;
 
 namespace ICMS.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = Roles.Admin + "," + Roles.InventoryManager + "," + Roles.VaccinationManager + "," + Roles.ReproductiveHealthManager)]
     [EnableRateLimiting("stricter")]
-    public class ReportsController : ControllerBase
+    public class ReportsController(IReportService reportService, IValidator<ReportRequestDto> validator) : ControllerBase
     {
-        private readonly IReportService _reportService;
-        private readonly IValidator<ReportRequestDto> _validator;
-
-        public ReportsController(IReportService reportService, IValidator<ReportRequestDto> validator)
-        {
-            _reportService = reportService;
-            _validator = validator;
-        }
 
         /// <summary>
         /// Enqueues a report generation job.
@@ -36,7 +26,7 @@ namespace ICMS.API.Controllers
             [FromBody] ReportRequestDto dto,
             CancellationToken ct = default)
         {
-            var validation = await _validator.ValidateAsync(dto, ct);
+            var validation = await validator.ValidateAsync(dto, ct);
             if (!validation.IsValid)
                 return ValidationProblem(new ValidationProblemDetails(
                     validation.Errors
@@ -47,7 +37,7 @@ namespace ICMS.API.Controllers
             if (!int.TryParse(userIdStr, out var userId))
                 return Unauthorized();
 
-            var result = await _reportService.EnqueueReportAsync(dto, userId, ct);
+            var result = await reportService.EnqueueReportAsync(dto, userId, ct);
             return Accepted(result);
         }
 
@@ -58,7 +48,7 @@ namespace ICMS.API.Controllers
         [HttpGet("{jobId}")]
         public async Task<ActionResult<ReportStatusDto>> GetStatus(string jobId, CancellationToken ct = default)
         {
-            var status = await _reportService.GetStatusAsync(jobId, ct);
+            var status = await reportService.GetStatusAsync(jobId, ct);
             if (status == null) return NotFound();
             return Ok(status);
         }

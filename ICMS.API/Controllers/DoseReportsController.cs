@@ -2,6 +2,7 @@ using ICMS.API.Extensions;
 using ICMS.Application.DTOs.DoseReport;
 using ICMS.Application.DTOs.Pagination;
 using ICMS.Application.Interfaces.Services;
+using ICMS.Domain.Constants;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -9,7 +10,7 @@ namespace ICMS.API.Controllers
 {
     [ApiController]
     [Route("api/dose-reports")]
-    [Authorize]
+    [Authorize(Roles = Roles.Admin + "," + Roles.InventoryManager)]
     public class DoseReportsController(IDoseReportService doseReportService) : ControllerBase
     {
         [HttpGet]

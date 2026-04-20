@@ -1,13 +1,16 @@
 using ICMS.Application.DTOs.FieldVisit;
 using ICMS.Application.DTOs.Pagination;
 using ICMS.Application.Interfaces.Services;
+using ICMS.Domain.Constants;
 using ICMS.Domain.ValueObjects;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ICMS.Api.Controllers
 {
     [Route("api/field-visits")]
     [ApiController]
+    [Authorize(Roles = Roles.Admin + "," + Roles.FieldVisitWorker)]
     public class FieldVisitsController(IFieldVisitService fieldVisitService) : ControllerBase
     {
         [HttpGet]

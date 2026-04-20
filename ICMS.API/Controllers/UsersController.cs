@@ -1,16 +1,16 @@
 using ICMS.Application.DTOs.Pagination;
 using ICMS.Application.DTOs.User;
 using ICMS.Application.Interfaces.Services;
+using ICMS.Domain.Constants;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Collections.Generic;
-using System.Threading.Tasks;
+
 
 namespace ICMS.API.Controllers
 {
     [Route("api/users")]
     [ApiController]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = Roles.Admin)]
     public class UsersController(IUserService userService) : ControllerBase
     {
         [HttpGet]

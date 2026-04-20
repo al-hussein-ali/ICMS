@@ -2,13 +2,17 @@ using ICMS.Application.DTOs.ImmunizationRecord;
 using ICMS.Application.DTOs.Pagination;
 using ICMS.Application.DTOs.VaccinatedIndividual;
 using ICMS.Application.Interfaces.Services;
+using ICMS.Domain.Constants;
 using ICMS.Domain.ValueObjects;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using ICMS.API.Extensions;
 
 namespace ICMS.API.Controllers
 {
     [Route("api/vaccinated-individuals")]
     [ApiController]
+    [Authorize(Roles = Roles.Admin + "," + Roles.VaccinationManager)]
     public class VaccinatedIndividualsController(IVaccinatedIndividualService vaccinatedIndividualService) : ControllerBase
     {
 
@@ -72,7 +76,7 @@ namespace ICMS.API.Controllers
                 return BadRequest("ID mismatch");
             }
 
-            var userId = ICMS.API.Extensions.ClaimsPrincipalExtensions.GetUserId(User);
+            var userId = ClaimsPrincipalExtensions.GetUserId(User);
             await vaccinatedIndividualService.GiveDose(dto, userId);
 
             return Accepted();
@@ -84,7 +88,7 @@ namespace ICMS.API.Controllers
             if (!newFieldVaccinatedIndividuals.Any())
                 return BadRequest("No records were found.");
 
-            var userId = ICMS.API.Extensions.ClaimsPrincipalExtensions.GetUserId(User);
+            var userId = ClaimsPrincipalExtensions.GetUserId(User);
             var result = await vaccinatedIndividualService.BulkInsertIndividualAsync(newFieldVaccinatedIndividuals, userId);
 
             return Ok(result);
@@ -96,7 +100,7 @@ namespace ICMS.API.Controllers
             if (!updateFieldVisitIndividuals.Any())
                 return BadRequest("No records were found.");
 
-            var userId = ICMS.API.Extensions.ClaimsPrincipalExtensions.GetUserId(User);
+            var userId = ClaimsPrincipalExtensions.GetUserId(User);
             var result = await vaccinatedIndividualService.BulkUpdateFieldVisitIndividualAsync(updateFieldVisitIndividuals, userId);
 
             return Ok(result);

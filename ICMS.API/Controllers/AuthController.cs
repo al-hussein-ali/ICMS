@@ -1,8 +1,9 @@
 using ICMS.Application.DTOs.Auth;
 using ICMS.Application.Interfaces.Services;
 using Microsoft.AspNetCore.Mvc;
-using System.Threading.Tasks;
+
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.AspNetCore.Authorization;
 
 namespace ICMS.API.Controllers
 {
@@ -11,6 +12,7 @@ namespace ICMS.API.Controllers
     [EnableRateLimiting("stricter")]
     public class AuthController(IAuthService authService) : ControllerBase
     {
+        [AllowAnonymous]
         [HttpPost("login")]
         public async Task<ActionResult<AuthResponseDto>> LoginAsync([FromBody] LoginDto loginDto)
         {
@@ -18,6 +20,7 @@ namespace ICMS.API.Controllers
             return Ok(result);
         }
 
+        [AllowAnonymous]
         [HttpPost("refresh")]
         public async Task<ActionResult<AuthResponseDto>> RefreshTokenAsync([FromBody] RefreshTokenRequestDto refreshDto)
         {

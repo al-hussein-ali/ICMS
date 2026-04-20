@@ -6,29 +6,16 @@ using ICMS.Application.Interfaces;
 using ICMS.Application.Interfaces.Services;
 using ICMS.Domain.Exceptions;
 using ICMS.Domain.ValueObjects;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace ICMS.Application.Services
 {
-    public class BatchService : IBatchService
+    public class BatchService(IUnitOfWork unitOfWork, ICacheService cacheService) : IBatchService
     {
-        private readonly IUnitOfWork _unitOfWork;
-        private readonly ICacheService _cacheService;
-
-        public BatchService(IUnitOfWork unitOfWork, ICacheService cacheService)
-        {
-            _unitOfWork = unitOfWork;
-            _cacheService = cacheService;
-        }
 
         public async Task<PagedResult<BatchReadDto>> GetAllAsync(BatchFilterDto filter,
             PaginationParams paginationParams, CancellationToken ct = default)
         {
-            var pagedBatches = await _unitOfWork.BatchRepository.GetAllAsync(filter, paginationParams, ct);
+            var pagedBatches = await unitOfWork.BatchRepository.GetAllAsync(filter, paginationParams, ct);
 
             var dtos = pagedBatches.Items.Select(b => b.ToReadDto()).ToList();
 
@@ -42,14 +29,14 @@ namespace ICMS.Application.Services
         public async Task<BatchDetailsDto?> GetByIdAsync(int batchId, CancellationToken ct = default)
         {
             string cacheKey = $"batch:{batchId}";
-            if (_cacheService.TryGet(cacheKey, out BatchDetailsDto? cached) && cached != null)
+            if (cacheService.TryGet(cacheKey, out BatchDetailsDto? cached) && cached != null)
                 return cached;
 
-            var batch = await _unitOfWork.BatchRepository.GetByIdWithDetailsAsync(batchId, ct);
+            var batch = await unitOfWork.BatchRepository.GetByIdWithDetailsAsync(batchId, ct);
             var dto = batch?.ToDetailsDto();
 
             if (dto != null)
-                _cacheService.Set(cacheKey, dto, TimeSpan.FromMinutes(2)); // Short TTL for inventory
+                cacheService.Set(cacheKey, dto, TimeSpan.FromMinutes(2)); // Short TTL for inventory
 
             return dto;
         }
@@ -57,12 +44,12 @@ namespace ICMS.Application.Services
         public async Task<BatchReadDto> AddAsync(BatchCreateDto dto, int userId, CancellationToken ct = default)
         {
             var batch = dto.ToDomain(userId);
-            await _unitOfWork.BatchRepository.AddAsync(batch, ct);
-            await _unitOfWork.SaveChangesAsync(ct);
+            await unitOfWork.BatchRepository.AddAsync(batch, ct);
+            await unitOfWork.SaveChangesAsync(ct);
             return batch.ToReadDto();
         }
 
-        public async Task<bool> UpdateAsync(int batchId, BatchCreateDto dto, CancellationToken ct = default)
+        public Task<bool> UpdateAsync(int batchId, BatchCreateDto dto, CancellationToken ct = default)
         {
             // Direct update of Batch metadata is restricted as per domain rules.
             throw new DomainException("DomainError");
@@ -70,38 +57,38 @@ namespace ICMS.Application.Services
 
         public async Task AddStockAsync(int batchId, InventoryUpdateDto dto, int userId, CancellationToken ct = default)
         {
-            await _unitOfWork.ExecuteInTransactionAsync(async () =>
+            await unitOfWork.ExecuteInTransactionAsync(async () =>
             {
-                var batch = await _unitOfWork.BatchRepository.GetByIdAsync(batchId, ct);
+                var batch = await unitOfWork.BatchRepository.GetByIdAsync(batchId, ct);
                 if (batch == null) throw new NotFoundException("NotFound");
 
                 batch.AddInventory(dto.Quantity, dto.PermissionNumber, dto.SourceOrDestination, userId);
-                await _unitOfWork.SaveChangesAsync(ct);
-                _cacheService.Remove($"batch:{batchId}");
+                await unitOfWork.SaveChangesAsync(ct);
+                cacheService.Remove($"batch:{batchId}");
             });
         }
 
         public async Task RemoveStockAsync(int batchId, InventoryUpdateDto dto, int userId,
             CancellationToken ct = default)
         {
-            await _unitOfWork.ExecuteInTransactionAsync(async () =>
+            await unitOfWork.ExecuteInTransactionAsync(async () =>
             {
-                var batch = await _unitOfWork.BatchRepository.GetByIdAsync(batchId, ct);
+                var batch = await unitOfWork.BatchRepository.GetByIdAsync(batchId, ct);
                 if (batch == null) throw new NotFoundException("NotFound");
 
 
                 batch.RemoveInventory(dto.Quantity, dto.PermissionNumber, dto.SourceOrDestination, userId);
-                await _unitOfWork.SaveChangesAsync(ct);
-                _cacheService.Remove($"batch:{batchId}");
+                await unitOfWork.SaveChangesAsync(ct);
+                cacheService.Remove($"batch:{batchId}");
             });
         }
 
         public async Task RemoveStockByDoseAsync(InventoryRemoveByDoseDto dto, int userId,
             CancellationToken ct = default)
         {
-            await _unitOfWork.ExecuteInTransactionAsync(async () =>
+            await unitOfWork.ExecuteInTransactionAsync(async () =>
             {
-                var batches = _unitOfWork.BatchRepository.GetQueryable(track: true)
+                var batches = unitOfWork.BatchRepository.GetQueryable(track: true)
                     .Where(b => b.DoseId == dto.DoseId && b.TotalQuantity > 0)
                     .OrderBy(b => b.ExpiryDate)
                     .ToList(); // ToList because we need to iterate and modify
@@ -119,17 +106,17 @@ namespace ICMS.Application.Services
                     int toSubtractFromThisBatch = Math.Min(batch.TotalQuantity, remainingToSubtract);
                     batch.RemoveInventory(toSubtractFromThisBatch, dto.PermissionNumber, dto.Destination, userId);
                     remainingToSubtract -= toSubtractFromThisBatch;
-                    _cacheService.Remove($"batch:{batch.Id}");
+                    cacheService.Remove($"batch:{batch.Id}");
                 }
 
-                await _unitOfWork.SaveChangesAsync(ct);
+                await unitOfWork.SaveChangesAsync(ct);
             });
         }
 
-        public async Task<PagedResult<TransactionReadDto>> GetTransactionsAsync(int batchId,
+        public Task<PagedResult<TransactionReadDto>> GetTransactionsAsync(int batchId,
             TransactionFilterDto filter, PaginationParams paginationParams, CancellationToken ct = default)
         {
-            var query = _unitOfWork.TransactionRepository.GetQueryable()
+            var query = unitOfWork.TransactionRepository.GetQueryable()
                 .Where(t => t.BatchId == batchId);
 
             if (filter.TransactionType.HasValue)
@@ -146,11 +133,11 @@ namespace ICMS.Application.Services
 
             var dtos = items.Select(t => t.ToReadDto()).ToList();
 
-            return new PagedResult<TransactionReadDto>(
+            return Task.FromResult(new PagedResult<TransactionReadDto>(
                 dtos,
                 totalCount,
                 paginationParams.PageNumber,
-                paginationParams.PageSize);
+                paginationParams.PageSize));
         }
     }
 }

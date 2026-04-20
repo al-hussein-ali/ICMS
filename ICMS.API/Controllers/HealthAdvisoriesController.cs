@@ -5,22 +5,14 @@ using ICMS.Domain.Constants;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace ICMS.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize(Roles = "Admin")]
-    public class HealthAdvisoriesController : ControllerBase
+    [Authorize(Roles = Roles.Admin + "," + Roles.VaccinationManager + "," + Roles.ReproductiveHealthManager)]
+    public class HealthAdvisoriesController(IHealthAdvisoryService healthAdvisoryService) : ControllerBase
     {
-        private readonly IHealthAdvisoryService _healthAdvisoryService;
-
-        public HealthAdvisoriesController(IHealthAdvisoryService healthAdvisoryService)
-        {
-            _healthAdvisoryService = healthAdvisoryService;
-        }
 
         [HttpGet]
         public async Task<ActionResult<PagedResult<HealthAdvisoryReadDto>>> GetPaged(
@@ -28,14 +20,14 @@ namespace ICMS.API.Controllers
             [FromQuery] int pageSize = 10,
             CancellationToken ct = default)
         {
-            var result = await _healthAdvisoryService.GetPagedAsync(pageNumber, pageSize, ct);
+            var result = await healthAdvisoryService.GetPagedAsync(pageNumber, pageSize, ct);
             return Ok(result);
         }
 
         [HttpGet("{id}")]
         public async Task<ActionResult<HealthAdvisoryDetailsDto>> GetById(int id, CancellationToken ct = default)
         {
-            var result = await _healthAdvisoryService.GetByIdAsync(id, ct);
+            var result = await healthAdvisoryService.GetByIdAsync(id, ct);
             return Ok(result);
         }
 
@@ -50,7 +42,7 @@ namespace ICMS.API.Controllers
                 return Unauthorized();
             }
 
-            var result = await _healthAdvisoryService.CreateAndSendNowAsync(dto, userId, ct);
+            var result = await healthAdvisoryService.CreateAndSendNowAsync(dto, userId, ct);
             return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
         }
 
@@ -65,14 +57,14 @@ namespace ICMS.API.Controllers
                 return Unauthorized();
             }
 
-            var result = await _healthAdvisoryService.CreateAsync(dto, userId, ct);
+            var result = await healthAdvisoryService.CreateAsync(dto, userId, ct);
             return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
         }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id, CancellationToken ct = default)
         {
-            await _healthAdvisoryService.DeleteAsync(id, ct);
+            await healthAdvisoryService.DeleteAsync(id, ct);
             return NoContent();
         }
     }

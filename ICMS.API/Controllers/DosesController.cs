@@ -1,11 +1,14 @@
 using ICMS.Application.DTOs.Dose;
 using ICMS.Application.Interfaces.Services;
+using ICMS.Domain.Constants;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ICMS.API.Controllers
 {
     [ApiController]
     [Route("api/doses")]
+    [Authorize(Roles = Roles.Admin + "," + Roles.VaccinationManager)]
     public class DosesController(IDoseService doseService) : ControllerBase
     {
         [HttpGet()]

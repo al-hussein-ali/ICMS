@@ -1,25 +1,25 @@
 using ICMS.Application.DTOs.ImmunizationRecord;
 using ICMS.Application.DTOs.Pagination;
 using ICMS.Application.Interfaces.Services;
+using ICMS.Domain.Constants;
 using ICMS.Domain.ValueObjects;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+
+using ICMS.API.Extensions;
 
 namespace ICMS.API.Controllers
 {
     [Route("api/immunization-records")]
     [ApiController]
-    public class ImmunizationRecordsController : ControllerBase
+    [Authorize(Roles = Roles.Admin + "," + Roles.VaccinationManager)]
+    public class ImmunizationRecordsController(IImmunizationRecordService immunizationRecordService) : ControllerBase
     {
-        private readonly IImmunizationRecordService _immunizationRecordService;
-        public ImmunizationRecordsController(IImmunizationRecordService immunizationRecordService)
-        {
-            _immunizationRecordService = immunizationRecordService;
-        }
 
         [HttpGet()]
         public async Task<ActionResult<PagedResult<ImmunizationRecordReadDto>>> GetAllAsync([FromQuery] PaginationParams paginationParams)
         {
-            var immnuizationRecords = await _immunizationRecordService.GetAllAsync(paginationParams);
+            var immnuizationRecords = await immunizationRecordService.GetAllAsync(paginationParams);
 
             return Ok(immnuizationRecords);
         }
@@ -27,7 +27,7 @@ namespace ICMS.API.Controllers
         [HttpGet("{id}", Name = "GetImmunizationRecordById")]
         public async Task<ActionResult<ImmunizationRecordReadDto>> GetByIdAsync([FromRoute] Guid id)
         {
-            var immunizationRecord = await _immunizationRecordService.GetByIdAsync(id);
+            var immunizationRecord = await immunizationRecordService.GetByIdAsync(id);
 
             return Ok(immunizationRecord);
         }
@@ -35,8 +35,8 @@ namespace ICMS.API.Controllers
         [HttpPost("create")]
         public async Task<IActionResult> AddAsync([FromBody] ImmunizationRecordCreateDto dto)
         {
-            var userId = ICMS.API.Extensions.ClaimsPrincipalExtensions.GetUserId(User);
-            var record = await _immunizationRecordService.AddAsync(dto, userId);
+            var userId = ClaimsPrincipalExtensions.GetUserId(User);
+            var record = await immunizationRecordService.AddAsync(dto, userId);
 
             return CreatedAtRoute("GetImmunizationRecordById", new { id = record.Id }, record);
         }
@@ -44,7 +44,7 @@ namespace ICMS.API.Controllers
         [HttpPut("update/{id}")]
         public async Task<IActionResult> UpdateAsync([FromRoute] Guid id, [FromBody] ImmunizationRecordCreateDto dto)
         {
-            await _immunizationRecordService.UpdateAsync(id, dto);
+            await immunizationRecordService.UpdateAsync(id, dto);
 
             return NoContent();
         }
@@ -52,7 +52,7 @@ namespace ICMS.API.Controllers
         [HttpDelete("delete/{id}")]
         public async Task<IActionResult> DeleteAsync([FromRoute] Guid id)
         {
-            await _immunizationRecordService.DeleteAsync(id);
+            await immunizationRecordService.DeleteAsync(id);
 
             return NoContent();
         }

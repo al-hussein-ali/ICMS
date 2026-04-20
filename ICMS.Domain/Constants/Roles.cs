@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.NetworkInformation;
@@ -9,12 +9,14 @@ namespace ICMS.Domain.Constants
 {
     public class Roles
     {
-        public static string Admin = "Admin";
-        public static string VaccinationManager = "VaccinationManager";
-        public static string InventoryManager = "InventoryManager";
-        public static string ReproductiveHealthManager = "ReproductiveHealthManager";
-        public static string VaccinatedIndividual = "VaccinatedIndividual";
-        public static string PregnantWoman = "PregnantWoman";
-        public static string FieldVisitWorker = "FieldVisitWorker";
+        public const string Admin = "Admin";
+        public const string VaccinationManager = "VaccinationManager";
+        public const string InventoryManager = "InventoryManager";
+        public const string ReproductiveHealthManager = "ReproductiveHealthManager";
+        public const string VaccinatedIndividual = "VaccinatedIndividual";
+        public const string PregnantWoman = "PregnantWoman";
+        public const string FieldVisitWorker = "FieldVisitWorker";
+
+        public const string StaffRoles = Admin + "," + VaccinationManager + "," + InventoryManager + "," + ReproductiveHealthManager + "," + FieldVisitWorker;
     }
 }

@@ -1,6 +1,4 @@
 using ICMS.Application.DTOs.Reports;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace ICMS.Application.Interfaces.Reports
 {

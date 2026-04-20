@@ -2,27 +2,23 @@ using ICMS.Application.DTOs.Reports;
 using ICMS.Application.Enums;
 using ICMS.Application.Interfaces;
 using ICMS.Application.Interfaces.Reports;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 
 namespace ICMS.Infrastructure.Reports.DataFetchers
 {
-    public class PregnantWomenReportFetcher : IReportDataFetcher
+    public class PregnantWomenReportFetcher(IUnitOfWork unitOfWork) : IReportDataFetcher
     {
-        private readonly IUnitOfWork _unitOfWork;
-
-        public PregnantWomenReportFetcher(IUnitOfWork unitOfWork) => _unitOfWork = unitOfWork;
-
         public ReportType ReportType => ReportType.PregnantWomen;
 
         public async Task<ReportData> FetchAsync(DateOnly startDate, DateOnly endDate, CancellationToken ct = default)
         {
-            var women = await _unitOfWork.PregnantWomanRepository
-                .GetQueryable(false, ct, pw => pw.Person, pw => pw.PregnancyDetails)
+            var queryable = unitOfWork.PregnantWomanRepository
+                .GetQueryable(false, ct, pw => pw.Person, pw => pw.PregnancyDetails);
+
+            if (queryable == null)
+                throw new InvalidOperationException("Failed to get queryable.");
+
+            var women = await queryable
                 .Where(pw => pw.Person != null
                           && DateOnly.FromDateTime(pw.Person.CreatedAt) >= startDate
                           && DateOnly.FromDateTime(pw.Person.CreatedAt) <= endDate)

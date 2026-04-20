@@ -1,25 +1,18 @@
+using ICMS.Domain.Constants;
 using ICMS.Application.Interfaces.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.RateLimiting;
+using System.Security.Claims;
 
 namespace ICMS.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
+    [Authorize(Roles = Roles.VaccinatedIndividual + "," + Roles.PregnantWoman)]
     [EnableRateLimiting("fixed")]
-    public class UserDevicesController : ControllerBase
+    public class UserDevicesController(IUserDeviceService userDeviceService) : ControllerBase
     {
-        private readonly IUserDeviceService _userDeviceService;
-
-        public UserDevicesController(IUserDeviceService userDeviceService)
-        {
-            _userDeviceService = userDeviceService;
-        }
 
         [HttpPost("register")]
         public async Task<IActionResult> RegisterDevice([FromBody] string fcmToken, CancellationToken ct = default)
@@ -35,7 +28,7 @@ namespace ICMS.API.Controllers
                 return BadRequest("FCM Token is required.");
             }
 
-            await _userDeviceService.RegisterDeviceAsync(userId, fcmToken, ct);
+            await userDeviceService.RegisterDeviceAsync(userId, fcmToken, ct);
             return Ok();
         }
 
@@ -53,7 +46,7 @@ namespace ICMS.API.Controllers
                 return BadRequest("FCM Token is required.");
             }
 
-            await _userDeviceService.UnregisterDeviceAsync(userId, fcmToken, ct);
+            await userDeviceService.UnregisterDeviceAsync(userId, fcmToken, ct);
             return Ok();
         }
     }

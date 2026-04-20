@@ -3,6 +3,7 @@ using ICMS.Application.DTOs.Batch;
 using ICMS.Application.DTOs.Pagination;
 using ICMS.Application.DTOs.Transaction;
 using ICMS.Application.Interfaces.Services;
+using ICMS.Domain.Constants;
 using ICMS.Domain.ValueObjects;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -13,7 +14,7 @@ namespace ICMS.API.Controllers
 {
     [ApiController]
     [Route("api/batches")]
-    [Authorize]
+    [Authorize(Roles = Roles.Admin + "," + Roles.InventoryManager)]
     public class BatchesController(IBatchService batchService) : ControllerBase
     {
         [HttpGet]

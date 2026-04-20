@@ -11,7 +11,7 @@ namespace ICMS.Infrastructure.Reports.Templates
     {
         public static string Wrap(string accentColor, string reportTitle, string iconEmoji, ReportData data, string bodyContent)
         {
-            var summaryHtml = BuildSummaryCards(data.SummaryStats, accentColor);
+            var summaryHtml = BuildSummaryCards(data.SummaryStats);
             var statsBar = $@"
                 <div class='stats-bar'>
                     <div class='stat-item'><span class='stat-label'>Report Period</span><span class='stat-value'>{data.StartDate:yyyy-MM-dd} → {data.EndDate:yyyy-MM-dd}</span></div>
@@ -115,9 +115,9 @@ namespace ICMS.Infrastructure.Reports.Templates
 </html>";
         }
 
-        private static string BuildSummaryCards(Dictionary<string, string> stats, string accentColor)
+        private static string BuildSummaryCards(Dictionary<string, string> stats)
         {
-            if (stats == null || stats.Count == 0) return string.Empty;
+            if (stats.Count == 0) return string.Empty;
 
             var cards = new StringBuilder();
             foreach (var kv in stats)
@@ -168,7 +168,10 @@ namespace ICMS.Infrastructure.Reports.Templates
                     int b = Math.Max(0, Convert.ToInt32(hex[5..7], 16) - 40);
                     return $"#{r:X2}{g:X2}{b:X2}";
                 }
-                catch { }
+                catch
+                {
+                    // Fallback to original color if hex processing fails
+                }
             }
             return hex;
         }
