@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -21,32 +21,46 @@ namespace ICMS.Application.Services
 
         private readonly IUnitOfWork _unitOfWork;
         private readonly IValidator<DoseCreateDto> createDTOValidator;
+        private readonly ICacheService _cacheService;
 
-        public DoseService(IUnitOfWork unitOfWork, IValidator<DoseCreateDto> createDTOValidator)
+        public DoseService(IUnitOfWork unitOfWork, IValidator<DoseCreateDto> createDTOValidator, ICacheService cacheService)
         {
             _unitOfWork = unitOfWork;
             this.createDTOValidator = createDTOValidator;
+            _cacheService = cacheService;
+        }
+
+        private void InvalidateDoseCache(int vaccineId)
+        {
+            _cacheService.Remove("doses:all:vaccine:all");
+            _cacheService.Remove($"doses:all:vaccine:{vaccineId}");
         }
 
         public async Task<IReadOnlyList<DoseReadDto>> GetAllAsync(int? vaccineId, CancellationToken ct = default)
         {
-            var doses = await _unitOfWork.DoseRepository.GetAllAsync(vaccineId, ct);
+            string cacheKey = $"doses:all:vaccine:{vaccineId?.ToString() ?? "all"}";
+            if (_cacheService.TryGet(cacheKey, out IReadOnlyList<DoseReadDto>? cached) && cached != null)
+                return cached;
 
-            return doses.Select(d => d.ToReadDto()).ToList();
+            var doses = await _unitOfWork.DoseRepository.GetAllAsync(vaccineId, ct);
+            var dtos = doses.Select(d => d.ToReadDto()).ToList();
+
+            _cacheService.Set(cacheKey, dtos);
+            return dtos;
         }
 
         public async Task<DoseReadDto> GetByIdAsync(int id, CancellationToken ct = default)
         {
             var dose = await _unitOfWork.DoseRepository.GetByIdAsync(id);
 
-            return dose.ToReadDto() ?? throw new NotFoundException("Dose id was not found."); ;
+            return dose.ToReadDto() ?? throw new NotFoundException("NotFound"); ;
         }
 
         public async Task<DoseReadDto> GetByNameAsync(string doseName, CancellationToken ct)
         {
             var dose = await _unitOfWork.DoseRepository.GetByAsync(d => d.DoseName == doseName, ct);
 
-            return dose.ToReadDto() ?? throw new NotFoundException("Dose id was not found."); ;
+            return dose.ToReadDto() ?? throw new NotFoundException("NotFound"); ;
         }
 
         public async Task<DoseReadDto> AddAsync(DoseCreateDto entity, CancellationToken ct = default)
@@ -56,7 +70,7 @@ namespace ICMS.Application.Services
             var vaccine = await _unitOfWork.VaccineRepository.GetByIdAsync(entity.VaccineId, ct);
 
             if (vaccine == null)
-                throw new NotFoundException("Vaccine id was not found.");
+                throw new NotFoundException("NotFound");
 
 
             var newDose = entity.ToDomain();
@@ -64,6 +78,8 @@ namespace ICMS.Application.Services
             vaccine.AddDose(newDose);
 
             await _unitOfWork.SaveChangesAsync();
+
+            InvalidateDoseCache(entity.VaccineId);
 
             return newDose.ToReadDto();
         }
@@ -73,7 +89,7 @@ namespace ICMS.Application.Services
             var existingDose = await _unitOfWork.DoseRepository.GetByIdAsync(id, ct);
 
             if (existingDose == null)
-                throw new NotFoundException("This Dose was not found.");
+                throw new NotFoundException("NotFound");
 
             existingDose.UpdateDoseInfo(updatedEntity.VaccineId,
                 updatedEntity.DoseName,
@@ -82,7 +98,14 @@ namespace ICMS.Application.Services
                 updatedEntity.RecommendedAgeGroup,
                 updatedEntity.Notes);
 
-            return await _unitOfWork.SaveChangesAsync(ct) > 0;
+            var result = await _unitOfWork.SaveChangesAsync(ct) > 0;
+            if (result)
+            {
+                InvalidateDoseCache(updatedEntity.VaccineId);
+                if (existingDose.VaccineId != updatedEntity.VaccineId)
+                    InvalidateDoseCache(existingDose.VaccineId);
+            }
+            return result;
         }
 
         public async Task<bool> DeleteAsync(int id, CancellationToken ct = default)
@@ -90,11 +113,13 @@ namespace ICMS.Application.Services
             var existingDose = await _unitOfWork.DoseRepository.GetByIdAsync(id, ct);
 
             if (existingDose == null)
-                throw new NotFoundException("This Dose was not found");
+                throw new NotFoundException("NotFound");
 
             await _unitOfWork.DoseRepository.DeleteAsync(existingDose, ct);
 
-            return await _unitOfWork.SaveChangesAsync(ct) > 0;
+            var result = await _unitOfWork.SaveChangesAsync(ct) > 0;
+            if (result) InvalidateDoseCache(existingDose.VaccineId);
+            return result;
 
         }
 

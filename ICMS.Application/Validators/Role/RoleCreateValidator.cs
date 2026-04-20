@@ -1,3 +1,4 @@
+using ICMS.Application.Interfaces.Services;
 using FluentValidation;
 using ICMS.Application.DTOs.Role;
 
@@ -5,13 +6,14 @@ namespace ICMS.Application.Validators.Role
 {
     public class RoleCreateValidator : AbstractValidator<RoleCreateDto>
     {
-        public RoleCreateValidator()
+        public RoleCreateValidator(ILocalizer localizer)
         {
             RuleFor(x => x.RoleName)
                 .NotEmpty()
-                .WithMessage("Role name is required.")
+                .WithMessage(x => localizer["RequiredField", "This field"])
                 .MaximumLength(50)
-                .WithMessage("Role name must be at most 50 characters.");
+                .WithMessage(x => localizer["InvalidField", "This field"]);
         }
     }
 }
+

@@ -1,4 +1,4 @@
-﻿using ICMS.Application.DTOs;
+using ICMS.Application.DTOs;
 using ICMS.Application.DTOs.Pagination;
 using ICMS.Application.Interfaces.Services;
 

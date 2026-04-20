@@ -1,48 +1,50 @@
-﻿using EntityFramework.Exceptions.Common;
+using EntityFramework.Exceptions.Common;
 using FluentValidation;
 using ICMS.Domain.Exceptions;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 
+using ICMS.Application.Interfaces.Services;
+
 namespace ICMS.API.Handlers
 {
-    public class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logger) : IExceptionHandler
+    public class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logger, ILocalizer localizer) : IExceptionHandler
     {
         public async ValueTask<bool> TryHandleAsync(HttpContext httpContext, Exception exception, CancellationToken cancellationToken)
         {
             logger.LogError(exception, "Exception occurred: {Message}", exception.Message);
 
             // Map Exceptions to Status Codes & Messages
-            var (statusCode, title, detail) = exception switch
+            var (statusCode, titleKey, detail) = exception switch
             {
-                // 1. FluentValidation Errors (400)
                 ValidationException =>
-                    (StatusCodes.Status400BadRequest, "Validation Error", "One or more validation failures occurred."),
+                    (StatusCodes.Status400BadRequest, "ValidationError", localizer["ValidationError"]),
 
-                // 2. Database Unique Constraint (409)
                 UniqueConstraintException =>
-                    (StatusCodes.Status409Conflict, "Conflict Error", "This record already exists in the system."),
+                    (StatusCodes.Status409Conflict, "Conflict", localizer["Conflict"]),
 
-                // 3. Database Reference/Foreign Key Violation (400)
                 ReferenceConstraintException =>
-                    (StatusCodes.Status400BadRequest, "Related Data Error", "Cannot delete or update because this record is used elsewhere."),
+                    (StatusCodes.Status400BadRequest, "RelatedData", localizer["RelatedData"]),
 
-                // 4. Custom Domain Exception (e.g. NotFound)
-                NotFoundException =>
-                    (StatusCodes.Status404NotFound, "Not Found", exception.Message),
+                DomainException domEx =>
+                    (StatusCodes.Status400BadRequest, "DomainError", localizer[domEx.MessageKey, domEx.Args]),
 
-                InvalidDoubleDoseException =>
-                (StatusCodes.Status400BadRequest,"Double Dose","This individual has been already toke the dose."),
-
-                // 5. Everything Else (500)
                 _ =>
-                    (StatusCodes.Status500InternalServerError, "Server Error", "An unexpected error occurred.")
+                    (StatusCodes.Status500InternalServerError, "ServerError", localizer["ServerError"])
             };
+
+            // Override specific domain exceptions with appropriate status codes if needed
+            if (exception is NotFoundException notFoundEx)
+            {
+                statusCode = StatusCodes.Status404NotFound;
+                titleKey = "NotFound";
+                detail = localizer[notFoundEx.MessageKey, notFoundEx.Args];
+            }
 
             var problemDetails = new ProblemDetails
             {
                 Status = statusCode,
-                Title = title,
+                Title = localizer[titleKey],
                 Detail = detail,
                 Instance = httpContext.Request.Path
             };

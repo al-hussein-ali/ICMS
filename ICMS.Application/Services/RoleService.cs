@@ -42,7 +42,7 @@ namespace ICMS.Application.Services
             await roleCreateValidator.ValidateAndThrowAsync(updatedEntity, ct);
 
             var role = await unitOfWork.RoleRepository.GetByIdAsync(id, ct);
-            if (role == null) throw new NotFoundException($"Role with ID {id} not found.");
+            if (role == null) throw new NotFoundException("NotFound");
 
             role.UpdateRoleName(updatedEntity.RoleName);
 
@@ -55,7 +55,7 @@ namespace ICMS.Application.Services
         public async Task<bool> DeleteAsync(int id, CancellationToken ct = default)
         {
             var role = await unitOfWork.RoleRepository.GetByIdAsync(id, ct);
-            if (role == null) throw new NotFoundException($"Role with ID {id} not found.");
+            if (role == null) throw new NotFoundException("NotFound");
 
             await unitOfWork.RoleRepository.DeleteAsync(role, ct);
             await unitOfWork.SaveChangesAsync(ct);

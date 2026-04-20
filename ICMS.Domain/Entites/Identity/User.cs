@@ -27,6 +27,9 @@ namespace ICMS.Domain.Entites.Identity
         public Person? Person { get; private set; }
 
         public ICollection<RefreshToken> RefreshTokens { get; private set; } = new List<RefreshToken>();
+        
+        private readonly List<UserDevice> _devices = new();
+        public IReadOnlyList<UserDevice> Devices => _devices.AsReadOnly();
 
         private User()
         {
@@ -104,6 +107,30 @@ namespace ICMS.Domain.Entites.Identity
         public void ClearUserRoles()
         {
             _userRoles.Clear();
+        }
+
+        public void AddDevice(string fcmToken)
+        {
+            if (string.IsNullOrWhiteSpace(fcmToken)) return;
+
+            var existingDevice = _devices.FirstOrDefault(d => d.FcmToken == fcmToken);
+            if (existingDevice != null)
+            {
+                existingDevice.UpdateLastActive();
+            }
+            else
+            {
+                _devices.Add(UserDevice.Create(this.Id, fcmToken));
+            }
+        }
+
+        public void RemoveDevice(string fcmToken)
+        {
+            var device = _devices.FirstOrDefault(d => d.FcmToken == fcmToken);
+            if (device != null)
+            {
+                _devices.Remove(device);
+            }
         }
 
     }

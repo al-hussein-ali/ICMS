@@ -30,7 +30,7 @@ namespace ICMS.Application.Services
         public async Task<DoseReportReadDto> AddAsync(DoseReportCreateDto dto, int userId, CancellationToken ct = default)
         {
             var batch = await unitOfWork.BatchRepository.GetByIdAsync(dto.BatchId, ct);
-            if (batch == null) throw new NotFoundException($"Batch {dto.BatchId} not found");
+            if (batch == null) throw new NotFoundException("NotFound");
 
             // Automatically zero out stock for reported batches to prevent further use
             if (batch.TotalQuantity > 0)

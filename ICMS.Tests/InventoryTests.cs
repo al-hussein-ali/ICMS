@@ -3,10 +3,12 @@ using ICMS.Application.DTOs.Batch;
 using ICMS.Application.DTOs.Pagination;
 using ICMS.Application.DTOs.Transaction;
 using ICMS.Application.Interfaces;
+using ICMS.Application.Interfaces.Services;
 using ICMS.Application.Services;
 using ICMS.Domain.Entites.Clinical;
 using ICMS.Domain.Enums;
 using ICMS.Application.DTOs.DoseReport;
+using ICMS.Application.Interfaces.Repositories;
 using ICMS.Infrastructure.Persistence.Data;
 using ICMS.Infrastructure.Repositories;
 using ICMS.Infrastructure.Repositories.Clinical;
@@ -26,13 +28,26 @@ namespace ICMS.Tests
             var options = new DbContextOptionsBuilder<AppDbContext>()
                 .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
                 .Options;
-            
+
             _context = new AppDbContext(options);
-            
+
             var unitOfWork = new UnitOfWork(_context);
-            _batchService = new BatchService(unitOfWork);
+            _batchService = new BatchService(unitOfWork, new FakeCacheService());
             _reportService = new DoseReportService(unitOfWork);
         }
+
+        private class FakeCacheService : ICMS.Application.Interfaces.Services.ICacheService
+        {
+            public T? Get<T>(string key) => default;
+            public void Set<T>(string key, T value, TimeSpan? duration = null) { }
+            public void Remove(string key) { }
+            public bool TryGet<T>(string key, out T? value)
+            {
+                value = default;
+                return false;
+            }
+        }
+
 
         [Fact]
         public async Task RemoveStockByDoseAsync_ShouldSubtractFromMultipleBatches_WhenQuantityExceedsOneBatch()
@@ -40,10 +55,12 @@ namespace ICMS.Tests
             // Arrange
             int doseId = 1;
             int userId = 1;
-            
-            var batch1 = Batch.Create(doseId, userId, DateOnly.FromDateTime(DateTime.Now.AddMonths(1)), 10, "Country", "Cook1");
-            var batch2 = Batch.Create(doseId, userId, DateOnly.FromDateTime(DateTime.Now.AddMonths(2)), 20, "Country", "Cook2");
-            
+
+            var batch1 = Batch.Create(doseId, userId, DateOnly.FromDateTime(DateTime.Now.AddMonths(1)), 10, "Country",
+                "Cook1");
+            var batch2 = Batch.Create(doseId, userId, DateOnly.FromDateTime(DateTime.Now.AddMonths(2)), 20, "Country",
+                "Cook2");
+
             _context.Batches.AddRange(batch1, batch2);
             await _context.SaveChangesAsync();
 
@@ -55,11 +72,13 @@ namespace ICMS.Tests
             // Assert
             batch1.TotalQuantity.Should().Be(0);
             batch2.TotalQuantity.Should().Be(15);
-            
+
             _context.Transactions.Count().Should().Be(2);
             var transactions = _context.Transactions.ToList();
-            transactions.Should().Contain(t => t.BatchId == batch1.Id && t.Quantity == 10 && t.TransactionType == TransactionType.Out);
-            transactions.Should().Contain(t => t.BatchId == batch2.Id && t.Quantity == 5 && t.TransactionType == TransactionType.Out);
+            transactions.Should().Contain(t =>
+                t.BatchId == batch1.Id && t.Quantity == 10 && t.TransactionType == TransactionType.Out);
+            transactions.Should().Contain(t =>
+                t.BatchId == batch2.Id && t.Quantity == 5 && t.TransactionType == TransactionType.Out);
         }
 
         [Fact]
@@ -68,7 +87,8 @@ namespace ICMS.Tests
             // Arrange
             int doseId = 1;
             int userId = 1;
-            var batch = Batch.Create(doseId, userId, DateOnly.FromDateTime(DateTime.Now.AddMonths(1)), 100, "Country", "Cook1");
+            var batch = Batch.Create(doseId, userId, DateOnly.FromDateTime(DateTime.Now.AddMonths(1)), 100, "Country",
+                "Cook1");
             _context.Batches.Add(batch);
             await _context.SaveChangesAsync();
 
@@ -94,7 +114,8 @@ namespace ICMS.Tests
             // Arrange
             int doseId = 1;
             int userId = 1;
-            var batch = Batch.Create(doseId, userId, DateOnly.FromDateTime(DateTime.Now.AddMonths(1)), 100, "Country", "Cook1");
+            var batch = Batch.Create(doseId, userId, DateOnly.FromDateTime(DateTime.Now.AddMonths(1)), 100, "Country",
+                "Cook1");
             _context.Batches.Add(batch);
             await _context.SaveChangesAsync();
 
@@ -106,13 +127,14 @@ namespace ICMS.Tests
             // Assert
             result.BatchId.Should().Be(batch.Id);
             result.Description.Should().Be("Side effects reported");
-            
+
             _context.DoseReports.Count().Should().Be(1);
             _context.DoseReports.First().Description.Should().Be("Side effects reported");
 
             // Verify stock was zeroed out
             batch.TotalQuantity.Should().Be(0);
-            _context.Transactions.Should().Contain(t => t.BatchId == batch.Id && t.TransactionType == TransactionType.Out && t.PermissionNumber == "REPORTED");
+            _context.Transactions.Should().Contain(t =>
+                t.BatchId == batch.Id && t.TransactionType == TransactionType.Out && t.PermissionNumber == "REPORTED");
         }
     }
 }

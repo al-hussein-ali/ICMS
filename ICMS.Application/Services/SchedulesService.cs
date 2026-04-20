@@ -13,23 +13,31 @@ namespace ICMS.Application.Services
     public class SchedulesService : ISchedulesService
     {
         private readonly IUnitOfWork _unitOfWork;
+        private readonly ICacheService _cacheService;
 
-        public SchedulesService(IUnitOfWork unitOfWork)
+        public SchedulesService(IUnitOfWork unitOfWork, ICacheService cacheService)
         {
             _unitOfWork = unitOfWork;
+            _cacheService = cacheService;
         }
 
         public async Task<IEnumerable<ScheduleReadDto>> GetIndividualSchedulesAsync(int individualId, CancellationToken ct = default)
         {
+            string cacheKey = $"schedules:individual:{individualId}";
+            if (_cacheService.TryGet(cacheKey, out IEnumerable<ScheduleReadDto>? cached) && cached != null)
+                return cached;
+
             var individual = await _unitOfWork.VaccinatedIndividualRepository
                 .GetIndividualWithSchedulesAsync(individualId, ct);
 
             if (individual == null)
             {
-                throw new NotFoundException($"Individual with ID {individualId} not found.");
+                throw new NotFoundException("NotFound");
             }
 
-            return individual.Schedules.Select(s => s.ToReadDto()).ToList();
+            var dtos = individual.Schedules.Select(s => s.ToReadDto()).ToList();
+            _cacheService.Set(cacheKey, dtos, TimeSpan.FromMinutes(30));
+            return dtos;
         }
 
         public async Task<IEnumerable<MissedScheduleReadDto>> GetMissedSchedulesDetailedAsync(MissedScheduleQueryDto query, CancellationToken ct = default)

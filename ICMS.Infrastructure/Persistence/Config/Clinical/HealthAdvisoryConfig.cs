@@ -32,6 +32,9 @@ public class HealthAdvisoryConfig : IEntityTypeConfiguration<HealthAdvisory>
         
 
         builder.Property(ha => ha.CreationDate).HasDefaultValueSql("TIMEZONE('utc', NOW())").ValueGeneratedOnAdd();
+        
+        builder.Property(ha => ha.ScheduledDate).IsRequired();
+        builder.Property(ha => ha.IsSent).HasDefaultValue(false);
 
         builder.HasIndex(ha => ha.UserId);
 

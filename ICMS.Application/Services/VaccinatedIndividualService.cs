@@ -44,7 +44,7 @@ namespace ICMS.Application.Services
             var individual = await _unitOfWork.VaccinatedIndividualRepository.GetDetailsById(id, ct);
             if (individual == null)
             {
-                throw new NotFoundException($"Individual with ID {id} not found.");
+                throw new NotFoundException("NotFound");
             }
 
             return individual.ToDetailsDto();
@@ -55,7 +55,7 @@ namespace ICMS.Application.Services
             var individual = await _unitOfWork.VaccinatedIndividualRepository.GetDetailsByCardNumber(cardNumber, ct);
             if (individual == null)
             {
-                throw new NotFoundException($"Individual with Card Number {cardNumber} not found.");
+                throw new NotFoundException("NotFound");
             }
 
             return individual.ToDetailsDto();
@@ -68,12 +68,12 @@ namespace ICMS.Application.Services
             if (vaccinatedIndividualCreateDto.PersonId.HasValue && vaccinatedIndividualCreateDto.PersonId.Value > 0)
             {
                 var person = await _unitOfWork.PersonRepository.GetByIdAsync(vaccinatedIndividualCreateDto.PersonId.Value, ct);
-                if (person == null) throw new NotFoundException("This person was not found");
+                if (person == null) throw new NotFoundException("NotFound");
                 selectedPersonId = person.Id;
             }
             else
             {
-                if (vaccinatedIndividualCreateDto.PersonCreateDto == null) throw new DomainException("Person details required to create new person.");
+                if (vaccinatedIndividualCreateDto.PersonCreateDto == null) throw new DomainException("DomainError");
                 var newPerson = Person.Create(
                     vaccinatedIndividualCreateDto.PersonCreateDto.FirstName,
                     vaccinatedIndividualCreateDto.PersonCreateDto.SecondName,
@@ -111,7 +111,7 @@ namespace ICMS.Application.Services
             var individual = await _unitOfWork.VaccinatedIndividualRepository.GetByIdAsync(id, ct);
             if (individual == null)
             {
-                throw new NotFoundException($"Individual with ID {id} not found.");
+                throw new NotFoundException("NotFound");
             }
 
             individual.UpdateIndividualInfo(updatedEntity.DirectorateId, updatedEntity.NeighborhoodId, updatedEntity.SubNeighborhoodId);
@@ -126,7 +126,7 @@ namespace ICMS.Application.Services
         {
             var individual = await _unitOfWork.VaccinatedIndividualRepository.GetByIdAsync(id, ct);
             if (individual == null)
-                throw new NotFoundException($"Individual with ID {id} not found.");
+                throw new NotFoundException("NotFound");
 
             await _unitOfWork.VaccinatedIndividualRepository.DeleteAsync(individual, ct);
             await _unitOfWork.SaveChangesAsync(ct);
@@ -138,11 +138,11 @@ namespace ICMS.Application.Services
         {
             var individual = await _unitOfWork.VaccinatedIndividualRepository.GetIndividualWithSchedulesAsync(dto.IndividualId, ct);
             if (individual == null)
-                throw new NotFoundException($"Individual with ID {dto.IndividualId} not found.");
+                throw new NotFoundException("NotFound");
 
             var dose = await _unitOfWork.DoseRepository.GetByIdAsync(dto.DoseId, ct);
             if (dose == null)
-                throw new NotFoundException($"Dose with ID {dto.DoseId} not found.");
+                throw new NotFoundException("NotFound");
 
             var allDoses = await _unitOfWork.DoseRepository.GetAllAsync(dose.VaccineId, ct);
             var nextDose = allDoses.OrderBy(d => d.DoseOrder).FirstOrDefault(d => d.DoseOrder > dose.DoseOrder);
@@ -226,7 +226,7 @@ namespace ICMS.Application.Services
         {
             var individual = await _unitOfWork.VaccinatedIndividualRepository.GetIndividualWithSchedulesAsync(id, ct);
             if (individual == null)
-                throw new NotFoundException($"Individual with ID {id} not found.");
+                throw new NotFoundException("NotFound");
 
             if (individual.UserId.HasValue)
             {

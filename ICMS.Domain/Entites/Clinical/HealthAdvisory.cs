@@ -1,17 +1,7 @@
-using ICMS.Domain.Entites.Geography;
-using ICMS.Domain.Entites.Audit;
-using ICMS.Domain.Entites.Visits;
-using ICMS.Domain.Entites.Maternal;
-using ICMS.Domain.Entites.Clinical;
 using ICMS.Domain.Entites.Identity;
 using ICMS.Domain.Entites.Common;
 using ICMS.Domain.Exceptions;
 using ICMS.Domain.Enums;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ICMS.Domain.Entites.Clinical
 {
@@ -20,22 +10,28 @@ namespace ICMS.Domain.Entites.Clinical
         public string Title { get; private set; } = string.Empty;
         public string Content { get; private set; } = string.Empty;
         public AdviceTarget Target { get; private set; }
+        public DateOnly ScheduledDate { get; private set; }
+        public bool IsSent { get; private set; }
         public DateTime CreationDate { get; private set; }
         public int UserId { get; private set; }
         public User? User { get; private set; }
 
         private HealthAdvisory()
-        {   
+        {
         }
 
-        public static HealthAdvisory Create(string title, string content, AdviceTarget target, int userId)
+        public static HealthAdvisory Create(string title, string content, AdviceTarget target, DateOnly? scheduledDate, int userId)
         {
             if (string.IsNullOrWhiteSpace(title)) throw new DomainException("Title is required");
             if (string.IsNullOrWhiteSpace(content)) throw new DomainException("Content is required");
             if (userId <= 0) throw new DomainException("Invalid user id");
 
-            return new HealthAdvisory { Title = title, Content = content, Target = target, UserId = userId, CreationDate = DateTime.UtcNow };
+            var finalDate = scheduledDate ?? DateOnly.FromDateTime(DateTime.UtcNow.AddHours(3));
+
+            return new HealthAdvisory
+                { Title = title, Content = content, Target = target, ScheduledDate = finalDate, IsSent = false, UserId = userId, CreationDate = DateTime.UtcNow };
         }
+
 
         public void AssignUser(User user)
         {
@@ -45,6 +41,12 @@ namespace ICMS.Domain.Entites.Clinical
 
             User = user;
             UserId = user.Id;
+        }
+
+        public void MarkAsSent()
+        {
+            if (IsSent) return;
+            IsSent = true;
         }
     }
 }

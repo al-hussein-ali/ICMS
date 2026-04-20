@@ -1,41 +1,42 @@
 using FluentValidation;
 using ICMS.Application.DTOs.Batch;
+using ICMS.Application.Interfaces.Services;
 
 namespace ICMS.Application.Validators.Batch
 {
     internal class BatchCreateValidator : AbstractValidator<BatchCreateDto>
     {
-        public BatchCreateValidator()
+        public BatchCreateValidator(ILocalizer localizer)
         {
             RuleFor(x => x.DoseId)
                 .GreaterThanOrEqualTo(1)
-                .WithMessage("The Dose Id is required and must be greater than 0.");
+                .WithMessage(x => localizer["GreaterThanZero", "Dose Id"]);
 
             RuleFor(x => x.CountryOfOrigin)
                 .NotEmpty()
-                .WithMessage("Country of origin is required.")
+                .WithMessage(x => localizer["RequiredField", "Country of origin"])
                 .MaximumLength(150)
-                .WithMessage("Country of origin must be at most 150 characters.");
+                .WithMessage(x => localizer["MaxLength", "Country of origin", 150]);
 
             RuleFor(x => x.CookNumber)
                 .NotEmpty()
-                .WithMessage("Cook number is required.")
+                .WithMessage(x => localizer["RequiredField", "Cook number"])
                 .MaximumLength(200)
-                .WithMessage("Cook number must be at most 200 characters.");
+                .WithMessage(x => localizer["MaxLength", "Cook number", 200]);
 
             RuleFor(x => x.ExpiryDate)
                 .Must(d => d != default)
-                .WithMessage("Expiry Date is required.");
+                .WithMessage(x => localizer["RequiredField", "Expiry Date"]);
 
             RuleFor(x => x.TotalQuantity)
                 .GreaterThanOrEqualTo(0)
-                .WithMessage("Total quantity must be zero or a positive number.");
+                .WithMessage(x => localizer["PositiveNumber", "Total quantity"]);
 
             When(x => x.Notes != null, () =>
             {
                 RuleFor(x => x.Notes)
                     .MaximumLength(500)
-                    .WithMessage("Notes must be at most 500 characters.");
+                    .WithMessage(x => localizer["MaxLength", "Notes", 500]);
             });
         }
     }

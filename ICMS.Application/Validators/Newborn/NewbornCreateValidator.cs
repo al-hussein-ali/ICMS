@@ -1,3 +1,4 @@
+using ICMS.Application.Interfaces.Services;
 using FluentValidation;
 using ICMS.Application.DTOs.Newborn;
 
@@ -5,23 +6,24 @@ namespace ICMS.Application.Validators.Newborn
 {
     internal class NewbornCreateValidator : AbstractValidator<NewbornCreateDto>
     {
-        public NewbornCreateValidator()
+        public NewbornCreateValidator(ILocalizer localizer)
         {
             RuleFor(x => x.PregnancyDetailsId)
                 .GreaterThanOrEqualTo(1)
-                .WithMessage("Pregnancy details id is required.");
+                .WithMessage(x => localizer["RequiredField", "This field"]);
 
             RuleFor(x => x.NewbornWeightInGrams)
                 .GreaterThan(0)
-                .WithMessage("Newborn weight must be greater than 0.");
+                .WithMessage(x => localizer["InvalidField", "This field"]);
 
             RuleFor(x => x.NewbornStatus)
                 .NotNull()
-                .WithMessage("Newborn status is required.");
+                .WithMessage(x => localizer["RequiredField", "This field"]);
 
             RuleFor(x => x.NewbornGender)
                 .NotNull()
-                .WithMessage("Newborn gender is required.");
+                .WithMessage(x => localizer["RequiredField", "This field"]);
         }
     }
 }
+

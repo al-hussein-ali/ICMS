@@ -21,13 +21,13 @@ namespace ICMS.Application.Services
         public async Task AssignRolesToUserAsync(int userId, IEnumerable<string> roleNames, CancellationToken ct = default)
         {
             var user = await _unitOfWork.UserRepository.GetByIdAsync(userId, ct);
-            if (user == null) throw new NotFoundException($"User with ID {userId} not found.");
+            if (user == null) throw new NotFoundException("NotFound");
 
             foreach (var roleName in roleNames)
             {
                 var role = await _unitOfWork.RoleRepository.FirstOrDefaultAsync(r => r.RoleName == roleName, ct);
 
-                if (role == null) throw new DomainException($"Role '{roleName}' does not exist");
+                if (role == null) throw new DomainException("DomainError");
 
                 if (!user.UserRoles.Any(ur => ur.RoleId == role.Id))
                 {
@@ -43,7 +43,7 @@ namespace ICMS.Application.Services
         public async Task RemoveRolesFromUserAsync(int userId, IEnumerable<string> roleNames, CancellationToken ct = default)
         {
              var user = await _unitOfWork.UserRepository.GetByIdAsync(userId, ct);
-            if (user == null) throw new NotFoundException($"User with ID {userId} not found.");
+            if (user == null) throw new NotFoundException("NotFound");
 
             foreach (var roleName in roleNames)
             {

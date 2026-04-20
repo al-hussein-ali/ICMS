@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,9 +8,13 @@ namespace ICMS.Domain.Exceptions
 {
     public class DomainException : Exception
     {
-        public DomainException(string message) : base(message)
+        public string MessageKey { get; }
+        public object[] Args { get; }
+
+        public DomainException(string messageKey, params object[] args) : base(messageKey)
         {
-             
+             MessageKey = messageKey;
+             Args = args;
         }
     }
 }

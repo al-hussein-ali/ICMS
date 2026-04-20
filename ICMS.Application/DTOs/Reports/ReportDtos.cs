@@ -1,0 +1,27 @@
+using ICMS.Application.Enums;
+using System;
+
+namespace ICMS.Application.DTOs.Reports
+{
+    public record ReportRequestDto(ReportType ReportType, DateOnly StartDate, DateOnly EndDate);
+    public record ReportJobResponseDto(string JobId, string Message);
+    public record ReportStatusDto(string JobId, string Status, string? DownloadUrl, string? ErrorMessage);
+
+    // Generic container for report tabular data
+    public class ReportRow
+    {
+        public Dictionary<string, string?> Columns { get; set; } = new();
+    }
+
+    public class ReportData
+    {
+        public ReportType ReportType { get; set; }
+        public DateOnly StartDate { get; set; }
+        public DateOnly EndDate { get; set; }
+        public string GeneratedAt { get; set; } = string.Empty;
+        public int TotalRecords { get; set; }
+        public Dictionary<string, string> SummaryStats { get; set; } = new();
+        public List<string> ColumnHeaders { get; set; } = new();
+        public List<ReportRow> Rows { get; set; } = new();
+    }
+}

@@ -226,6 +226,14 @@ namespace ICMS.Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("TIMEZONE('utc', NOW())");
 
+                    b.Property<bool>("IsSent")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
+
+                    b.Property<DateOnly>("ScheduledDate")
+                        .HasColumnType("date");
+
                     b.Property<string>("Target")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -1006,6 +1014,36 @@ namespace ICMS.Infrastructure.Migrations
                     b.ToTable("Users");
                 });
 
+            modelBuilder.Entity("ICMS.Domain.Entites.Identity.UserDevice", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("UserDeviceId");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("FcmToken")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<DateTime>("LastActiveAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FcmToken")
+                        .IsUnique();
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("UserDevices");
+                });
+
             modelBuilder.Entity("ICMS.Domain.Entites.Identity.UserRole", b =>
                 {
                     b.Property<int>("UserId")
@@ -1713,6 +1751,17 @@ namespace ICMS.Infrastructure.Migrations
                     b.Navigation("Person");
                 });
 
+            modelBuilder.Entity("ICMS.Domain.Entites.Identity.UserDevice", b =>
+                {
+                    b.HasOne("ICMS.Domain.Entites.Identity.User", "User")
+                        .WithMany("Devices")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("ICMS.Domain.Entites.Identity.UserRole", b =>
                 {
                     b.HasOne("ICMS.Domain.Entites.Identity.Role", "Role")
@@ -1909,6 +1958,8 @@ namespace ICMS.Infrastructure.Migrations
 
             modelBuilder.Entity("ICMS.Domain.Entites.Identity.User", b =>
                 {
+                    b.Navigation("Devices");
+
                     b.Navigation("RefreshTokens");
 
                     b.Navigation("UserRoles");

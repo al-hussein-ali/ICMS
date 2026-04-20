@@ -1,3 +1,4 @@
+using ICMS.Application.Interfaces.Services;
 using FluentValidation;
 using ICMS.Application.DTOs.ImmunizationRecord;
 
@@ -5,40 +6,41 @@ namespace ICMS.Application.Validators.ImmunizationRecord
 {
     internal class ImmunizationRecordCreateValidator : AbstractValidator<ImmunizationRecordCreateDto>
     {
-        public ImmunizationRecordCreateValidator()
+        public ImmunizationRecordCreateValidator(ILocalizer localizer)
         {
             RuleFor(x => x.IndividualId)
                 .GreaterThanOrEqualTo(1)
-                .WithMessage("Individual Id is required.");
+                .WithMessage(x => localizer["RequiredField", "This field"]);
 
             RuleFor(x => x.DoseId)
                 .GreaterThanOrEqualTo(1)
-                .WithMessage("Dose Id is required.");
+                .WithMessage(x => localizer["RequiredField", "This field"]);
 
             When(x => x.FieldVisitId != null, () =>
             {
                 RuleFor(x => x.FieldVisitId!.Value)
                     .GreaterThanOrEqualTo(1)
-                    .WithMessage("FieldVisitId must be greater than 0 when provided.");
+                    .WithMessage(x => localizer["InvalidField", "This field"]);
             });
 
             RuleFor(x => x.VaccinationDate)
                 .Must(d => d != default)
                 .NotEmpty()
-                .WithMessage("Vaccination date is required.");
+                .WithMessage(x => localizer["RequiredField", "This field"]);
 
             RuleFor(x => x.TakenIn)
                 .NotEmpty()
-                .WithMessage("Taken In is required.")
+                .WithMessage(x => localizer["RequiredField", "This field"])
                 .MaximumLength(200)
-                .WithMessage("TakenIn must be at most 200 characters.");
+                .WithMessage(x => localizer["InvalidField", "This field"]);
 
             When(x => x.Notes != null, () =>
             {
                 RuleFor(x => x.Notes)
                     .MaximumLength(500)
-                    .WithMessage("Notes must be at most 500 characters.");
+                    .WithMessage(x => localizer["InvalidField", "This field"]);
             });
         }
     }
 }
+

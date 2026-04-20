@@ -42,6 +42,10 @@ public class UserConfig : IEntityTypeConfiguration<User>
             .UsePropertyAccessMode(PropertyAccessMode.Field)
             .HasField("_userRoles");
 
+        builder.Navigation(nameof(User.Devices))?
+            .UsePropertyAccessMode(PropertyAccessMode.Field)
+            .HasField("_devices");
+
     
 
 

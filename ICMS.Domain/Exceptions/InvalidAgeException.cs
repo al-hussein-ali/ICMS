@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,7 +8,7 @@ namespace ICMS.Domain.Exceptions
 {
     public class InvalidAgeException : DomainException
     {
-        public InvalidAgeException(string message) : base(message)
+        public InvalidAgeException(string messageKey, params object[] args) : base(messageKey, args)
         {
         }
     }

@@ -40,7 +40,7 @@ namespace ICMS.Application.Services
 
             ct.ThrowIfCancellationRequested();
 
-            return immunizationRecord?.ToReadDto() ?? throw new NotFoundException("This record was not found");
+            return immunizationRecord?.ToReadDto() ?? throw new NotFoundException("NotFound");
         }
 
         public async Task<ImmunizationRecordReadDto> AddAsync(ImmunizationRecordCreateDto entity, int userId, CancellationToken ct = default)
@@ -48,10 +48,10 @@ namespace ICMS.Application.Services
             await immunizationCreateValidator.ValidateAndThrowAsync(entity);
 
             if (!await unitOfWork.DoseRepository.ExistAsync(entity.DoseId))
-                throw new NotFoundException($"The dose with Id {entity.DoseId} was not found!");
+                throw new NotFoundException("NotFound");
 
             if (!await unitOfWork.VaccinatedIndividualRepository.ExistAsync(entity.IndividualId))
-                throw new NotFoundException($"The Vaccinated Individual with Id {entity.IndividualId} was not found!");
+                throw new NotFoundException("NotFound");
 
             var immunizationRecord = ImmunizationRecord.Create(
                 entity.IndividualId,
@@ -77,13 +77,13 @@ namespace ICMS.Application.Services
             ct.ThrowIfCancellationRequested();
 
             if (oldImmunizaitionRecord == null)
-                throw new NotFoundException("This Record was not found");
+                throw new NotFoundException("NotFound");
 
             if (!await unitOfWork.DoseRepository.ExistAsync(updatedEntity.DoseId))
-                throw new NotFoundException($"The dose with Id {updatedEntity.DoseId} was not found!");
+                throw new NotFoundException("NotFound");
 
             if (!await unitOfWork.VaccinatedIndividualRepository.ExistAsync(updatedEntity.IndividualId))
-                throw new NotFoundException($"The Vaccinated Individual with Id {updatedEntity.IndividualId} was not found!");
+                throw new NotFoundException("NotFound");
 
 
 
@@ -102,7 +102,7 @@ namespace ICMS.Application.Services
             var existingRecord = await unitOfWork.ImmunizationRecordRepository.GetByIdAsync(id, ct);
 
             if (existingRecord == null)
-                throw new NotFoundException("This record was not found!");
+                throw new NotFoundException("NotFound");
 
             ct.ThrowIfCancellationRequested();
 

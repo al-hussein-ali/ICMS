@@ -1,3 +1,4 @@
+using ICMS.Application.Interfaces.Services;
 using FluentValidation;
 using ICMS.Application.DTOs.Person;
 using ICMS.Application.DTOs.VaccinatedIndividual;
@@ -6,29 +7,29 @@ namespace ICMS.Application.Validators.VaccinatedIndividual
 {
     internal class VaccinatedIndividualCreateValidator : AbstractValidator<VaccinatedIndividualCreateDto>
     {
-        public  VaccinatedIndividualCreateValidator(IValidator<PersonCreateDto> personCreateValidator)
+        public  VaccinatedIndividualCreateValidator(IValidator<PersonCreateDto> personCreateValidator, ILocalizer localizer)
         {
             RuleFor(x => x.DirectorateId)
                 .NotEmpty()
-                .WithMessage("The Directorate is required")
+                .WithMessage(x => localizer["RequiredField", "This field"])
                 .GreaterThan(0)
-                .WithMessage("DirectorateId must be greater than 0.");
+                .WithMessage(x => localizer["InvalidField", "This field"]);
 
             RuleFor(x => x.NeighborhoodId)
                 .NotEmpty()
-                .WithMessage("The Neighborhood is required")
+                .WithMessage(x => localizer["RequiredField", "This field"])
                 .GreaterThan(0)
-                .WithMessage("NeighborhoodId must be greater than 0.");
+                .WithMessage(x => localizer["InvalidField", "This field"]);
 
             RuleFor(x => x)
                 .Must(x => x.PersonId != null || x.PersonCreateDto != null)
-                .WithMessage("Either PersonId or PersonCreateDto must be provided.");
+                .WithMessage(x => localizer["InvalidField", "This field"]);
 
             When(x => x.PersonId != null, () =>
             {
                 RuleFor(x => x.PersonId)
                     .GreaterThanOrEqualTo(1)
-                    .WithMessage("PersonId must be greater than 0.");
+                    .WithMessage(x => localizer["InvalidField", "This field"]);
             });
 
 
@@ -41,3 +42,4 @@ namespace ICMS.Application.Validators.VaccinatedIndividual
         }
     }
 }
+

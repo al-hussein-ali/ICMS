@@ -33,6 +33,7 @@ namespace ICMS.Infrastructure.Repositories
         public IRoleRepository RoleRepository { get; }
         public ITransactionRepository TransactionRepository { get; }
         public IUserRepository UserRepository { get; }
+        public IUserDeviceRepository UserDeviceRepository { get; }
         public IUserRoleRepository UserRoleRepository { get; }
         public IVaccinatedIndividualRepository VaccinatedIndividualRepository { get; }
         public IVaccineRepository VaccineRepository { get; }
@@ -64,6 +65,7 @@ namespace ICMS.Infrastructure.Repositories
             RoleRepository = new RoleRepository(_context);
             TransactionRepository = new TransactionRepository(_context);
             UserRepository = new UserRepository(_context);
+            UserDeviceRepository = new UserDeviceRepository(_context);
             UserRoleRepository = new UserRoleRepository(_context);
             VaccinatedIndividualRepository = new VaccinatedIndividualRepository(_context);
             VaccineRepository = new VaccineRepository(_context);

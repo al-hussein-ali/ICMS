@@ -66,7 +66,7 @@ namespace ICMS.Application.Services
             await userUpdateValidator.ValidateAndThrowAsync(updatedEntity, ct);
 
             var user = await unitOfWork.UserRepository.GetByIdAsync(updatedEntity.Id, ct);
-            if (user == null) throw new NotFoundException($"User with ID {updatedEntity.Id} not found.");
+            if (user == null) throw new NotFoundException("NotFound");
 
             // Sync Roles if provided
             if (updatedEntity.Roles != null)

@@ -12,12 +12,12 @@ namespace ICMS.Application.Extensions
     public static class HealthAdvisoryExtensions
     {
         public static HealthAdvisoryReadDto ToReadDto(this HealthAdvisory ha)
-            => new(ha.Id, ha.Title, ha.Content, ha.Target, ha.CreationDate);
+            => new(ha.Id, ha.Title, ha.Content, ha.Target, ha.ScheduledDate, ha.IsSent, ha.CreationDate);
 
         public static HealthAdvisoryDetailsDto ToDetailsDto(this HealthAdvisory ha)
-            => new(ha.Id, ha.Title, ha.Content, ha.Target, ha.CreationDate, ha.UserId);
+            => new(ha.Id, ha.Title, ha.Content, ha.Target, ha.ScheduledDate, ha.IsSent, ha.CreationDate, ha.UserId);
 
         public static HealthAdvisory ToDomain(this HealthAdvisoryCreateDto dto, int userId)
-            => HealthAdvisory.Create(dto.Title, dto.Content, dto.Target, userId); // factory not implemented
+            => HealthAdvisory.Create(dto.Title, dto.Content, dto.Target, dto.ScheduledDate, userId);
     }
 }

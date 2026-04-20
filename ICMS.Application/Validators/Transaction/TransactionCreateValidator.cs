@@ -1,3 +1,4 @@
+using ICMS.Application.Interfaces.Services;
 using FluentValidation;
 using ICMS.Application.DTOs.Transaction;
 
@@ -5,35 +6,36 @@ namespace ICMS.Application.Validators.Transaction
 {
     internal class TransactionCreateValidator : AbstractValidator<TransactionCreateDto>
     {
-        public TransactionCreateValidator()
+        public TransactionCreateValidator(ILocalizer localizer)
         {
             RuleFor(x => x.BatchId)
                 .GreaterThanOrEqualTo(1)
-                .WithMessage("Batch Id is required.");
+                .WithMessage(x => localizer["RequiredField", "This field"]);
 
             RuleFor(x => x.TransactionType)
                 .NotNull()
-                .WithMessage("Transaction type is required.");
+                .WithMessage(x => localizer["RequiredField", "This field"]);
 
             RuleFor(x => x.TransactionDate)
                 .NotNull()
-                .WithMessage("Transaction date is required.");
+                .WithMessage(x => localizer["RequiredField", "This field"]);
 
             RuleFor(x => x.Quantity)
                 .GreaterThanOrEqualTo(0)
-                .WithMessage("Quantity must be zero or positive.");
+                .WithMessage(x => localizer["InvalidField", "This field"]);
 
             RuleFor(x => x.PermissionNumber)
                 .NotEmpty()
-                .WithMessage("Permission number is required.")
+                .WithMessage(x => localizer["RequiredField", "This field"])
                 .MaximumLength(200)
-                .WithMessage("Permission number must be at most 200 characters.");
+                .WithMessage(x => localizer["InvalidField", "This field"]);
 
             RuleFor(x => x.SourceorDestination)
                 .NotEmpty()
-                .WithMessage("Source or destination is required.")
+                .WithMessage(x => localizer["RequiredField", "This field"])
                 .MaximumLength(250)
-                .WithMessage("Source or destination must be at most 250 characters.");
+                .WithMessage(x => localizer["InvalidField", "This field"]);
         }
     }
 }
+

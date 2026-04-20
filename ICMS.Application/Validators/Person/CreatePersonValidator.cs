@@ -1,4 +1,5 @@
-﻿using FluentValidation;
+using ICMS.Application.Interfaces.Services;
+using FluentValidation;
 using ICMS.Application.DTOs.Person;
 using ICMS.Domain.Enums;
 
@@ -6,44 +7,45 @@ namespace ICMS.Application.Validators.Person
 {
     public sealed class CreatePersonValidator : AbstractValidator<PersonCreateDto>
     {
-        public CreatePersonValidator()
+        public CreatePersonValidator(ILocalizer localizer)
         {
             RuleFor(x => x.FirstName)
                 .NotEmpty()
-                .WithMessage("The First Name is required")
+                .WithMessage(x => localizer["RequiredField", "This field"])
                 .MaximumLength(20)
-                .WithMessage("First Name must be at most 20 characters.");
+                .WithMessage(x => localizer["InvalidField", "This field"]);
 
             RuleFor(x => x.SecondName)
                 .NotEmpty()
-                .WithMessage("The Second Name is required")
+                .WithMessage(x => localizer["RequiredField", "This field"])
                 .MaximumLength(20)
-                .WithMessage("Second Name must be at most 20 characters.");
+                .WithMessage(x => localizer["InvalidField", "This field"]);
 
             When(x => x.ThirdName != null, () =>
             {
                 RuleFor(x => x.ThirdName)
                     .MaximumLength(20)
-                    .WithMessage("Third Name must be at most 20 characters.");
+                    .WithMessage(x => localizer["InvalidField", "This field"]);
             });
 
             RuleFor(x => x.LastName)
                 .NotEmpty()
-                .WithMessage("The Last Name is required")
+                .WithMessage(x => localizer["RequiredField", "This field"])
                 .MaximumLength(20)
-                .WithMessage("Last Name must be at most 20 characters.");
+                .WithMessage(x => localizer["InvalidField", "This field"]);
 
             RuleFor(x => x.DateOfBirth)
                 .NotNull()
-                .WithMessage("The Date of Birth is required");
+                .WithMessage(x => localizer["RequiredField", "This field"]);
 
             RuleFor(x => x.PhoneNumber)
                 .NotEmpty()
-                .WithMessage("The Phone Number is required");
+                .WithMessage(x => localizer["RequiredField", "This field"]);
 
             RuleFor(x => x.Gender)
                 .NotEmpty()
-                .WithMessage("The Gender value is required.");
+                .WithMessage(x => localizer["RequiredField", "This field"]);
         }
     }
 }
+

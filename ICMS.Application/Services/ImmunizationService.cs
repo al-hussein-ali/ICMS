@@ -24,14 +24,14 @@ namespace ICMS.Application.Services
 
             if (individual == null)
             {
-                throw new NotFoundException($"VaccinatedIndividual with ID {request.IndividualId} not found.");
+                throw new NotFoundException("NotFound");
             }
 
             // 2. Load Doses (Current and Next for interval calculation)
             var currentDose = await _unitOfWork.DoseRepository.GetByIdAsync(request.DoseId, ct);
             if (currentDose == null)
             {
-                throw new NotFoundException($"Dose with ID {request.DoseId} not found.");
+                throw new NotFoundException("NotFound");
             }
 
             var nextDose = await _unitOfWork.DoseRepository

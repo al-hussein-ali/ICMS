@@ -1,0 +1,1 @@
+namespace ICMS.Application.Resources { public class ExceptionsResource { } }

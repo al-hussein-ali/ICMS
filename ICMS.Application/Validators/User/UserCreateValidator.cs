@@ -1,3 +1,4 @@
+using ICMS.Application.Interfaces.Services;
 using FluentValidation;
 using ICMS.Application.DTOs.User;
 using System.Linq;
@@ -6,27 +7,28 @@ namespace ICMS.Application.Validators.User
 {
     public class UserCreateValidator : AbstractValidator<UserCreateDto>
     {
-        public UserCreateValidator()
+        public UserCreateValidator(ILocalizer localizer)
         {
             RuleFor(x => x.UserName)
                 .NotEmpty()
-                .WithMessage("User name is required.")
+                .WithMessage(x => localizer["RequiredField", "This field"])
                 .MaximumLength(50)
-                .WithMessage("User name must be at most 50 characters.");
+                .WithMessage(x => localizer["InvalidField", "This field"]);
 
             RuleFor(x => x.Password)
                 .NotEmpty()
-                .WithMessage("Password is required.")
+                .WithMessage(x => localizer["RequiredField", "This field"])
                 .MaximumLength(256)
-                .WithMessage("Password must be at most 256 characters.");
+                .WithMessage(x => localizer["InvalidField", "This field"]);
 
             RuleFor(x => x.PersonId)
                 .GreaterThanOrEqualTo(1)
-                .WithMessage("Person Id is required.");
+                .WithMessage(x => localizer["RequiredField", "This field"]);
 
             RuleFor(x => x.Roles)
                 .Must(roles => roles == null || roles.All(r => !string.IsNullOrWhiteSpace(r)))
-                .WithMessage("Role names cannot be empty.");
+                .WithMessage(x => localizer["ValidationError", "Role names cannot be empty."]);
         }
     }
 }
+

@@ -32,7 +32,7 @@ namespace ICMS.Application.Services
             var fieldVisit = await _unitOfWork.FieldVisitRepository.GetByIdWithDetailsAsync(id, ct);
 
             if (fieldVisit == null)
-                throw new NotFoundException($"Field visit with ID {id} not found.");
+                throw new NotFoundException("NotFound");
 
             return fieldVisit.ToDetailsDto();
         }
@@ -52,7 +52,7 @@ namespace ICMS.Application.Services
             var fieldVisit = await _unitOfWork.FieldVisitRepository.GetByIdAsync(id, ct);
 
             if (fieldVisit == null)
-                throw new NotFoundException($"Field visit with ID {id} not found.");
+                throw new NotFoundException("NotFound");
 
             fieldVisit.UpdateVisitInfo(dto.VisitDate, dto.SubNeighborhoodId);
 
@@ -64,7 +64,7 @@ namespace ICMS.Application.Services
             var fieldVisit = await _unitOfWork.FieldVisitRepository.GetByIdAsync(id, ct);
 
             if (fieldVisit == null)
-                throw new NotFoundException($"Field visit with ID {id} not found.");
+                throw new NotFoundException("NotFound");
 
             await _unitOfWork.FieldVisitRepository.DeleteAsync(fieldVisit, ct);
 
@@ -76,7 +76,7 @@ namespace ICMS.Application.Services
             var fieldVisit = await _unitOfWork.FieldVisitRepository.GetByIdAsync(id, ct);
 
             if (fieldVisit == null)
-                throw new NotFoundException($"Field visit with ID {id} not found.");
+                throw new NotFoundException("NotFound");
 
             fieldVisit.MarkCompleted();
 

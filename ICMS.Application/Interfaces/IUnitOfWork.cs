@@ -26,6 +26,7 @@ namespace ICMS.Application.Interfaces
         IRoleRepository RoleRepository { get; }
         ITransactionRepository TransactionRepository { get; }
         IUserRepository UserRepository { get; }
+        IUserDeviceRepository UserDeviceRepository { get; }
         IUserRoleRepository UserRoleRepository { get; }
         IVaccinatedIndividualRepository VaccinatedIndividualRepository { get; }
         IVaccineRepository VaccineRepository { get;}

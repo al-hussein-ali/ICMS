@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="RequiredField" xml:space="preserve">
+    <value>هذا الحقل مطلوب.</value>
+  </data>
+  <data name="TitleRequired" xml:space="preserve">
+    <value>العنوان مطلوب.</value>
+  </data>
+  <data name="TitleMaxLength" xml:space="preserve">
+    <value>لا يمكن أن يتجاوز العنوان 250 حرفًا.</value>
+  </data>
+  <data name="ContentRequired" xml:space="preserve">
+    <value>المحتوى مطلوب.</value>
+  </data>
+  <data name="ContentMaxLength" xml:space="preserve">
+    <value>لا يمكن أن يتجاوز المحتوى 2000 حرف.</value>
+  </data>
+  <data name="InvalidTarget" xml:space="preserve">
+    <value>الفئة المستهدفة للإشعار غير صالحة.</value>
+  </data>
+  <data name="ScheduledDateMustBeFuture" xml:space="preserve">
+    <value>يجب أن يكون تاريخ الجدولة اليوم أو في المستقبل.</value>
+  </data>
+  <data name="FcmTokenRequired" xml:space="preserve">
+    <value>رمز جهاز FCM مطلوب.</value>
+  </data>
+  <data name="StartDateRequired" xml:space="preserve">
+    <value>تاريخ البداية مطلوب.</value>
+  </data>
+  <data name="EndDateRequired" xml:space="preserve">
+    <value>تاريخ النهاية مطلوب.</value>
+  </data>
+  <data name="EndDateMustBeAfterStart" xml:space="preserve">
+    <value>يجب أن يكون تاريخ النهاية في نفس يوم البداية أو بعده.</value>
+  </data>
+  <data name="InvalidReportType" xml:space="preserve">
+    <value>نوع التقرير المحدد غير صالح.</value>
+  </data>
+</root>

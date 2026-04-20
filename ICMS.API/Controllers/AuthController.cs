@@ -2,11 +2,13 @@ using ICMS.Application.DTOs.Auth;
 using ICMS.Application.Interfaces.Services;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace ICMS.API.Controllers
 {
     [Route("api/auth")]
     [ApiController]
+    [EnableRateLimiting("stricter")]
     public class AuthController(IAuthService authService) : ControllerBase
     {
         [HttpPost("login")]

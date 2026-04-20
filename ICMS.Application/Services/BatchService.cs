@@ -17,29 +17,41 @@ namespace ICMS.Application.Services
     public class BatchService : IBatchService
     {
         private readonly IUnitOfWork _unitOfWork;
+        private readonly ICacheService _cacheService;
 
-        public BatchService(IUnitOfWork unitOfWork)
+        public BatchService(IUnitOfWork unitOfWork, ICacheService cacheService)
         {
             _unitOfWork = unitOfWork;
+            _cacheService = cacheService;
         }
 
-        public async Task<PagedResult<BatchReadDto>> GetAllAsync(BatchFilterDto filter, PaginationParams paginationParams, CancellationToken ct = default)
+        public async Task<PagedResult<BatchReadDto>> GetAllAsync(BatchFilterDto filter,
+            PaginationParams paginationParams, CancellationToken ct = default)
         {
             var pagedBatches = await _unitOfWork.BatchRepository.GetAllAsync(filter, paginationParams, ct);
-            
+
             var dtos = pagedBatches.Items.Select(b => b.ToReadDto()).ToList();
-            
+
             return new PagedResult<BatchReadDto>(
-                dtos, 
-                pagedBatches.TotalCount, 
-                pagedBatches.PageNumber, 
+                dtos,
+                pagedBatches.TotalCount,
+                pagedBatches.PageNumber,
                 pagedBatches.PageSize);
         }
 
         public async Task<BatchDetailsDto?> GetByIdAsync(int batchId, CancellationToken ct = default)
         {
+            string cacheKey = $"batch:{batchId}";
+            if (_cacheService.TryGet(cacheKey, out BatchDetailsDto? cached) && cached != null)
+                return cached;
+
             var batch = await _unitOfWork.BatchRepository.GetByIdWithDetailsAsync(batchId, ct);
-            return batch?.ToDetailsDto();
+            var dto = batch?.ToDetailsDto();
+
+            if (dto != null)
+                _cacheService.Set(cacheKey, dto, TimeSpan.FromMinutes(2)); // Short TTL for inventory
+
+            return dto;
         }
 
         public async Task<BatchReadDto> AddAsync(BatchCreateDto dto, int userId, CancellationToken ct = default)
@@ -53,7 +65,7 @@ namespace ICMS.Application.Services
         public async Task<bool> UpdateAsync(int batchId, BatchCreateDto dto, CancellationToken ct = default)
         {
             // Direct update of Batch metadata is restricted as per domain rules.
-            throw new DomainException("Direct update of Batch metadata is restricted. Please create a new batch if identifiers change.");
+            throw new DomainException("DomainError");
         }
 
         public async Task AddStockAsync(int batchId, InventoryUpdateDto dto, int userId, CancellationToken ct = default)
@@ -61,26 +73,31 @@ namespace ICMS.Application.Services
             await _unitOfWork.ExecuteInTransactionAsync(async () =>
             {
                 var batch = await _unitOfWork.BatchRepository.GetByIdAsync(batchId, ct);
-                if (batch == null) throw new DomainException($"Batch {batchId} not found");
+                if (batch == null) throw new NotFoundException("NotFound");
 
                 batch.AddInventory(dto.Quantity, dto.PermissionNumber, dto.SourceOrDestination, userId);
                 await _unitOfWork.SaveChangesAsync(ct);
+                _cacheService.Remove($"batch:{batchId}");
             });
         }
 
-        public async Task RemoveStockAsync(int batchId, InventoryUpdateDto dto, int userId, CancellationToken ct = default)
+        public async Task RemoveStockAsync(int batchId, InventoryUpdateDto dto, int userId,
+            CancellationToken ct = default)
         {
             await _unitOfWork.ExecuteInTransactionAsync(async () =>
             {
                 var batch = await _unitOfWork.BatchRepository.GetByIdAsync(batchId, ct);
-                if (batch == null) throw new DomainException($"Batch {batchId} not found");
+                if (batch == null) throw new NotFoundException("NotFound");
+
 
                 batch.RemoveInventory(dto.Quantity, dto.PermissionNumber, dto.SourceOrDestination, userId);
                 await _unitOfWork.SaveChangesAsync(ct);
+                _cacheService.Remove($"batch:{batchId}");
             });
         }
 
-        public async Task RemoveStockByDoseAsync(InventoryRemoveByDoseDto dto, int userId, CancellationToken ct = default)
+        public async Task RemoveStockByDoseAsync(InventoryRemoveByDoseDto dto, int userId,
+            CancellationToken ct = default)
         {
             await _unitOfWork.ExecuteInTransactionAsync(async () =>
             {
@@ -93,7 +110,7 @@ namespace ICMS.Application.Services
                 int totalAvailable = batches.Sum(b => b.TotalQuantity);
 
                 if (totalAvailable < dto.Quantity)
-                    throw new DomainException($"Insufficient total inventory for Dose {dto.DoseId}. Available: {totalAvailable}, Requested: {dto.Quantity}");
+                    throw new DomainException("DomainError");
 
                 foreach (var batch in batches)
                 {
@@ -102,13 +119,15 @@ namespace ICMS.Application.Services
                     int toSubtractFromThisBatch = Math.Min(batch.TotalQuantity, remainingToSubtract);
                     batch.RemoveInventory(toSubtractFromThisBatch, dto.PermissionNumber, dto.Destination, userId);
                     remainingToSubtract -= toSubtractFromThisBatch;
+                    _cacheService.Remove($"batch:{batch.Id}");
                 }
 
                 await _unitOfWork.SaveChangesAsync(ct);
             });
         }
 
-        public async Task<PagedResult<TransactionReadDto>> GetTransactionsAsync(int batchId, TransactionFilterDto filter, PaginationParams paginationParams, CancellationToken ct = default)
+        public async Task<PagedResult<TransactionReadDto>> GetTransactionsAsync(int batchId,
+            TransactionFilterDto filter, PaginationParams paginationParams, CancellationToken ct = default)
         {
             var query = _unitOfWork.TransactionRepository.GetQueryable()
                 .Where(t => t.BatchId == batchId);
@@ -122,11 +141,11 @@ namespace ICMS.Application.Services
 
             var totalCount = query.Count();
             var items = query.Skip((paginationParams.PageNumber - 1) * paginationParams.PageSize)
-                             .Take(paginationParams.PageSize)
-                             .ToList();
-            
+                .Take(paginationParams.PageSize)
+                .ToList();
+
             var dtos = items.Select(t => t.ToReadDto()).ToList();
-            
+
             return new PagedResult<TransactionReadDto>(
                 dtos,
                 totalCount,

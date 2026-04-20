@@ -1,3 +1,4 @@
+using ICMS.Application.Interfaces.Services;
 using FluentValidation;
 using ICMS.Application.DTOs.Maternal;
 
@@ -5,26 +6,27 @@ namespace ICMS.Application.Validators.Maternal
 {
     public class ConcludePregnancyDtoValidator : AbstractValidator<ConcludePregnancyDto>
     {
-        public ConcludePregnancyDtoValidator()
+        public ConcludePregnancyDtoValidator(ILocalizer localizer)
         {
             RuleFor(x => x.DeliveryDate)
-                .NotEmpty().WithMessage("Delivery date is required.");
+                .NotEmpty().WithMessage(x => localizer["RequiredField", "This field"]);
 
             RuleFor(x => x.BirthNature)
-                .IsInEnum().WithMessage("Invalid birth nature.");
+                .IsInEnum().WithMessage(x => localizer["InvalidField", "This field"]);
 
             RuleFor(x => x.BirthLocationType)
-                .IsInEnum().WithMessage("Invalid birth location type.");
+                .IsInEnum().WithMessage(x => localizer["InvalidField", "This field"]);
 
             RuleFor(x => x.BirthLocationDetails)
-                .NotEmpty().WithMessage("Birth location details are required.");
+                .NotEmpty().WithMessage(x => localizer["RequiredField", "This field"]);
 
             RuleFor(x => x.Newborns)
-                .NotEmpty().WithMessage("At least one newborn record is required.")
-                .Must(x => x != null && x.Count > 0).WithMessage("At least one newborn record is required.");
+                .NotEmpty().WithMessage(x => localizer["RequiredField", "This field"])
+                .Must(x => x != null && x.Count > 0).WithMessage(x => localizer["RequiredField", "This field"]);
 
             RuleForEach(x => x.Newborns)
-                .SetValidator(new NewbornDtoValidator());
+                .SetValidator(new NewbornDtoValidator(localizer));
         }
     }
 }
+

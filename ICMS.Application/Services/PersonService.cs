@@ -1,4 +1,4 @@
-﻿using FluentValidation;
+using FluentValidation;
 using ICMS.Application.DTOs.Pagination;
 using ICMS.Application.DTOs.Person;
 using ICMS.Application.Extensions;
@@ -39,14 +39,14 @@ namespace ICMS.Application.Services
             var person = await _unitOfWork.PersonRepository.GetByIdAsync(id, ct);
             ct.ThrowIfCancellationRequested();
 
-            return person?.ToReadDto() ?? throw new NotFoundException("This person was not found");
+            return person?.ToReadDto() ?? throw new NotFoundException("NotFound");
         }
         public async Task<PersonReadDto> GetByPhoneNumberAsync(string phoneNumber, CancellationToken ct = default)
         {
             var person = await _unitOfWork.PersonRepository.GetByPhoneNumberAsync(phoneNumber, ct);
             ct.ThrowIfCancellationRequested();
 
-            return person?.ToReadDto() ?? throw new NotFoundException("This person was not found");
+            return person?.ToReadDto() ?? throw new NotFoundException("NotFound");
         }
 
         public async Task<PersonReadDto> AddAsync(PersonCreateDto entity, CancellationToken ct = default)
@@ -67,7 +67,7 @@ namespace ICMS.Application.Services
             var oldRecord = await _unitOfWork.PersonRepository.GetByIdAsync(id, ct);
 
             if (oldRecord is null)
-                throw new NotFoundException("Record was not found!");
+                throw new NotFoundException("NotFound");
 
             oldRecord.UpdatePersonInfo(
                 updatedEntity.FirstName,
@@ -87,7 +87,7 @@ namespace ICMS.Application.Services
             var exsitingPerson = await _unitOfWork.PersonRepository.GetByIdAsync(id, ct);
 
             if (exsitingPerson is null)
-                throw new NotFoundException("Record was not found!");
+                throw new NotFoundException("NotFound");
 
             exsitingPerson.MarkAsDeleted();
 

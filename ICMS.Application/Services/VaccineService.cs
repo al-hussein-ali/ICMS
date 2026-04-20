@@ -10,14 +10,22 @@ using System.Collections.Immutable;
 
 namespace ICMS.Application.Services;
 
-public class VaccineService(IUnitOfWork unitOfWork,IValidator<VaccineCreateDto> vaccineCreateValidator) : IVaccineService
+public class VaccineService(IUnitOfWork unitOfWork, IValidator<VaccineCreateDto> vaccineCreateValidator, ICacheService cacheService) : IVaccineService
 {
+    private const string CacheKeyAll = "vaccines:all";
 
     public async Task<IReadOnlyList<VaccineReadDto>> GetAllAsync(CancellationToken ct = default)
     {
-        var vaccines = await unitOfWork.VaccineRepository.GetAllAsync(cancellationToken:ct);
+        if (cacheService.TryGet(CacheKeyAll, out IReadOnlyList<VaccineReadDto>? cachedVaccines) && cachedVaccines != null)
+        {
+            return cachedVaccines;
+        }
 
-        return vaccines.Select(v => v.ToReadDto()).ToList();
+        var vaccines = await unitOfWork.VaccineRepository.GetAllAsync(cancellationToken:ct);
+        var dtos = vaccines.Select(v => v.ToReadDto()).ToList();
+
+        cacheService.Set(CacheKeyAll, dtos);
+        return dtos;
     }
 
     public async Task<VaccineReadDto> GetByIdAsync(int id, CancellationToken ct = default)
@@ -25,7 +33,7 @@ public class VaccineService(IUnitOfWork unitOfWork,IValidator<VaccineCreateDto> 
         var vaccine = await unitOfWork.VaccineRepository.GetByIdAsync(id,ct);
 
 
-        return vaccine?.ToReadDto() ?? throw new NotFoundException("Vaccine was not found");
+        return vaccine?.ToReadDto() ?? throw new NotFoundException("NotFound");
         ;
     }
 
@@ -41,6 +49,8 @@ public class VaccineService(IUnitOfWork unitOfWork,IValidator<VaccineCreateDto> 
 
         await unitOfWork.SaveChangesAsync();
 
+        cacheService.Remove(CacheKeyAll);
+
         return newVaccine.ToReadDto();
     }
 
@@ -49,7 +59,7 @@ public class VaccineService(IUnitOfWork unitOfWork,IValidator<VaccineCreateDto> 
         var existingVaccine = await unitOfWork.VaccineRepository.GetByIdAsync(id,ct);
 
         if (existingVaccine == null)
-            throw new NotFoundException("This Vaccine was not found");
+            throw new NotFoundException("NotFound");
 
 
         existingVaccine.UpdateVaccineInfo(updatedEntity.VaccineName,
@@ -60,7 +70,9 @@ public class VaccineService(IUnitOfWork unitOfWork,IValidator<VaccineCreateDto> 
             updatedEntity.Audience);
 
 
-        return await unitOfWork.SaveChangesAsync() > 0;
+        var result = await unitOfWork.SaveChangesAsync() > 0;
+        if (result) cacheService.Remove(CacheKeyAll);
+        return result;
             
     }
     public async Task<bool> DeactivateAsync(int id, CancellationToken ct = default)
@@ -68,13 +80,15 @@ public class VaccineService(IUnitOfWork unitOfWork,IValidator<VaccineCreateDto> 
         var existingVaccine = await unitOfWork.VaccineRepository.GetByIdAsync(id, ct);
 
         if (existingVaccine == null)
-            throw new NotFoundException("This Vaccine was not found");
+            throw new NotFoundException("NotFound");
 
 
 
         existingVaccine.Deactivate();
 
-        return await unitOfWork.SaveChangesAsync() > 0;
+        var result = await unitOfWork.SaveChangesAsync() > 0;
+        if (result) cacheService.Remove(CacheKeyAll);
+        return result;
     }
 
 
@@ -83,13 +97,15 @@ public class VaccineService(IUnitOfWork unitOfWork,IValidator<VaccineCreateDto> 
         var existingVaccine = await unitOfWork.VaccineRepository.GetByIdAsync(id, ct);
 
         if (existingVaccine == null)
-            throw new NotFoundException("This Vaccine was not found");
+            throw new NotFoundException("NotFound");
 
 
 
         existingVaccine.Reactivate();
 
-        return await unitOfWork.SaveChangesAsync() > 0;
+        var result = await unitOfWork.SaveChangesAsync() > 0;
+        if (result) cacheService.Remove(CacheKeyAll);
+        return result;
     }
 
 }

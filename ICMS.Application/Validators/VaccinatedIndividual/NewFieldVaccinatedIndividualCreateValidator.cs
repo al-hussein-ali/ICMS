@@ -1,3 +1,4 @@
+using ICMS.Application.Interfaces.Services;
 using FluentValidation;
 using ICMS.Application.DTOs.VaccinatedIndividual;
 
@@ -5,37 +6,38 @@ namespace ICMS.Application.Validators.VaccinatedIndividual
 {
     internal class NewFieldVaccinatedIndividualCreateValidator : AbstractValidator<NewFieldVaccinatedIndividualDto>
     {
-        public NewFieldVaccinatedIndividualCreateValidator(IValidator<ICMS.Application.DTOs.Person.PersonCreateDto> personValidator)
+        public NewFieldVaccinatedIndividualCreateValidator(IValidator<ICMS.Application.DTOs.Person.PersonCreateDto> personValidator, ILocalizer localizer)
         {
             RuleFor(x => x.DirectorateId)
                 .NotEmpty()
-                .WithMessage("The Directorate is required")
+                .WithMessage(x => localizer["RequiredField", "This field"])
                 .GreaterThan(0)
-                .WithMessage("DirectorateId must be greater than 0.");
+                .WithMessage(x => localizer["InvalidField", "This field"]);
 
             RuleFor(x => x.NeighborhoodId)
                 .NotEmpty()
-                .WithMessage("The Neighborhood is required")
+                .WithMessage(x => localizer["RequiredField", "This field"])
                 .GreaterThan(0)
-                .WithMessage("NeighborhoodId must be greater than 0.");
+                .WithMessage(x => localizer["InvalidField", "This field"]);
 
 
             RuleFor(x => x.Person)
                 .NotNull()
-                .WithMessage("Person details are required.")
+                .WithMessage(x => localizer["RequiredField", "This field"])
                 .SetValidator(personValidator);
 
             RuleFor(x => x.DoseId)
                 .GreaterThan(0)
-                .WithMessage("Valid DoseId is required.");
+                .WithMessage(x => localizer["RequiredField", "This field"]);
 
             RuleFor(x => x.VaccinationDate)
                 .NotEmpty()
-                .WithMessage("Vaccination date is required.");
+                .WithMessage(x => localizer["RequiredField", "This field"]);
 
             RuleFor(x => x.TakenIn)
                 .NotEmpty()
-                .WithMessage("TakenIn (location) is required.");
+                .WithMessage(x => localizer["RequiredField", "This field"]);
         }
     }
 }
+

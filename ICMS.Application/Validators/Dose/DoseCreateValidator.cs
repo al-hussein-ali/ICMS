@@ -1,49 +1,50 @@
-﻿using FluentValidation;
+using ICMS.Application.Interfaces.Services;
+using FluentValidation;
 using ICMS.Application.DTOs.Dose;
 
 namespace ICMS.Application.Validators.Dose
 {
     internal class DoseCreateValidator : AbstractValidator<DoseCreateDto>
     {
-        public DoseCreateValidator()
+        public DoseCreateValidator(ILocalizer localizer)
         {
             RuleFor(x => x.VaccineId)
                 .GreaterThanOrEqualTo(1)
-                .WithMessage("The Vaccine Id is not valid.")
+                .WithMessage(x => localizer["ValidationError", "The Vaccine Id is not valid."])
                 ;
 
             RuleFor(x => x.DoseName)
                 .NotEmpty()
-                .WithMessage("The Dose Name is required.")
+                .WithMessage(x => localizer["RequiredField", "This field"])
                 .Length(1, 150)
-                .WithMessage("The Dose Name must be between 1 and 150 characters long.");
+                .WithMessage(x => localizer["InvalidField", "This field"]);
 
             RuleFor(x => x.DoseOrder)
                 .NotNull()
-                .WithMessage("The Dose Order is required.")
+                .WithMessage(x => localizer["RequiredField", "This field"])
                 .Must(_isValidDoseOrder)
-                .WithMessage("The Dose Order is invalid.")
+                .WithMessage(x => localizer["InvalidField", "This field"])
                 ;
 
             RuleFor(x => x.RecommendedAgeInMonths)
                 .NotNull()
-                .WithMessage("The Recommended Age In Months is required.")
+                .WithMessage(x => localizer["RequiredField", "This field"])
                 .GreaterThanOrEqualTo(0)
-                .WithMessage("The Recommended Age In Months is not valid.")
+                .WithMessage(x => localizer["ValidationError", "The Recommended Age In Months is not valid."])
                 ;
 
             RuleFor(x => x.RecommendedAgeGroup)
                 .NotEmpty()
-                .WithMessage("The Recommended Age Group is required.")
+                .WithMessage(x => localizer["RequiredField", "This field"])
                 .Length(1,100)
-                .WithMessage("The Recommended Age Group must be between 1 and 100 characters long.");
+                .WithMessage(x => localizer["InvalidField", "This field"]);
 
 
             When(x => x.Notes != null, () =>
             {
                 RuleFor(x => x.Notes)
                     .Length(1, 500)
-                    .WithMessage("The Note must be between 1 and 500 characters long.");
+                    .WithMessage(x => localizer["InvalidField", "This field"]);
             });
            
         }
@@ -54,3 +55,4 @@ namespace ICMS.Application.Validators.Dose
         }
     }
 }
+
