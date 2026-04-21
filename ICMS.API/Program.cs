@@ -142,6 +142,17 @@ else
     Console.WriteLine($"Firebase configuration file not found at {firebaseCredentialsPath}. Push notifications will fail.");
 }
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        policy.WithOrigins("http://localhost:5173")
+              .AllowAnyMethod()
+              .AllowAnyHeader()
+              .AllowCredentials();
+    });
+});
+
 var app = builder.Build();
 
 app.UseSerilogRequestLogging();
@@ -160,6 +171,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseCors("AllowFrontend");
 app.UseStaticFiles();
 
 app.UseRequestLocalization(options =>
