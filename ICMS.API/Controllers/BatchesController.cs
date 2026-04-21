@@ -37,7 +37,14 @@ namespace ICMS.API.Controllers
         {
             var userId = User.GetUserId();
             var result = await batchService.AddAsync(dto, userId);
-            return CreatedAtRoute("GetBatchById", new { id = result.Id }, result);
+            return CreatedAtRoute("GetBatchById", new { batchId = result.Id }, result);
+        }
+
+        [HttpPut("{batchId}")]
+        public async Task<IActionResult> UpdateAsync([FromRoute] int batchId, [FromBody] BatchUpdateDto dto)
+        {
+            await batchService.UpdateAsync(batchId, dto);
+            return NoContent();
         }
 
         [HttpPost("{batchId}/inventory/add")]

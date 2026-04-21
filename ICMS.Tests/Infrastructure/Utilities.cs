@@ -37,7 +37,7 @@ namespace ICMS.Tests.Infrastructure
             db.SaveChanges();
 
             // Seed Clinical
-            var vaccine = Vaccine.Create("BCG", "BCG-01", "Tuberculosis vaccine", true, 5, TargetAudience.InfantRoutine);
+            var vaccine = Vaccine.Create("BCG", "BCG-01", "Tuberculosis vaccine", true, 5, 0, 12, TargetAudience.InfantRoutine);
             db.Vaccines.Add(vaccine);
             db.SaveChanges();
 

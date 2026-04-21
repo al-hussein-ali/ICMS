@@ -21,9 +21,11 @@ namespace ICMS.Domain.Entites.Clinical
         private readonly List<Transaction> _transactions = new();
         public int DoseId { get; private set; }
         public int UserId { get; private set; }
+        public string BatchName { get; private set; } = string.Empty;
         public string CountryOfOrigin { get; private set; } = string.Empty;
         public string CookNumber { get; private set; } = string.Empty;
         public DateOnly ExpiryDate { get; private set; }
+        public DateOnly CreationDate { get; private set; }
         public int TotalQuantity { get; private set; }
         public string? Notes { get; private set; }
 
@@ -34,10 +36,11 @@ namespace ICMS.Domain.Entites.Clinical
         {
         }
 
-        public static Batch Create(int doseId, int userId, DateOnly expiryDate, int totalQuantity, string countryOfOrigin, string cookNumber, string? notes = null)
+        public static Batch Create(int doseId, int userId, string batchName, DateOnly creationDate, DateOnly expiryDate, int totalQuantity, string countryOfOrigin, string cookNumber, string? notes = null)
         {
             if (doseId <= 0) throw new DomainException("Invalid dose id");
             if (userId <= 0) throw new DomainException("Invalid user id");
+            if (string.IsNullOrWhiteSpace(batchName)) throw new DomainException("Batch name is required");
             if (totalQuantity < 0) throw new DomainException("Total quantity cannot be negative");
             if (string.IsNullOrWhiteSpace(countryOfOrigin)) throw new DomainException("Country of origin is required");
             if (string.IsNullOrWhiteSpace(cookNumber)) throw new DomainException("Cook number is required");
@@ -46,12 +49,27 @@ namespace ICMS.Domain.Entites.Clinical
             {
                 DoseId = doseId,
                 UserId = userId,
+                BatchName = batchName,
+                CreationDate = creationDate,
                 ExpiryDate = expiryDate,
                 TotalQuantity = totalQuantity,
                 CountryOfOrigin = countryOfOrigin,
                 CookNumber = cookNumber,
                 Notes = notes
             };
+        }
+
+        public void UpdateBatchInfo(string batchName, string countryOfOrigin, string cookNumber, DateOnly expiryDate, string? notes)
+        {
+            if (string.IsNullOrWhiteSpace(batchName)) throw new DomainException("Batch name is required");
+            if (string.IsNullOrWhiteSpace(countryOfOrigin)) throw new DomainException("Country of origin is required");
+            if (string.IsNullOrWhiteSpace(cookNumber)) throw new DomainException("Cook number is required");
+
+            BatchName = batchName;
+            CountryOfOrigin = countryOfOrigin;
+            CookNumber = cookNumber;
+            ExpiryDate = expiryDate;
+            Notes = notes;
         }
 
         public void AddInventory(int quantity, string permissionNumber, string source, int userId, DateTime? date = null)

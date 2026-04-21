@@ -20,7 +20,7 @@ namespace ICMS.Tests.Domain
             var cookNumber = "B123-X";
 
             // Act
-            var batch = Batch.Create(doseId, userId, expiryDate, totalQuantity, country, cookNumber);
+            var batch = Batch.Create(doseId, userId, "Batch Name", DateOnly.FromDateTime(DateTime.UtcNow), expiryDate, totalQuantity, country, cookNumber);
 
             // Assert
             Assert.Equal(doseId, batch.DoseId);
@@ -33,7 +33,7 @@ namespace ICMS.Tests.Domain
         public void AddInventory_IncreasesQuantityAndCreatesTransaction()
         {
             // Arrange
-            var batch = Batch.Create(1, 1, DateOnly.FromDateTime(DateTime.UtcNow), 100, "Jordan", "CN-1");
+            var batch = Batch.Create(1, 1, "Batch Name", DateOnly.FromDateTime(DateTime.UtcNow), DateOnly.FromDateTime(DateTime.UtcNow), 100, "Jordan", "CN-1");
             batch.Id = 1; // Simulate existing batch
             var addAmount = 50;
 
@@ -52,7 +52,7 @@ namespace ICMS.Tests.Domain
         public void RemoveInventory_DecreasesQuantityAndCreatesTransaction()
         {
             // Arrange
-            var batch = Batch.Create(1, 1, DateOnly.FromDateTime(DateTime.UtcNow), 100, "Jordan", "CN-1");
+            var batch = Batch.Create(1, 1, "Batch Name", DateOnly.FromDateTime(DateTime.UtcNow), DateOnly.FromDateTime(DateTime.UtcNow), 100, "Jordan", "CN-1");
             batch.Id = 1; // Simulate existing batch
             var removeAmount = 30;
 
@@ -71,7 +71,7 @@ namespace ICMS.Tests.Domain
         public void RemoveInventory_InsufficientQuantity_ThrowsDomainException()
         {
             // Arrange
-            var batch = Batch.Create(1, 1, DateOnly.FromDateTime(DateTime.UtcNow), 20, "Jordan", "CN-1");
+            var batch = Batch.Create(1, 1, "Batch Name", DateOnly.FromDateTime(DateTime.UtcNow), DateOnly.FromDateTime(DateTime.UtcNow), 20, "Jordan", "CN-1");
 
             // Act & Assert
             Assert.Throws<DomainException>(() => batch.RemoveInventory(30, "P", "D", 1));

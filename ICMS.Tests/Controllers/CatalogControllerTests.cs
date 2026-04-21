@@ -31,7 +31,7 @@ namespace ICMS.Tests.Controllers
         [Fact]
         public async Task Add_Valid_ReturnsCreated()
         {
-            var dto = new VaccineCreateDto("Polio", "OPV-01", "Oral Polio Vaccine", true, 3, ICMS.Domain.Enums.TargetAudience.InfantRoutine);
+            var dto = new VaccineCreateDto("Polio", "OPV-01", "Oral Polio Vaccine", true, 3, 0, 60, ICMS.Domain.Enums.TargetAudience.InfantRoutine);
             var response = await _client.PostAsJsonAsync("/api/Vaccines", dto);
             response.StatusCode.Should().Be(HttpStatusCode.Created);
         }

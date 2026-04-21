@@ -12,13 +12,13 @@ namespace ICMS.Application.Extensions
     public static class BatchExtensions
     {
         public static BatchReadDto ToReadDto(this Batch b)
-            => new(b.Id, b.DoseId, b.UserId, b.ExpiryDate, b.TotalQuantity);
+            => new(b.Id, b.BatchName, b.DoseId, b.UserId, b.CreationDate, b.ExpiryDate, b.TotalQuantity);
 
         public static BatchDetailsDto ToDetailsDto(this Batch b)
-            => new(b.Id, b.DoseId, b.UserId, b.ExpiryDate, b.TotalQuantity, b.CountryOfOrigin, b.CookNumber, b.Notes);
+            => new(b.Id, b.BatchName, b.DoseId, b.UserId, b.CreationDate, b.ExpiryDate, b.TotalQuantity, b.CountryOfOrigin, b.CookNumber, b.Notes);
 
         public static Batch ToDomain(this BatchCreateDto dto, int userId)
-            => Batch.Create(dto.DoseId, userId, dto.ExpiryDate, dto.TotalQuantity, dto.CountryOfOrigin,
+            => Batch.Create(dto.DoseId, userId, dto.BatchName, dto.CreationDate, dto.ExpiryDate, dto.TotalQuantity, dto.CountryOfOrigin,
                 dto.CookNumber ?? string.Empty, dto.Notes);
     }
 }

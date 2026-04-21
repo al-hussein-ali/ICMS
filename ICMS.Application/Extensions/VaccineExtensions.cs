@@ -6,12 +6,12 @@ namespace ICMS.Application.Extensions
     public static class VaccineExtensions
     {
         public static VaccineReadDto ToReadDto(this Vaccine v)
-            => new(v.Id, v.VaccineName, v.VaccineCode, v.Description, v.IsActive, v.TotalDosages, v.Audience);
+            => new(v.Id, v.VaccineName, v.VaccineCode, v.Description, v.IsActive, v.TotalDosages, v.MinEligibleAgeInMonths, v.MaxEligibleAgeInMonths, v.Audience);
 
         public static VaccineDetailsDto ToDetailsDto(this Vaccine v)
-            => new(v.Id, v.VaccineName, v.VaccineCode, v.Description, v.IsActive, v.TotalDosages);
+            => new(v.Id, v.VaccineName, v.VaccineCode, v.Description, v.IsActive, v.TotalDosages, v.MinEligibleAgeInMonths, v.MaxEligibleAgeInMonths, v.Audience);
 
         public static Vaccine ToDomain(this VaccineCreateDto dto)
-            => Vaccine.Create(dto.VaccineName, dto.VaccineCode, dto.Description, dto.IsActive, dto.TotalDosages, dto.Audience);
+            => Vaccine.Create(dto.VaccineName, dto.VaccineCode, dto.Description, dto.IsActive, dto.TotalDosages, dto.MinEligibleAgeInMonths, dto.MaxEligibleAgeInMonths, dto.Audience);
     }
 }

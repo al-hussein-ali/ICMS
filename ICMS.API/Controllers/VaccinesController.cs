@@ -13,10 +13,9 @@ namespace ICMS.API.Controllers
     {
 
         [HttpGet]
-        public async Task<ActionResult<IReadOnlyList<VaccineReadDto>>> GetAllAsync()
+        public async Task<ActionResult<IReadOnlyList<VaccineReadDto>>> GetAllAsync([FromQuery] string? name = null)
         {
-            var vaccines = await vaccineService.GetAllAsync();
-
+            var vaccines = await vaccineService.GetAllAsync(name);
             return Ok(vaccines);
         }
 

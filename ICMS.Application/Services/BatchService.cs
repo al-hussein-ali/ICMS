@@ -49,10 +49,17 @@ namespace ICMS.Application.Services
             return batch.ToReadDto();
         }
 
-        public Task<bool> UpdateAsync(int batchId, BatchCreateDto dto, CancellationToken ct = default)
+        public async Task<bool> UpdateAsync(int batchId, BatchUpdateDto dto, CancellationToken ct = default)
         {
-            // Direct update of Batch metadata is restricted as per domain rules.
-            throw new DomainException("DomainError");
+            var batch = await unitOfWork.BatchRepository.GetByIdAsync(batchId, ct);
+            if (batch == null) throw new NotFoundException("NotFound");
+
+            batch.UpdateBatchInfo(dto.BatchName, dto.CountryOfOrigin, dto.CookNumber, dto.ExpiryDate, dto.Notes);
+
+            var result = await unitOfWork.SaveChangesAsync(ct) > 0;
+            if (result) cacheService.Remove($"batch:{batchId}");
+            
+            return result;
         }
 
         public async Task AddStockAsync(int batchId, InventoryUpdateDto dto, int userId, CancellationToken ct = default)

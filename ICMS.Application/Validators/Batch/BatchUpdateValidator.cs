@@ -4,23 +4,15 @@ using ICMS.Application.Interfaces.Services;
 
 namespace ICMS.Application.Validators.Batch
 {
-    internal class BatchCreateValidator : AbstractValidator<BatchCreateDto>
+    internal class BatchUpdateValidator : AbstractValidator<BatchUpdateDto>
     {
-        public BatchCreateValidator(ILocalizer localizer)
+        public BatchUpdateValidator(ILocalizer localizer)
         {
-            RuleFor(x => x.DoseId)
-                .GreaterThanOrEqualTo(1)
-                .WithMessage(x => localizer["GreaterThanZero", "Dose Id"]);
-
             RuleFor(x => x.BatchName)
                 .NotEmpty()
                 .WithMessage(x => localizer["RequiredField", "Batch Name"])
                 .MaximumLength(250)
                 .WithMessage(x => localizer["MaxLength", "Batch Name", 250]);
-
-            RuleFor(x => x.CreationDate)
-                .Must(d => d != default)
-                .WithMessage(x => localizer["RequiredField", "Creation Date"]);
 
             RuleFor(x => x.CountryOfOrigin)
                 .NotEmpty()
@@ -37,10 +29,6 @@ namespace ICMS.Application.Validators.Batch
             RuleFor(x => x.ExpiryDate)
                 .Must(d => d != default)
                 .WithMessage(x => localizer["RequiredField", "Expiry Date"]);
-
-            RuleFor(x => x.TotalQuantity)
-                .GreaterThanOrEqualTo(0)
-                .WithMessage(x => localizer["PositiveNumber", "Total quantity"]);
 
             When(x => x.Notes != null, () =>
             {

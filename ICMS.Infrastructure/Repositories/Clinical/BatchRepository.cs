@@ -5,9 +5,6 @@ using ICMS.Domain.Entites.Clinical;
 using ICMS.Domain.ValueObjects;
 using ICMS.Infrastructure.Persistence.Data;
 using Microsoft.EntityFrameworkCore;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace ICMS.Infrastructure.Repositories.Clinical
 {
@@ -17,7 +14,8 @@ namespace ICMS.Infrastructure.Repositories.Clinical
         {
         }
 
-        public async Task<PagedResult<Batch>> GetAllAsync(BatchFilterDto filter, PaginationParams paginationParams, CancellationToken ct = default)
+        public async Task<PagedResult<Batch>> GetAllAsync(BatchFilterDto filter, PaginationParams paginationParams,
+            CancellationToken ct = default)
         {
             var query = _context.Batches
                 .Include(b => b.Dose)
@@ -31,6 +29,16 @@ namespace ICMS.Infrastructure.Repositories.Clinical
             if (filter.ExpiryDate.HasValue)
             {
                 query = query.Where(b => b.ExpiryDate == filter.ExpiryDate.Value);
+            }
+
+            if (!string.IsNullOrWhiteSpace(filter.CookNumber))
+            {
+                query = query.Where(b => b.CookNumber.Contains(filter.CookNumber));
+            }
+
+            if (!string.IsNullOrWhiteSpace(filter.VaccineName))
+            {
+                query = query.Where(b => b.Dose!.Vaccine.VaccineName.Contains(filter.VaccineName));
             }
 
             var totalCount = await query.CountAsync(ct);

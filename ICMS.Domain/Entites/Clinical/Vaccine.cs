@@ -24,16 +24,20 @@ namespace ICMS.Domain.Entites.Clinical
         public string? Description { get; private set; }
         public bool IsActive { get; private set; } = true;
         public byte TotalDosages { get; private set; }
+        public int MinEligibleAgeInMonths { get; private set; }
+        public int MaxEligibleAgeInMonths { get; private set; }
         public ICMS.Domain.Enums.TargetAudience Audience { get; private set; }
 
         private Vaccine()
         {
         }
 
-        public static Vaccine Create(string vaccineName, string vaccineCode, string? description, bool isActive, byte totalDosages, ICMS.Domain.Enums.TargetAudience audience)
+        public static Vaccine Create(string vaccineName, string vaccineCode, string? description, bool isActive, byte totalDosages, int minEligibleAgeInMonths, int maxEligibleAgeInMonths, ICMS.Domain.Enums.TargetAudience audience)
         {
             if (string.IsNullOrWhiteSpace(vaccineName)) throw new DomainException("Vaccine name is required");
             if (string.IsNullOrWhiteSpace(vaccineCode)) throw new DomainException("Vaccine code is required");
+            if (minEligibleAgeInMonths < 0) throw new DomainException("Minimum eligible age cannot be negative");
+            if (maxEligibleAgeInMonths < minEligibleAgeInMonths) throw new DomainException("Maximum eligible age cannot be less than minimum eligible age");
 
             return new Vaccine
             {
@@ -42,6 +46,8 @@ namespace ICMS.Domain.Entites.Clinical
                 Description = description,
                 IsActive = isActive,
                 TotalDosages = totalDosages,
+                MinEligibleAgeInMonths = minEligibleAgeInMonths,
+                MaxEligibleAgeInMonths = maxEligibleAgeInMonths,
                 Audience = audience
             };
         }
@@ -66,13 +72,18 @@ namespace ICMS.Domain.Entites.Clinical
 
         }
 
-        public void UpdateVaccineInfo(string vaccineName, string vaccineCode, string? description, bool isActive, byte totalDosages, ICMS.Domain.Enums.TargetAudience audience)
+        public void UpdateVaccineInfo(string vaccineName, string vaccineCode, string? description, bool isActive, byte totalDosages, int minEligibleAgeInMonths, int maxEligibleAgeInMonths, ICMS.Domain.Enums.TargetAudience audience)
         {
+            if (minEligibleAgeInMonths < 0) throw new DomainException("Minimum eligible age cannot be negative");
+            if (maxEligibleAgeInMonths < minEligibleAgeInMonths) throw new DomainException("Maximum eligible age cannot be less than minimum eligible age");
+
             VaccineName = vaccineName;
             VaccineCode = vaccineCode;
             Description = description;
             IsActive = isActive;
             Audience = audience;
+            MinEligibleAgeInMonths = minEligibleAgeInMonths;
+            MaxEligibleAgeInMonths = maxEligibleAgeInMonths;
 
             if (totalDosages < Doses.Count)
                 throw new DomainException("The Number of Total Doses is less than Dosages");

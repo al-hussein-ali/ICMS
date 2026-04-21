@@ -56,9 +56,9 @@ namespace ICMS.Tests
             int doseId = 1;
             int userId = 1;
 
-            var batch1 = Batch.Create(doseId, userId, DateOnly.FromDateTime(DateTime.Now.AddMonths(1)), 10, "Country",
+            var batch1 = Batch.Create(doseId, userId, "Batch1", DateOnly.FromDateTime(DateTime.Now), DateOnly.FromDateTime(DateTime.Now.AddMonths(1)), 10, "Country",
                 "Cook1");
-            var batch2 = Batch.Create(doseId, userId, DateOnly.FromDateTime(DateTime.Now.AddMonths(2)), 20, "Country",
+            var batch2 = Batch.Create(doseId, userId, "Batch2", DateOnly.FromDateTime(DateTime.Now), DateOnly.FromDateTime(DateTime.Now.AddMonths(2)), 20, "Country",
                 "Cook2");
 
             _context.Batches.AddRange(batch1, batch2);
@@ -87,7 +87,7 @@ namespace ICMS.Tests
             // Arrange
             int doseId = 1;
             int userId = 1;
-            var batch = Batch.Create(doseId, userId, DateOnly.FromDateTime(DateTime.Now.AddMonths(1)), 100, "Country",
+            var batch = Batch.Create(doseId, userId, "Batch1", DateOnly.FromDateTime(DateTime.Now), DateOnly.FromDateTime(DateTime.Now.AddMonths(1)), 100, "Country",
                 "Cook1");
             _context.Batches.Add(batch);
             await _context.SaveChangesAsync();
@@ -114,7 +114,7 @@ namespace ICMS.Tests
             // Arrange
             int doseId = 1;
             int userId = 1;
-            var batch = Batch.Create(doseId, userId, DateOnly.FromDateTime(DateTime.Now.AddMonths(1)), 100, "Country",
+            var batch = Batch.Create(doseId, userId, "Batch1", DateOnly.FromDateTime(DateTime.Now), DateOnly.FromDateTime(DateTime.Now.AddMonths(1)), 100, "Country",
                 "Cook1");
             _context.Batches.Add(batch);
             await _context.SaveChangesAsync();

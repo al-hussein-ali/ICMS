@@ -27,5 +27,10 @@ namespace ICMS.Infrastructure.Repositories.Clinical
             return await _dbSet.Include(v => v.Doses).FirstOrDefaultAsync(v => v.Id == id, ct); 
         }
 
+        public async Task<IReadOnlyList<Vaccine>> SearchByNameAsync(string name, CancellationToken ct = default)
+        {
+            return await _dbSet.Where(v => v.VaccineName.Contains(name)).ToListAsync(ct);
+        }
+
     }
 }

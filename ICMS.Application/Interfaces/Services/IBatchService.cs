@@ -13,7 +13,7 @@ namespace ICMS.Application.Interfaces.Services
         Task<PagedResult<BatchReadDto>> GetAllAsync(BatchFilterDto filter, PaginationParams paginationParams, CancellationToken ct = default);
         Task<BatchDetailsDto?> GetByIdAsync(int batchId, CancellationToken ct = default);
         Task<BatchReadDto> AddAsync(BatchCreateDto dto, int userId, CancellationToken ct = default);
-        Task<bool> UpdateAsync(int batchId, BatchCreateDto dto, CancellationToken ct = default);
+        Task<bool> UpdateAsync(int batchId, BatchUpdateDto dto, CancellationToken ct = default);
         Task AddStockAsync(int batchId, InventoryUpdateDto dto, int userId, CancellationToken ct = default);
         Task RemoveStockAsync(int batchId, InventoryUpdateDto dto, int userId, CancellationToken ct = default);
         Task RemoveStockByDoseAsync(InventoryRemoveByDoseDto dto, int userId, CancellationToken ct = default);

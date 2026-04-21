@@ -22,6 +22,8 @@ namespace ICMS.Infrastructure.Persistence.Config.Clinical
             builder.Property(v => v.Description).HasMaxLength(600).IsUnicode(true).IsRequired(false);
             builder.Property(v => v.IsActive).HasDefaultValue(true);
             builder.Property(v => v.TotalDosages).IsRequired();
+            builder.Property(v => v.MinEligibleAgeInMonths).IsRequired();
+            builder.Property(v => v.MaxEligibleAgeInMonths).IsRequired();
             builder.Property(v => v.Audience).IsRequired();
 
             builder.HasIndex(v => v.VaccineCode).IsUnique();

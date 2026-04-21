@@ -20,9 +20,11 @@ namespace ICMS.Infrastructure.Persistence.Config.Clinical
 
             builder.Property<uint>("xmin").HasColumnType("xid").IsRowVersion();
 
+            builder.Property(b => b.BatchName).HasMaxLength(250).IsUnicode(true).IsRequired();
             builder.Property(b => b.CountryOfOrigin).HasMaxLength(150).IsUnicode(true).IsRequired();
             builder.Property(b => b.CookNumber).HasMaxLength(200).IsUnicode(true).IsRequired();
             builder.Property(b => b.ExpiryDate).IsRequired();
+            builder.Property(b => b.CreationDate).IsRequired();
             builder.Property(b => b.TotalQuantity).IsRequired();
             builder.Property(b => b.Notes).HasMaxLength(500).IsUnicode(true).IsRequired(false);
 
