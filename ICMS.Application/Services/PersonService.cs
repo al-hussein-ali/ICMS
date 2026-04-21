@@ -15,6 +15,7 @@ namespace ICMS.Application.Services
         private readonly IUnitOfWork _unitOfWork;
         private readonly IValidator<PaginationParams> pagnationValidator;
         private readonly IValidator<PersonCreateDto> createDTOValidator;
+
         public PersonService(IUnitOfWork unitOfWork,
             IValidator<PaginationParams> pagnationValidator,
             IValidator<PersonCreateDto> createDTOValidator)
@@ -23,17 +24,20 @@ namespace ICMS.Application.Services
             this.pagnationValidator = pagnationValidator;
             this.createDTOValidator = createDTOValidator;
         }
-        public async Task<PagedResult<PersonReadDto>> GetAllAsync(PaginationParams paginationParams, CancellationToken ct = default)
+
+        public async Task<PagedResult<PersonReadDto>> GetAllAsync(PaginationParams paginationParams,
+            CancellationToken ct = default)
         {
             await pagnationValidator.ValidateAndThrowAsync(paginationParams);
 
-            var people = _unitOfWork.PersonRepository.GetQueryable().Where(p => !p.IsDeleted).Select(p => p.ToReadDto());
+            var people = _unitOfWork.PersonRepository.GetQueryable().Where(p => !p.IsDeleted)
+                .Select(p => p.ToReadDto());
 
             ct.ThrowIfCancellationRequested();
 
             return people.ApplyPagination(pageNumber: paginationParams.PageNumber, pageSize: paginationParams.PageSize);
-
         }
+
         public async Task<PersonReadDto> GetByIdAsync(int id, CancellationToken ct = default)
         {
             var person = await _unitOfWork.PersonRepository.GetByIdAsync(id, ct);
@@ -41,6 +45,7 @@ namespace ICMS.Application.Services
 
             return person?.ToReadDto() ?? throw new NotFoundException("NotFound");
         }
+
         public async Task<PersonReadDto> GetByPhoneNumberAsync(string phoneNumber, CancellationToken ct = default)
         {
             var person = await _unitOfWork.PersonRepository.GetByPhoneNumberAsync(phoneNumber, ct);
@@ -62,6 +67,7 @@ namespace ICMS.Application.Services
 
             return person.ToReadDto();
         }
+
         public async Task<bool> UpdateAsync(int id, PersonCreateDto updatedEntity, CancellationToken ct = default)
         {
             var oldRecord = await _unitOfWork.PersonRepository.GetByIdAsync(id, ct);
@@ -77,11 +83,12 @@ namespace ICMS.Application.Services
                 updatedEntity.Gender.FromStringToGenderEnum(),
                 updatedEntity.DateOfBirth,
                 updatedEntity.PhoneNumber
-                );
+            );
 
-        
+
             return await _unitOfWork.SaveChangesAsync(ct) > 0;
         }
+
         public async Task<bool> DeleteAsync(int id, CancellationToken ct = default)
         {
             var exsitingPerson = await _unitOfWork.PersonRepository.GetByIdAsync(id, ct);
