@@ -94,7 +94,7 @@ namespace ICMS.Application.Services
             }
             else
             {
-                if (request.PersonCreateDto == null) throw new DomainException("DomainError");
+                if (request.PersonCreateDto == null) throw new DomainException("MissingPersonData");
                 var newPerson = ICMS.Domain.Entites.Identity.Person.Create(
                     request.PersonCreateDto.FirstName, request.PersonCreateDto.SecondName, request.PersonCreateDto.ThirdName,
                     request.PersonCreateDto.LastName, Enum.Parse<ICMS.Domain.Enums.Gender>(request.PersonCreateDto.Gender, true), request.PersonCreateDto.DateOfBirth, request.PersonCreateDto.PhoneNumber);
@@ -141,7 +141,7 @@ namespace ICMS.Application.Services
 
             if (pregnantWoman == null)
             {
-                throw new DomainException("DomainError");
+                throw new DomainException("MotherNotFound");
             }
 
             PreviousPregnancyComplications? pregComps = null;
@@ -177,7 +177,7 @@ namespace ICMS.Application.Services
 
             if (pregnancy == null)
             {
-                throw new DomainException("DomainError");
+                throw new DomainException("MotherNotFound");
             }
 
             pregnancy.AddVisit(
@@ -201,7 +201,7 @@ namespace ICMS.Application.Services
                 
                 if (vaccinatedIndividual == null)
                 {
-                    throw new DomainException("DomainError");
+                    throw new DomainException("MissingPersonData");
                 }
 
                 var doseDto = new AdministerDoseDto(
@@ -241,7 +241,7 @@ namespace ICMS.Application.Services
 
             if (pregnancy == null)
             {
-                throw new DomainException("DomainError");
+                throw new DomainException("MotherNotFound");
             }
 
             var newborns = request.Newborns?.Select(n => n.ToDomain(pregnancyId, userId)).ToList();

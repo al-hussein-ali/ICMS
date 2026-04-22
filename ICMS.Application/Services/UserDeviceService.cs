@@ -21,7 +21,7 @@ namespace ICMS.Application.Services
             var user = await _unitOfWork.UserRepository.GetByIdAsync(userId, ct);
             if (user == null)
             {
-                throw new DomainException("User not found.");
+                throw new DomainException("UserNotFound");
             }
 
             user.AddDevice(fcmToken);

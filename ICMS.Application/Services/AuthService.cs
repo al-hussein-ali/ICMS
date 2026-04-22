@@ -19,12 +19,12 @@ namespace ICMS.Application.Services
             var user = await unitOfWork.UserRepository.FirstOrDefaultAsync(u => u.UserName == loginDto.UserName, ct);
             if (user == null || !user.IsActive)
             {
-                throw new DomainException("DomainError");
+                throw new DomainException("UserNotFoundOrInactive");
             }
 
             if (!BCrypt.Net.BCrypt.Verify(loginDto.Password, user.PasswordHash))
             {
-                throw new DomainException("DomainError");
+                throw new DomainException("InvalidCredentials");
             }
 
             var roles = (await identityService.GetUserRolesAsync(user.Id, ct)).ToList();
@@ -41,7 +41,7 @@ namespace ICMS.Application.Services
             var isValid = await refreshTokenService.IsValidRefreshTokenAsync(refreshDto.RefreshToken, ct);
             if (!isValid)
             {
-                throw new DomainException("DomainError");
+                throw new DomainException("InvalidRefreshToken");
             }
 
             var tokenEntity = await refreshTokenService.GetRefreshTokenAsync(refreshDto.RefreshToken, ct);
@@ -50,7 +50,7 @@ namespace ICMS.Application.Services
             var user = await unitOfWork.UserRepository.GetByIdAsync(tokenEntity.UserId, ct);
             if (user == null || !user.IsActive)
             {
-                throw new DomainException("DomainError");
+                throw new DomainException("UserNotFoundOrInactive");
             }
 
             var roles = (await identityService.GetUserRolesAsync(user.Id, ct)).ToList();

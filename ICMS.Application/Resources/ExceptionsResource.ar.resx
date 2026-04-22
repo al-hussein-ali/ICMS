@@ -55,4 +55,34 @@
   <data name="ReportNotFound" xml:space="preserve">
     <value>التقرير غير موجود أو لم يتم إنشاؤه بعد.</value>
   </data>
+  <data name="UserNotFoundOrInactive" xml:space="preserve">
+    <value>المستخدم غير موجود أو غير نشط.</value>
+  </data>
+  <data name="InvalidCredentials" xml:space="preserve">
+    <value>بيانات الدخول غير صحيحة.</value>
+  </data>
+  <data name="InvalidRefreshToken" xml:space="preserve">
+    <value>رمز التحديث غير صالح أو منتهي الصلاحية.</value>
+  </data>
+  <data name="MissingPersonData" xml:space="preserve">
+    <value>بيانات الشخص مطلوبة.</value>
+  </data>
+  <data name="MotherNotFound" xml:space="preserve">
+    <value>سجل الأم غير موجود.</value>
+  </data>
+  <data name="VisitNotFound" xml:space="preserve">
+    <value>سجل الزيارة غير موجود.</value>
+  </data>
+  <data name="RoleNotFound" xml:space="preserve">
+    <value>الصلاحية غير موجودة.</value>
+  </data>
+  <data name="UserNotFound" xml:space="preserve">
+    <value>المستخدم غير موجود.</value>
+  </data>
+  <data name="BatchNotFound" xml:space="preserve">
+    <value>الدفعة غير موجودة.</value>
+  </data>
+  <data name="InsufficientStock" xml:space="preserve">
+    <value>الكمية المتوفرة في المخزون غير كافية.</value>
+  </data>
 </root>

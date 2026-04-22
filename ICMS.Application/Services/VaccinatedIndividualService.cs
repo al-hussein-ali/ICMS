@@ -73,7 +73,7 @@ namespace ICMS.Application.Services
             }
             else
             {
-                if (vaccinatedIndividualCreateDto.PersonCreateDto == null) throw new DomainException("DomainError");
+                if (vaccinatedIndividualCreateDto.PersonCreateDto == null) throw new DomainException("MissingPersonData");
                 var newPerson = Person.Create(
                     vaccinatedIndividualCreateDto.PersonCreateDto.FirstName,
                     vaccinatedIndividualCreateDto.PersonCreateDto.SecondName,

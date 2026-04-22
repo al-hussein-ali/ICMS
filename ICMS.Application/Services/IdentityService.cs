@@ -27,7 +27,7 @@ namespace ICMS.Application.Services
             {
                 var role = await _unitOfWork.RoleRepository.FirstOrDefaultAsync(r => r.RoleName == roleName, ct);
 
-                if (role == null) throw new DomainException("DomainError");
+                if (role == null) throw new DomainException("RoleNotFound");
 
                 if (!user.UserRoles.Any(ur => ur.RoleId == role.Id))
                 {

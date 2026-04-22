@@ -106,7 +106,7 @@ namespace ICMS.Application.Services
                 int totalAvailable = batches.Sum(b => b.TotalQuantity);
 
                 if (totalAvailable < dto.Quantity)
-                    throw new DomainException("DomainError");
+                    throw new DomainException("InsufficientStock");
 
                 foreach (var batch in batches)
                 {

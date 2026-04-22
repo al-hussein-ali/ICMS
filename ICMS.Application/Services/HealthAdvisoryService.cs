@@ -75,7 +75,7 @@ namespace ICMS.Application.Services
             var advisory = await _unitOfWork.HealthAdvisoryRepository.GetByIdAsync(id, ct);
             if (advisory == null)
             {
-                throw new DomainException("Health Advisory not found.");
+                throw new DomainException("HealthAdvisoryNotFound");
             }
 
             await _unitOfWork.HealthAdvisoryRepository.DeleteAsync(advisory, ct);
@@ -87,7 +87,7 @@ namespace ICMS.Application.Services
             var advisory = await _unitOfWork.HealthAdvisoryRepository.GetByIdAsync(id, ct);
             if (advisory == null)
             {
-                throw new DomainException("Health Advisory not found.");
+                throw new DomainException("HealthAdvisoryNotFound");
             }
 
             return advisory.ToDetailsDto();

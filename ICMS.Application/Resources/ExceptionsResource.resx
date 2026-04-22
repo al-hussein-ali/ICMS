@@ -55,4 +55,34 @@
   <data name="ReportNotFound" xml:space="preserve">
     <value>Report was not found or has not been generated yet.</value>
   </data>
+  <data name="UserNotFoundOrInactive" xml:space="preserve">
+    <value>User not found or inactive.</value>
+  </data>
+  <data name="InvalidCredentials" xml:space="preserve">
+    <value>Invalid credentials provided.</value>
+  </data>
+  <data name="InvalidRefreshToken" xml:space="preserve">
+    <value>Invalid or expired refresh token.</value>
+  </data>
+  <data name="MissingPersonData" xml:space="preserve">
+    <value>Person data is required.</value>
+  </data>
+  <data name="MotherNotFound" xml:space="preserve">
+    <value>Mother record not found.</value>
+  </data>
+  <data name="VisitNotFound" xml:space="preserve">
+    <value>Visit record not found.</value>
+  </data>
+  <data name="RoleNotFound" xml:space="preserve">
+    <value>Role not found.</value>
+  </data>
+  <data name="UserNotFound" xml:space="preserve">
+    <value>User not found.</value>
+  </data>
+  <data name="BatchNotFound" xml:space="preserve">
+    <value>Batch not found.</value>
+  </data>
+  <data name="InsufficientStock" xml:space="preserve">
+    <value>Insufficient stock quantity.</value>
+  </data>
 </root>

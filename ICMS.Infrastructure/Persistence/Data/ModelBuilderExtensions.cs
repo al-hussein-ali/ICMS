@@ -142,7 +142,7 @@ namespace ICMS.Infrastructure.Persistence.Data
                 {
                     Id = 999,
                     UserName = "admin",
-                    PasswordHash = "$2a$12$R9h/lIPzHZf5hP1TthHbCuZ8HCTWJ.L7N1S9G0S8T.m6/oM8W9S1.",
+                    PasswordHash = "$2a$11$tulMkZYZGUHXu/UNv3EJB.5WfDjvJEaYWjH8UZYHrGAJ/UjBvBlZq",
                     IsActive = true,
                     CreatedAt = new DateTime(2026, 4, 21, 0, 0, 0, DateTimeKind.Utc),
                     PersonId = 999
