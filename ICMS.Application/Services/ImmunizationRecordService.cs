@@ -21,13 +21,27 @@ namespace ICMS.Application.Services
         IValidator<PaginationParams> paginationValidator,
         IValidator<ImmunizationRecordCreateDto> immunizationCreateValidator) : IImmunizationRecordService
     {
-        public async Task<PagedResult<ImmunizationRecordReadDto>> GetAllAsync(PaginationParams paginationParams, CancellationToken ct = default)
+        public async Task<PagedResult<ImmunizationRecordReadDto>> GetAllAsync(PaginationParams paginationParams, int? individualId = null, CancellationToken ct = default)
         {
             await paginationValidator.ValidateAndThrowAsync(paginationParams);
 
-            var immunizationRecords = unitOfWork.ImmunizationRecordRepository.GetQueryable()
-                .Where(ir => !ir.VaccinatedIndividual!.Person.IsDeleted)
-                .Select(ir => ir.ToReadDto());
+            var query = unitOfWork.ImmunizationRecordRepository.GetQueryable()
+                .Where(ir => !ir.VaccinatedIndividual!.Person.IsDeleted);
+
+            if (individualId.HasValue)
+            {
+                query = query.Where(ir => ir.IndividualId == individualId.Value);
+            }
+
+            if (!string.IsNullOrWhiteSpace(paginationParams.Search))
+            {
+                var search = paginationParams.Search.Trim().ToLower();
+                query = query.Where(ir => 
+                    (ir.Notes != null && ir.Notes.ToLower().Contains(search)) || 
+                    ir.TakenIn.ToLower().Contains(search));
+            }
+
+            var immunizationRecords = query.Select(ir => ir.ToReadDto());
 
             ct.ThrowIfCancellationRequested();
 

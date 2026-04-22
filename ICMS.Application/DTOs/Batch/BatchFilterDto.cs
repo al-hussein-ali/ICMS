@@ -4,5 +4,6 @@ namespace ICMS.Application.DTOs.Batch
         int? DoseId,
         DateOnly? ExpiryDate,
         string? CookNumber = null,
-        string? VaccineName = null);
+        string? VaccineName = null,
+        bool IncludeInactive = false);
 }

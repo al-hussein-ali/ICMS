@@ -1,4 +1,4 @@
-﻿namespace ICMS.Application.DTOs.Pagination;
+namespace ICMS.Application.DTOs.Pagination;
 
 public class PaginationParams
 {
@@ -13,5 +13,6 @@ public class PaginationParams
         get => _pageSize;
         init => _pageSize = (value > _maxPageSize) ? _maxPageSize : value;
     }
+    public string? Search { get; init; }
 
 }

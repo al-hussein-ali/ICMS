@@ -21,6 +21,11 @@ namespace ICMS.Infrastructure.Repositories.Clinical
                 .Include(b => b.Dose)
                 .AsNoTracking();
 
+            if (!filter.IncludeInactive)
+            {
+                query = query.Where(b => b.IsActive);
+            }
+
             if (filter.DoseId.HasValue)
             {
                 query = query.Where(b => b.DoseId == filter.DoseId.Value);

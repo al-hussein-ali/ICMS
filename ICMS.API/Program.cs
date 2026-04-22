@@ -4,7 +4,6 @@ using Hangfire.PostgreSql;
 using ICMS.API.Handlers;
 using FirebaseAdmin;
 using Google.Apis.Auth.OAuth2;
-using System.IO;
 using ICMS.Application.Validators;
 using ICMS.Infrastructure.Extensions;
 using Scalar.AspNetCore;
@@ -52,7 +51,8 @@ builder.Services.AddScoped<ICMS.Application.Interfaces.Services.IReportNotificat
 
 builder.Services.AddControllers();
 
-var jwtOptions = builder.Configuration.GetSection("JwtOptions").Get<JwtOptions>() ?? throw new InvalidOperationException("JwtOptions are missing");
+var jwtOptions = builder.Configuration.GetSection("JwtOptions").Get<JwtOptions>() ??
+                 throw new InvalidOperationException("JwtOptions are missing");
 builder.Services.AddSingleton(jwtOptions);
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -79,6 +79,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 {
                     context.Token = accessToken;
                 }
+
                 return Task.CompletedTask;
             }
         };
@@ -89,7 +90,7 @@ builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
 
 builder.Services.AddValidatorsFromAssemblyContaining<
-        PaginationValidator>(includeInternalTypes: true); // fluent validation registration
+    PaginationValidator>(includeInternalTypes: true); // fluent validation registration
 
 builder.Services.AddRateLimiter(options =>
 {
@@ -133,13 +134,16 @@ if (File.Exists(firebaseCredentialsPath))
 {
     FirebaseApp.Create(new AppOptions
     {
-        Credential = GoogleCredential.FromFile(firebaseCredentialsPath)
+        Credential = CredentialFactory
+            .FromFile<ServiceAccountCredential>(firebaseCredentialsPath)
+            .ToGoogleCredential()
     });
 }
 else
 {
     // Log warning or throw exception if Firebase is required for startup
-    Console.WriteLine($"Firebase configuration file not found at {firebaseCredentialsPath}. Push notifications will fail.");
+    Console.WriteLine(
+        $"Firebase configuration file not found at {firebaseCredentialsPath}. Push notifications will fail.");
 }
 
 builder.Services.AddCors(options =>
@@ -147,9 +151,9 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowFrontend", policy =>
     {
         policy.WithOrigins("http://localhost:5173")
-              .AllowAnyMethod()
-              .AllowAnyHeader()
-              .AllowCredentials();
+            .AllowAnyMethod()
+            .AllowAnyHeader()
+            .AllowCredentials();
     });
 });
 
@@ -178,8 +182,8 @@ app.UseRequestLocalization(options =>
 {
     var supportedCultures = new[] { "en", "ar" };
     options.SetDefaultCulture("en")
-           .AddSupportedCultures(supportedCultures)
-           .AddSupportedUICultures(supportedCultures);
+        .AddSupportedCultures(supportedCultures)
+        .AddSupportedUICultures(supportedCultures);
 });
 
 app.UseAuthentication();

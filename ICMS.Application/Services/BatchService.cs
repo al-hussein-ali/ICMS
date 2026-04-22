@@ -6,6 +6,8 @@ using ICMS.Application.Interfaces;
 using ICMS.Application.Interfaces.Services;
 using ICMS.Domain.Exceptions;
 using ICMS.Domain.ValueObjects;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace ICMS.Application.Services
 {
@@ -145,6 +147,17 @@ namespace ICMS.Application.Services
                 totalCount,
                 paginationParams.PageNumber,
                 paginationParams.PageSize));
+        }
+
+        public async Task<bool> DeactivateAsync(int batchId, CancellationToken ct = default)
+        {
+            var batch = await unitOfWork.BatchRepository.GetByIdAsync(batchId, ct);
+            if (batch == null) throw new NotFoundException("NotFound");
+
+            batch.Deactivate();
+            var result = await unitOfWork.SaveChangesAsync(ct) > 0;
+            if (result) cacheService.Remove($"batch:{batchId}");
+            return result;
         }
     }
 }

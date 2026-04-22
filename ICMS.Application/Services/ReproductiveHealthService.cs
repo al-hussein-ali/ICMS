@@ -227,6 +227,14 @@ namespace ICMS.Application.Services
             return pw.PregnancyDetails.Select(p => p.ToReadDto()).ToList();
         }
 
+        public async Task<List<AddAncVisitDto>> GetVisitsAsync(int pregnancyId, CancellationToken ct = default)
+        {
+            var pregnancy = await _unitOfWork.PregnancyDetailsRepository.GetPregnancyWithDetailsAsync(pregnancyId, ct);
+            if (pregnancy == null) throw new NotFoundException("NotFound");
+
+            return pregnancy.VisitDetails.Select(v => v.ToAncVisitDto()).ToList();
+        }
+
         public async Task ConcludePregnancyAsync(int pregnancyId, ConcludePregnancyDto request, int userId, CancellationToken ct = default)
         {
             var pregnancy = await _unitOfWork.PregnancyDetailsRepository.GetPregnancyWithDetailsAsync(pregnancyId, ct);

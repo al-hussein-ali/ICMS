@@ -28,6 +28,7 @@ namespace ICMS.Domain.Entites.Clinical
         public DateOnly CreationDate { get; private set; }
         public int TotalQuantity { get; private set; }
         public string? Notes { get; private set; }
+        public bool IsActive { get; private set; } = true;
 
         public Dose? Dose { get; private set; }
         public User? User { get; private set; }
@@ -133,6 +134,12 @@ namespace ICMS.Domain.Entites.Clinical
             if (_transactions.Any(t => t.Id == transaction.Id)) throw new DomainException("Transaction already added");
 
             _transactions.Add(transaction);
+        }
+
+        public void Deactivate()
+        {
+            if (!IsActive) return;
+            IsActive = false;
         }
     }
 }

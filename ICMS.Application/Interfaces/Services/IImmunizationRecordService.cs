@@ -12,7 +12,7 @@ namespace ICMS.Application.Interfaces.Services
 {
     public interface IImmunizationRecordService
     {
-        Task<PagedResult<ImmunizationRecordReadDto>> GetAllAsync(PaginationParams paginationParams, CancellationToken ct = default);
+        Task<PagedResult<ImmunizationRecordReadDto>> GetAllAsync(PaginationParams paginationParams, int? individualId = null, CancellationToken ct = default);
 
         Task<ImmunizationRecordReadDto> GetByIdAsync(Guid id, CancellationToken ct = default);
 

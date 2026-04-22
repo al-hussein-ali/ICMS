@@ -7,6 +7,7 @@ using ICMS.Application.Interfaces.Services;
 using ICMS.Domain.Exceptions;
 using ICMS.Domain.ValueObjects;
 using System.Linq.Expressions;
+using System.Linq;
 
 namespace ICMS.Application.Services
 {
@@ -30,8 +31,18 @@ namespace ICMS.Application.Services
         {
             await pagnationValidator.ValidateAndThrowAsync(paginationParams);
 
-            var people = _unitOfWork.PersonRepository.GetQueryable().Where(p => !p.IsDeleted)
-                .Select(p => p.ToReadDto());
+            var query = _unitOfWork.PersonRepository.GetQueryable().Where(p => !p.IsDeleted);
+
+            if (!string.IsNullOrWhiteSpace(paginationParams.Search))
+            {
+                var search = paginationParams.Search.Trim().ToLower();
+                query = query.Where(p => 
+                    p.FirstName.ToLower().Contains(search) || 
+                    p.LastName.ToLower().Contains(search) || 
+                    p.PhoneNumber.Contains(search));
+            }
+
+            var people = query.Select(p => p.ToReadDto());
 
             ct.ThrowIfCancellationRequested();
 

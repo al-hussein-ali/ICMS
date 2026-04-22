@@ -1,3 +1,4 @@
+using ICMS.Application.DTOs.Maternal;
 using ICMS.Application.DTOs.VisitDetails;
 using ICMS.Domain.Entites.Visits;
 
@@ -29,5 +30,20 @@ namespace ICMS.Application.Extensions
                 dto.VaginalBleeding, 
                 dto.ClinicalExaminationAndObservation, 
                 dto.NextVisitDate);
+
+        public static AddAncVisitDto ToAncVisitDto(this VisitDetails vd)
+            => new(
+                vd.VisitDate,
+                vd.PregnancyDurationInWeeks,
+                vd.WeightInKilo,
+                vd.BloodPressure,
+                null, // TetanusDoseId - not stored directly in visit
+                vd.NextVisitDate,
+                vd.APPInUrineTest,
+                vd.OGTTInUrineTest,
+                vd.FetalHeartbeat,
+                vd.FetalMovement,
+                vd.FetalPosition,
+                vd.AnaemiaOrHemoglobinType);
     }
 }

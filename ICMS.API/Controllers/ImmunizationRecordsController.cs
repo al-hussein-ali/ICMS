@@ -17,9 +17,9 @@ namespace ICMS.API.Controllers
     {
 
         [HttpGet()]
-        public async Task<ActionResult<PagedResult<ImmunizationRecordReadDto>>> GetAllAsync([FromQuery] PaginationParams paginationParams)
+        public async Task<ActionResult<PagedResult<ImmunizationRecordReadDto>>> GetAllAsync([FromQuery] PaginationParams paginationParams, [FromQuery] int? individualId)
         {
-            var immnuizationRecords = await immunizationRecordService.GetAllAsync(paginationParams);
+            var immnuizationRecords = await immunizationRecordService.GetAllAsync(paginationParams, individualId);
 
             return Ok(immnuizationRecords);
         }

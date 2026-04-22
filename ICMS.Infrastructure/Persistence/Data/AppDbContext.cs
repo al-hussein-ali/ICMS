@@ -56,6 +56,7 @@ namespace ICMS.Infrastructure.Persistence.Data
 
             modelBuilder.ApplyConfigurationsFromAssembly(typeof(ICMS.Infrastructure.Persistence.Config.Identity.PersonConfig).Assembly);
             modelBuilder.SeedGeographicalData();
+            modelBuilder.SeedIdentityData();
 
         }
 

@@ -60,10 +60,17 @@ namespace ICMS.API.Controllers
             return Ok(result);
         }
 
-        [HttpGet("/{id}/pregnancies")]
+        [HttpGet("{id}/pregnancies")]
         public async Task<IActionResult> GetPregnancyHistory([FromRoute] int id, CancellationToken ct)
         {
             var result = await reproductiveHealthService.GetPregnancyHistoryAsync(id, ct);
+            return Ok(result);
+        }
+
+        [HttpGet("{pregnancyId}/visits")]
+        public async Task<IActionResult> GetVisits([FromRoute] int pregnancyId, CancellationToken ct)
+        {
+            var result = await reproductiveHealthService.GetVisitsAsync(pregnancyId, ct);
             return Ok(result);
         }
 

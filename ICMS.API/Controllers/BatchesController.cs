@@ -69,5 +69,12 @@ namespace ICMS.API.Controllers
             var result = await batchService.GetTransactionsAsync(batchId, filter, paginationParams);
             return Ok(result);
         }
+
+        [HttpDelete("{batchId}")]
+        public async Task<IActionResult> DeleteAsync([FromRoute] int batchId)
+        {
+            await batchService.DeactivateAsync(batchId);
+            return NoContent();
+        }
     }
 }

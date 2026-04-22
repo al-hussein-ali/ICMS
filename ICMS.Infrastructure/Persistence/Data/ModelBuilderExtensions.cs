@@ -108,5 +108,51 @@ namespace ICMS.Infrastructure.Persistence.Data
                 new { Id = 13, Name = "حي السلام-خلف البريد", NeighborhoodId = 15 }
             );
         }
+        public static void SeedIdentityData(this ModelBuilder modelBuilder)
+        {
+            // Seed Roles
+            modelBuilder.Entity<ICMS.Domain.Entites.Identity.Role>().HasData(
+                new { Id = 1001, RoleName = ICMS.Domain.Constants.Roles.Admin },
+                new { Id = 1002, RoleName = ICMS.Domain.Constants.Roles.InventoryManager },
+                new { Id = 1003, RoleName = ICMS.Domain.Constants.Roles.VaccinationManager },
+                new { Id = 1004, RoleName = ICMS.Domain.Constants.Roles.ReproductiveHealthManager },
+                new { Id = 1005, RoleName = ICMS.Domain.Constants.Roles.FieldVisitWorker }
+            );
+
+            // Seed Admin Person
+            modelBuilder.Entity<ICMS.Domain.Entites.Identity.Person>().HasData(
+                new
+                {
+                    Id = 999,
+                    FirstName = "System",
+                    SecondName = "Admin",
+                    LastName = "User",
+                    Gender = ICMS.Domain.Enums.Gender.Male,
+                    DateOfBirth = new DateOnly(1990, 1, 1),
+                    PhoneNumber = "777777777",
+                    CreatedAt = new DateTime(2026, 4, 21, 0, 0, 0, DateTimeKind.Utc),
+                    IsDeleted = false
+                }
+            );
+
+            // Seed Admin User
+            // Password is 'Admin@123'
+            modelBuilder.Entity<ICMS.Domain.Entites.Identity.User>().HasData(
+                new
+                {
+                    Id = 999,
+                    UserName = "admin",
+                    PasswordHash = "$2a$12$R9h/lIPzHZf5hP1TthHbCuZ8HCTWJ.L7N1S9G0S8T.m6/oM8W9S1.",
+                    IsActive = true,
+                    CreatedAt = new DateTime(2026, 4, 21, 0, 0, 0, DateTimeKind.Utc),
+                    PersonId = 999
+                }
+            );
+
+            // Assign Admin Role to Admin User
+            modelBuilder.Entity<ICMS.Domain.Entites.Identity.UserRole>().HasData(
+                new { UserId = 999, RoleId = 1001 }
+            );
+        }
     }
 }
