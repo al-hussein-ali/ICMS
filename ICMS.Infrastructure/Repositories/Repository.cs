@@ -42,9 +42,10 @@ namespace ICMS.Infrastructure.Repositories
             return await query.ToListAsync(cancellationToken);
         }
 
-        public async Task<TEntity?> GetByIdAsync(TKey id, CancellationToken cancellationToken = default)
+        public async Task<TEntity?> GetByIdAsync(TKey id, CancellationToken cancellationToken = default, params Expression<Func<TEntity, object>>[] includes)
         {
-            return await _dbSet.FindAsync(new object[] { id! }, cancellationToken);
+            var query = GetQueryable(false, cancellationToken, includes);
+            return await query.FirstOrDefaultAsync(e => e.Id!.Equals(id), cancellationToken);
         }
 
         public async Task<TEntity> AddAsync(TEntity entity, CancellationToken cancellationToken = default)

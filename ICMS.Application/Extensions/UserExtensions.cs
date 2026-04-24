@@ -17,7 +17,7 @@ namespace ICMS.Application.Extensions
                 u.Person?.ThirdName,
                 u.Person?.LastName, 
                 u.Person?.PhoneNumber, 
-                u.Person?.DateOfBirth.ToString("yyyy-MM-dd"),
+                u.Person != null ? u.Person.DateOfBirth.ToString("yyyy-MM-dd") : null,
                 u.Person?.Gender.ToString().ToLower(),
                 roles
             );

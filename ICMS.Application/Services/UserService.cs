@@ -77,8 +77,38 @@ namespace ICMS.Application.Services
         {
             await userUpdateValidator.ValidateAndThrowAsync(updatedEntity, ct);
 
-            var user = await unitOfWork.UserRepository.GetByIdAsync(updatedEntity.Id, ct);
+            var user = await unitOfWork.UserRepository.GetByIdAsync(updatedEntity.Id, ct, u => u.Person);
             if (user == null) throw new NotFoundException("NotFound");
+
+            // Update Person fields if Person exists
+            if (user.Person != null)
+            {
+                // Parse Gender
+                ICMS.Domain.Enums.Gender genderEnum = ICMS.Domain.Enums.Gender.Male;
+                if (!string.IsNullOrEmpty(updatedEntity.Gender))
+                {
+                    Enum.TryParse(updatedEntity.Gender, true, out genderEnum);
+                }
+
+                // Parse DateOfBirth
+                DateOnly dob = user.Person.DateOfBirth;
+                if (!string.IsNullOrEmpty(updatedEntity.DateOfBirth))
+                {
+                    DateOnly.TryParse(updatedEntity.DateOfBirth, out dob);
+                }
+
+                user.Person.UpdatePersonInfo(
+                    updatedEntity.FirstName ?? user.Person.FirstName,
+                    updatedEntity.SecondName ?? user.Person.SecondName,
+                    updatedEntity.ThirdName,
+                    updatedEntity.LastName ?? user.Person.LastName,
+                    genderEnum,
+                    dob,
+                    updatedEntity.Phone ?? user.Person.PhoneNumber
+                );
+                
+                await unitOfWork.PersonRepository.UpdateAsync(user.Person, ct);
+            }
 
             // Sync Roles if provided
             if (updatedEntity.Roles != null)
@@ -96,7 +126,11 @@ namespace ICMS.Application.Services
             // Update IsActive status if it changed
             if (updatedEntity.IsActive != user.IsActive)
             {
-                if (!updatedEntity.IsActive)
+                if (updatedEntity.IsActive)
+                {
+                    user.ActivateUser();
+                }
+                else
                 {
                     user.DeactivateUser();
                 }
