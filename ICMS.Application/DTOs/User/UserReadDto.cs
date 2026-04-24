@@ -12,7 +12,7 @@ namespace ICMS.Application.DTOs.User
         string? ThirdName,
         string? LastName,
         string? Phone,
-        DateOnly? DateOfBirth,
+        string? DateOfBirth,
         string? Gender,
         IEnumerable<string>? Roles = null
     );
