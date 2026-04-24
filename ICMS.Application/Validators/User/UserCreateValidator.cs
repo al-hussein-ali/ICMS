@@ -21,9 +21,10 @@ namespace ICMS.Application.Validators.User
                 .MaximumLength(256)
                 .WithMessage(x => localizer["InvalidField", "This field"]);
 
-            RuleFor(x => x.PersonId)
-                .GreaterThanOrEqualTo(1)
-                .WithMessage(x => localizer["RequiredField", "This field"]);
+            RuleFor(x => x)
+                .Must(x => x.PersonId > 0 || x.PersonCreateDto != null)
+                .WithMessage(x => localizer["RequiredField", "PersonId or Person details"]);
+
 
             RuleFor(x => x.Roles)
                 .Must(roles => roles == null || roles.All(r => !string.IsNullOrWhiteSpace(r)))

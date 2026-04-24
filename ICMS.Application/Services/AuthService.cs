@@ -38,13 +38,25 @@ namespace ICMS.Application.Services
 
         public async Task<AuthResponseDto> RefreshTokenAsync(RefreshTokenRequestDto refreshDto, CancellationToken ct = default)
         {
-            var isValid = await refreshTokenService.IsValidRefreshTokenAsync(refreshDto.RefreshToken, ct);
-            if (!isValid)
+            var tokenEntity = await refreshTokenService.GetRefreshTokenAsync(refreshDto.RefreshToken, ct);
+
+            if (tokenEntity == null)
             {
-                throw new DomainException("InvalidRefreshToken");
+                throw new DomainException("InvalidRefreshToken:NotFound");
             }
 
-            var tokenEntity = await refreshTokenService.GetRefreshTokenAsync(refreshDto.RefreshToken, ct);
+            if (tokenEntity.IsRevoked)
+            {
+                throw new DomainException("InvalidRefreshToken:Revoked");
+            }
+
+            if (tokenEntity.ExpirationDate <= System.DateTime.UtcNow)
+            {
+                throw new DomainException("InvalidRefreshToken:Expired");
+            }
+
+            // Invalidate the old token to prevent reuse (Rotation)
+            await refreshTokenService.InvalidateRefreshTokenAsync(tokenEntity, ct);
 
             // Get user to generate new token
             var user = await unitOfWork.UserRepository.GetByIdAsync(tokenEntity.UserId, ct);

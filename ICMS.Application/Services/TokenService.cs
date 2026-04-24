@@ -38,7 +38,7 @@ public class TokenService(IRefreshTokenService refreshTokenService,JwtOptions jw
             
             Subject = new ClaimsIdentity(claims),
             
-            Expires = DateTime.Now.AddMinutes(jwtOptions.ExpiresIn),
+            Expires = DateTime.UtcNow.AddMinutes(jwtOptions.ExpiresIn),
         };
 
 
@@ -52,8 +52,6 @@ public class TokenService(IRefreshTokenService refreshTokenService,JwtOptions jw
 
     public async Task<string> GenerateRefreshToken(int userId, CancellationToken cancellationToken = default)
     {
-        await refreshTokenService.InvalidateUserRefreshTokensAsync(userId, cancellationToken);
-        
         var newToken =  await refreshTokenService.GenerateRefreshTokenAsync(userId, cancellationToken);
         
         return newToken.Token;

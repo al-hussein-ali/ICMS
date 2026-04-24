@@ -21,7 +21,7 @@ namespace ICMS.Application.Services
     {
         public async Task<IReadOnlyList<UserReadDto>> GetAllAsync(PaginationParams paginationParams, CancellationToken ct = default)
         {
-            var users = await unitOfWork.UserRepository.GetPagedAsync(paginationParams.PageNumber, paginationParams.PageSize, false, ct);
+            var users = await unitOfWork.UserRepository.GetPagedAsync(paginationParams.PageNumber, paginationParams.PageSize, false, ct, u => u.Person);
 
             var userDtos = new List<UserReadDto>();
             foreach (var user in users)
@@ -46,8 +46,20 @@ namespace ICMS.Application.Services
         {
             await userCreateValidator.ValidateAndThrowAsync(entity, ct);
 
+            int personId = entity.PersonId ?? 0;
+
+            if (personId == 0 && entity.PersonCreateDto != null)
+            {
+                var person = entity.PersonCreateDto.ToDomain();
+                await unitOfWork.PersonRepository.AddAsync(person, ct);
+                await unitOfWork.SaveChangesAsync(ct);
+                personId = person.Id;
+            }
+
+            if (personId == 0) throw new DomainException("Person details or PersonId must be provided");
+
             string hashedPassword = BCrypt.Net.BCrypt.HashPassword(entity.Password);
-            var user = entity.ToDomain(hashedPassword);
+            var user = entity.ToDomain(hashedPassword, personId);
             
             await unitOfWork.UserRepository.AddAsync(user, ct);
             await unitOfWork.SaveChangesAsync(ct);
@@ -101,10 +113,19 @@ namespace ICMS.Application.Services
             var user = await unitOfWork.UserRepository.GetByIdAsync(id, ct);
             if (user == null) return false;
 
-            await unitOfWork.UserRepository.DeleteAsync(user, ct);
-            await unitOfWork.SaveChangesAsync(ct);
-
-            return true;
+            try
+            {
+                await unitOfWork.UserRepository.DeleteAsync(user, ct);
+                await unitOfWork.SaveChangesAsync(ct);
+                return true;
+            }
+            catch (Exception ex) when (ex.InnerException?.Message.Contains("FOREIGN KEY", StringComparison.OrdinalIgnoreCase) == true || 
+                                       ex.InnerException?.Message.Contains("REFERENCE", StringComparison.OrdinalIgnoreCase) == true ||
+                                       ex.Message.Contains("FOREIGN KEY", StringComparison.OrdinalIgnoreCase) ||
+                                       ex.Message.Contains("REFERENCE", StringComparison.OrdinalIgnoreCase))
+            {
+                throw new DomainException("Cannot delete this user because they are linked to existing system records. Please deactivate them instead.");
+            }
         }
 
         public async Task<bool> ActivateAsync(int id, CancellationToken ct = default)

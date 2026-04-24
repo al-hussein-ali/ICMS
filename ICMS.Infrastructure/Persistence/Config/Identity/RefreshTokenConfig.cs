@@ -26,6 +26,8 @@ namespace ICMS.Infrastructure.Persistence.Config.Identity
                 .WithMany(u => u.RefreshTokens)
                 .HasForeignKey(rt => rt.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            builder.HasIndex(rt => rt.Token).IsUnique();
         }
     }
 }

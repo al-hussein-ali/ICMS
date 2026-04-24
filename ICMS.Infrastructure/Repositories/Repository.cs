@@ -94,7 +94,12 @@ namespace ICMS.Infrastructure.Repositories
         public async Task<IReadOnlyList<TEntity>> GetPagedAsync(int pageNumber, int pageSize, bool track = false, CancellationToken cancellationToken = default, params Expression<Func<TEntity, object>>[] includes)
         {
             var query = GetQueryable(track, cancellationToken, includes);
-            return await query.Skip((pageNumber - 1) * pageSize).Take(pageSize).ToListAsync(cancellationToken);
+            return await query
+                .OrderBy(e => e.Id)
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync(cancellationToken);
+
         }
     }
 }

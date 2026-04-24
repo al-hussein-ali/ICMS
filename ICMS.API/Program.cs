@@ -96,30 +96,39 @@ builder.Services.AddRateLimiter(options =>
 {
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
 
-    // Default policy: 100 requests per 1 minute per IP
+    // Add Retry-After header so the frontend knows exactly how long to wait
+    options.OnRejected = async (context, cancellationToken) =>
+    {
+        context.HttpContext.Response.Headers.RetryAfter = "10";
+        await Task.CompletedTask;
+    };
+
+    // Default policy: 300 requests per 1 minute per IP
+    // Increased from 100 to handle SPA burst fetching (e.g. after PDF save dialog closes)
     options.AddFixedWindowLimiter("fixed", opt =>
     {
         opt.Window = TimeSpan.FromMinutes(1);
-        opt.PermitLimit = 100;
+        opt.PermitLimit = 300;
+        opt.QueueLimit = 5;
+        opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+    });
+
+    // Stricter policy: 20 requests per 1 minute (e.g. for report generation or auth)
+    options.AddFixedWindowLimiter("stricter", opt =>
+    {
+        opt.Window = TimeSpan.FromMinutes(1);
+        opt.PermitLimit = 20;
         opt.QueueLimit = 2;
         opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
     });
 
-    // Stricter policy: 10 requests per 1 minute (e.g. for report generation or auth)
-    options.AddFixedWindowLimiter("stricter", opt =>
-    {
-        opt.Window = TimeSpan.FromMinutes(1);
-        opt.PermitLimit = 10;
-        opt.QueueLimit = 0;
-    });
-
-    // Per IP address limiting (Global)
+    // Per IP address limiting (Global) - 300 req/min is sufficient for a single-user SPA in dev
     options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
         RateLimitPartition.GetFixedWindowLimiter(
             partitionKey: context.Connection.RemoteIpAddress?.ToString() ?? context.Request.Headers.Host.ToString(),
             factory: _ => new FixedWindowRateLimiterOptions
             {
-                PermitLimit = 50,
+                PermitLimit = 300,
                 Window = TimeSpan.FromMinutes(1),
                 QueueLimit = 0
             }));

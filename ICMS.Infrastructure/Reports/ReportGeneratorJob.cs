@@ -85,30 +85,52 @@ namespace ICMS.Infrastructure.Reports
             }
         }
 
-        private static async Task<byte[]> ConvertHtmlToPdfAsync(string html)
+        private async Task<byte[]> ConvertHtmlToPdfAsync(string html)
         {
+            _logger.LogInformation("Starting Playwright PDF conversion...");
             using var playwright = await Playwright.CreateAsync();
+            
+            _logger.LogInformation("Launching browser...");
             await using var browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
             {
-                Headless = true
+                Headless = true,
+                Args = new[] { "--no-sandbox", "--disable-setuid-sandbox" }
             });
 
-            var page = await browser.NewPageAsync();
-
-            // Set content directly (avoids needing a running web server)
-            await page.SetContentAsync(html, new PageSetContentOptions
+            try
             {
-                WaitUntil = WaitUntilState.NetworkIdle
-            });
+                _logger.LogInformation("Creating new page...");
+                var page = await browser.NewPageAsync();
 
-            var pdf = await page.PdfAsync(new PagePdfOptions
+                _logger.LogInformation("Setting content (NetworkIdle)...");
+                await page.SetContentAsync(html, new PageSetContentOptions
+                {
+                    WaitUntil = WaitUntilState.NetworkIdle,
+                    Timeout = 60000 // 60 seconds
+                });
+
+                _logger.LogInformation("Generating PDF bytes...");
+                var pdf = await page.PdfAsync(new PagePdfOptions
+                {
+                    Format = "A4",
+                    PrintBackground = true,
+                    Margin = new Margin { Top = "16px", Bottom = "16px", Left = "16px", Right = "16px" }
+                });
+
+                _logger.LogInformation("PDF conversion successful.");
+                return pdf;
+            }
+            catch (Exception ex)
             {
-                Format = "A4",
-                PrintBackground = true,
-                Margin = new Margin { Top = "16px", Bottom = "16px", Left = "16px", Right = "16px" }
-            });
-
-            return pdf;
+                _logger.LogError(ex, "Error during Playwright PDF conversion");
+                throw;
+            }
+            finally
+            {
+                _logger.LogInformation("Closing browser...");
+                await browser.CloseAsync();
+            }
         }
+
     }
 }

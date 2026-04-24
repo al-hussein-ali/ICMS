@@ -27,7 +27,7 @@ namespace ICMS.Infrastructure.Repositories.Identity
         public async Task<RefreshToken?> GetByTokenAsync(string token, CancellationToken cancellationToken = default)
         {
             return await _appDbContext.RefreshTokens.Include(rt => rt.User)
-                .AsNoTracking().FirstOrDefaultAsync(rt => rt.Token == token, cancellationToken);
+                .FirstOrDefaultAsync(rt => rt.Token == token, cancellationToken);
         }
 
         public async Task<IEnumerable<RefreshToken>> GetUserRefreshTokensAsync(int userId, CancellationToken cancellationToken = default)
