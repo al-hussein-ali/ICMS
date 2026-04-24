@@ -35,7 +35,7 @@ namespace ICMS.Application.Services
 
         public async Task<UserReadDto?> GetByIdAsync(int id, CancellationToken ct = default)
         {
-            var user = await unitOfWork.UserRepository.GetByIdAsync(id, ct);
+            var user = await unitOfWork.UserRepository.GetByIdAsync(id, ct, u => u.Person);
             if (user == null) return null;
 
             var roles = await identityService.GetUserRolesAsync(user.Id, ct);
