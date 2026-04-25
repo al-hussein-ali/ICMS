@@ -11,8 +11,8 @@ namespace ICMS.Domain.Entites.Identity
         private readonly List<ImmunizationRecord> _immunizationRecords = new();
         public IReadOnlyList<ImmunizationRecord> ImmunizationRecords => _immunizationRecords.AsReadOnly();
 
-        private readonly List<Clinical.VaccinationSchedule> _schedules = new();
-        public IReadOnlyCollection<Clinical.VaccinationSchedule> Schedules => _schedules.AsReadOnly();
+        private readonly List<VaccinationSchedule> _schedules = new();
+        public IReadOnlyCollection<VaccinationSchedule> Schedules => _schedules.AsReadOnly();
 
         public string CardNumber { get; private set; } = string.Empty;
 
@@ -22,8 +22,9 @@ namespace ICMS.Domain.Entites.Identity
         public int? UserId { get; private set; }
         public int PersonId { get; private set; }
         public User? User { get; private set; }
-        public Person Person { get; private set; }
+        public Person Person { get; private set; } = null!;
         public Directorate Directorate { get; private set; } = null!;
+        public Neighborhood Neighborhood { get; private set; } = null!;
 
 
         private VaccinatedIndividual()
@@ -50,10 +51,9 @@ namespace ICMS.Domain.Entites.Identity
 
         public void AssignPerson(Person person)
         {
-            if (person == null) throw new DomainException("Person is required");
             if (Person != null) throw new DomainException("Person already assigned");
 
-            Person = person;
+            Person = person ?? throw new DomainException("Person is required");
         }
 
         public void AssignExistingPersonById(int personId)
@@ -64,15 +64,6 @@ namespace ICMS.Domain.Entites.Identity
             PersonId = personId;
         }
 
-        public void AssignUser(User user)
-        {
-            if (user == null) throw new DomainException("User is required");
-            if (User != null) throw new DomainException("User already assigned");
-            if (user.Id != 0 && UserId.HasValue && user.Id != UserId.Value)
-                throw new DomainException("User id mismatch");
-
-            User = user;
-        }
 
         public void AssignExistingUserById(int userId)
         {
@@ -168,17 +159,5 @@ namespace ICMS.Domain.Entites.Identity
             }
         }
 
-        public void ScheduleAdultVaccines(IEnumerable<Dose> requiredDoses, DateOnly referenceDate)
-        {
-            foreach (var dose in requiredDoses.OrderBy(d => d.RecommendedAgeInMonths).ThenBy(d => d.DoseOrder))
-            {
-                if (_schedules.Any(s => s.DoseId == dose.Id)) continue;
-
-                // For adults, RecommendedAgeInMonths is treated as the interval from the reference date/first dose.
-                var scheduledDate = referenceDate.AddMonths(dose.RecommendedAgeInMonths);
-                var schedule = VaccinationSchedule.Create(Id, dose.Id, scheduledDate);
-                _schedules.Add(schedule);
-            }
-        }
     }
 }

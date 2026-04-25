@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ICMS.Domain.ValueObjects;
 
 namespace ICMS.Application.Interfaces.Repositories
 {
@@ -28,5 +29,7 @@ namespace ICMS.Application.Interfaces.Repositories
         Task<List<VaccinatedIndividual>> GetByIdsWithImmunizationRecordsAsync(List<int> ids, CancellationToken ct = default);
 
         Task<VaccinatedIndividual?> GetIndividualWithSchedulesAsync(int id, CancellationToken ct = default);
+        IQueryable<VaccinatedIndividual> GetQueryableWithDetails(CancellationToken ct = default);
+        Task<PagedResult<VaccinatedIndividual>> GetPagedWithDetailsAsync(int pageNumber, int pageSize, CancellationToken ct = default);
     }
 }

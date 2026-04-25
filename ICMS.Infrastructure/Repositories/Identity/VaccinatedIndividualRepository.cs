@@ -1,29 +1,15 @@
 using ICMS.Application.Interfaces.Repositories;
-using ICMS.Domain.Entites.Common;
 using ICMS.Domain.Entites.Identity;
-using ICMS.Domain.Entites.Clinical;
-using ICMS.Domain.Entites.Maternal;
-using ICMS.Domain.Entites.Visits;
-using ICMS.Domain.Entites.Audit;
-using ICMS.Domain.Entites.Geography;
 using ICMS.Infrastructure.Persistence.Data;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using EFCore.BulkExtensions;
+using ICMS.Domain.ValueObjects;
 
 namespace ICMS.Infrastructure.Repositories.Identity
 {
-    public class VaccinatedIndividualRepository : Repository<VaccinatedIndividual, int>, IVaccinatedIndividualRepository
+    public class VaccinatedIndividualRepository(AppDbContext context) : Repository<VaccinatedIndividual, int>(context), IVaccinatedIndividualRepository
     {
-        public VaccinatedIndividualRepository(AppDbContext context) : base(context)
-        {
-        }
-
-        public new async Task<VaccinatedIndividual?> GetByIdAsync(int id,CancellationToken ct = default)
+        public async Task<VaccinatedIndividual?> GetByIdAsync(int id, CancellationToken ct = default)
         {
             return await _dbSet.Include(vi => vi.Person).Include(vi => vi.User)
                 .Where(vi => !vi.Person.IsDeleted).FirstOrDefaultAsync(vi => vi.Id == id, ct);
@@ -31,14 +17,26 @@ namespace ICMS.Infrastructure.Repositories.Identity
 
         public async Task<VaccinatedIndividual?> GetDetailsById(int id, CancellationToken ct = default)
         {
-            return await _dbSet.Include(vi => vi.Person).Include(vi => vi.User).Include(vi => vi.ImmunizationRecords)
-                .Where(vi => !vi.Person.IsDeleted).FirstOrDefaultAsync(vi => vi.Id == id, ct);
+            return await _dbSet
+                .Include(vi => vi.Person)
+                .Include(vi => vi.User)
+                .Include(vi => vi.Directorate)
+                .Include(vi => vi.Neighborhood)
+                .Include(vi => vi.ImmunizationRecords)
+                .Where(vi => !vi.Person.IsDeleted)
+                .FirstOrDefaultAsync(vi => vi.Id == id, ct);
         }
 
         public async Task<VaccinatedIndividual?> GetDetailsByCardNumber(string cardNumber, CancellationToken ct = default)
         {
-            return await _dbSet.Include(vi => vi.Person).Include(vi => vi.User).Include(vi => vi.ImmunizationRecords)
-                .Where(vi => !vi.Person.IsDeleted).FirstOrDefaultAsync(vi => vi.CardNumber == cardNumber,ct);
+            return await _dbSet
+                .Include(vi => vi.Person)
+                .Include(vi => vi.User)
+                .Include(vi => vi.Directorate)
+                .Include(vi => vi.Neighborhood)
+                .Include(vi => vi.ImmunizationRecords)
+                .Where(vi => !vi.Person.IsDeleted)
+                .FirstOrDefaultAsync(vi => vi.CardNumber == cardNumber, ct);
         }
 
         public async Task<VaccinatedIndividual?> GetByPersonIdAsync(int personId, CancellationToken ct = default)
@@ -81,7 +79,23 @@ namespace ICMS.Infrastructure.Repositories.Identity
                 .FirstOrDefaultAsync(vi => vi.Id == id, ct);
         }
 
+        public IQueryable<VaccinatedIndividual> GetQueryableWithDetails(CancellationToken ct = default)
+        {
+            return _dbSet
+                .Include(vi => vi.Person)
+                .Include(vi => vi.Directorate)
+                .Include(vi => vi.Neighborhood);
+        }
 
+        public async Task<PagedResult<VaccinatedIndividual>> GetPagedWithDetailsAsync(int pageNumber, int pageSize, CancellationToken ct = default)
+        {
+            var query = GetQueryableWithDetails(ct);
+            var totalCount = await query.CountAsync(ct);
+            var items = await query.Skip((pageNumber - 1) * pageSize)
+                                  .Take(pageSize)
+                                  .ToListAsync(ct);
 
+            return new PagedResult<VaccinatedIndividual>(items, totalCount, pageNumber, pageSize);
+        }
     }
 }
