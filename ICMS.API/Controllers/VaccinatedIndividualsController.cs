@@ -52,7 +52,7 @@ namespace ICMS.API.Controllers
 
 
         [HttpPut("update/{id}")]
-        public async Task<IActionResult> UpdateAsync([FromRoute] int id, VaccinatedIndividualCreateDto vaccinatedIndividualCreateDto)
+        public async Task<IActionResult> UpdateAsync([FromRoute] int id, [FromBody] VaccinatedIndividualCreateDto vaccinatedIndividualCreateDto)
         {
             await vaccinatedIndividualService.UpdateAsync(id, vaccinatedIndividualCreateDto);
 
@@ -60,9 +60,9 @@ namespace ICMS.API.Controllers
         }
 
         [HttpDelete("delete/{id}")]
-        public async Task<IActionResult> DeleteAsync([FromRoute] int id)
+        public async Task<IActionResult> DeleteAsync([FromRoute] int id, [FromQuery] bool deletePersonalInfo = false)
         {
-            await vaccinatedIndividualService.DeleteAsync(id);
+            await vaccinatedIndividualService.DeleteAsync(id, deletePersonalInfo);
 
             return NoContent();
         }

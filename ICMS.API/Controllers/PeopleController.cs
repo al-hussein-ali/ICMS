@@ -56,5 +56,19 @@ namespace ICMS.API.Controllers
 
             return Ok("The record was deleted successfully");
         }
+
+        [HttpGet("search/name")]
+        public async Task<ActionResult<List<PersonReadDto>>> SearchByName([FromQuery] string fullName)
+        {
+            var results = await personService.GetByName(fullName);
+            return Ok(results);
+        }
+
+        [HttpGet("search/phone")]
+        public async Task<ActionResult<List<PersonReadDto>>> SearchByPhone([FromQuery] string phoneNumber)
+        {
+            var results = await personService.GetByPhone(phoneNumber);
+            return Ok(results);
+        }
     }
 }

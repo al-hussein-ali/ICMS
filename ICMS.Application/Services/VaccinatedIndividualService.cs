@@ -107,7 +107,11 @@ namespace ICMS.Application.Services
             await unitOfWork.VaccinatedIndividualRepository.AddAsync(vaccinatedIndividual, ct);
             await unitOfWork.SaveChangesAsync(ct);
 
-            return vaccinatedIndividual.ToReadDto();
+            // Fetch the full object with details to avoid NullReferenceException in ToReadDto
+            var fullIndividual = await unitOfWork.VaccinatedIndividualRepository.GetByIdAsync(vaccinatedIndividual.Id, ct);
+            if (fullIndividual == null) throw new NotFoundException("NotFound");
+
+            return fullIndividual.ToReadDto();
         }
 
         public async Task<bool> UpdateAsync(int id, VaccinatedIndividualCreateDto updatedEntity, CancellationToken ct = default)
@@ -120,19 +124,60 @@ namespace ICMS.Application.Services
 
             individual.UpdateIndividualInfo(updatedEntity.DirectorateId, updatedEntity.NeighborhoodId, updatedEntity.SubNeighborhoodId);
 
+            // Handle switching to a different existing person
+            if (updatedEntity.PersonId > 0 && updatedEntity.PersonId != individual.PersonId)
+            {
+                var newPerson = await unitOfWork.PersonRepository.GetByIdAsync(updatedEntity.PersonId.Value, ct);
+                if (newPerson == null) throw new NotFoundException("NotFound");
+                individual.AssignExistingPersonById(newPerson.Id);
+            }
+            else if (updatedEntity.PersonCreateDto != null)
+            {
+                var person = individual.Person;
+                if (person == null && individual.PersonId > 0)
+                {
+                    person = await unitOfWork.PersonRepository.GetByIdAsync(individual.PersonId, ct);
+                }
+
+                if (person != null)
+                {
+                    person.UpdatePersonInfo(
+                        updatedEntity.PersonCreateDto.FirstName,
+                        updatedEntity.PersonCreateDto.SecondName,
+                        updatedEntity.PersonCreateDto.ThirdName,
+                        updatedEntity.PersonCreateDto.LastName,
+                        updatedEntity.PersonCreateDto.Gender.FromStringToGenderEnum(),
+                        updatedEntity.PersonCreateDto.DateOfBirth,
+                        updatedEntity.PersonCreateDto.PhoneNumber
+                    );
+                    await unitOfWork.PersonRepository.UpdateAsync(person, ct);
+                }
+            }
+
             await unitOfWork.VaccinatedIndividualRepository.UpdateAsync(individual, ct);
             await unitOfWork.SaveChangesAsync(ct);
-
             return true;
         }
 
-        public async Task<bool> DeleteAsync(int id, CancellationToken ct = default)
+        public async Task<bool> DeleteAsync(int id, bool deletePersonalInfo = false, CancellationToken ct = default)
         {
             var individual = await unitOfWork.VaccinatedIndividualRepository.GetByIdAsync(id, ct);
             if (individual == null)
                 throw new NotFoundException("NotFound");
 
+            int personId = individual.PersonId;
+
             await unitOfWork.VaccinatedIndividualRepository.DeleteAsync(individual, ct);
+            
+            if (deletePersonalInfo)
+            {
+                var person = await unitOfWork.PersonRepository.GetByIdAsync(personId, ct);
+                if (person != null)
+                {
+                    await unitOfWork.PersonRepository.DeleteAsync(person, ct);
+                }
+            }
+
             await unitOfWork.SaveChangesAsync(ct);
 
             return true;

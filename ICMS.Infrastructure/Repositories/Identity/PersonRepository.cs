@@ -44,5 +44,38 @@ namespace ICMS.Infrastructure.Repositories.Identity
                                                       && p.PhoneNumber == phoneNumber
                                                       && p.DateOfBirth == dateOfBirth && !p.IsDeleted);
         }
+
+        public async Task<List<Person>> GetByName(string fullName, CancellationToken ct = default)
+        {
+            var search = fullName.Trim().ToLower();
+            
+            // Flexible name search that checks individual parts and combinations
+            return await _dbSet
+                .Where(p => !p.IsDeleted && (
+                    p.FirstName.ToLower().Contains(search) ||
+                    p.LastName.ToLower().Contains(search) ||
+                    (p.FirstName + " " + p.LastName).ToLower().Contains(search) ||
+                    (p.FirstName + " " + p.SecondName + " " + p.LastName).ToLower().Contains(search) ||
+                    (p.FirstName + " " + p.SecondName + " " + p.ThirdName + " " + p.LastName).ToLower().Contains(search)
+                ))
+                .ToListAsync(ct);
+        }
+
+        public async Task<List<Person>> GetByPhone(string phoneNumber, CancellationToken ct = default)
+        {
+            var search = phoneNumber.Trim();
+            
+            // If search starts with '0', also try without '0'
+            // If search doesn't start with '0', also try with '0' prefix
+            var searchWithoutZero = search.StartsWith('0') ? search.Substring(1) : search;
+            var searchWithZero = search.StartsWith('0') ? search : "0" + search;
+
+            return await _dbSet
+                .Where(p => !p.IsDeleted && p.PhoneNumber != null && 
+                    (p.PhoneNumber.Contains(search) || 
+                     p.PhoneNumber.Contains(searchWithoutZero) ||
+                     p.PhoneNumber.Contains(searchWithZero)))
+                .ToListAsync(ct);
+        }
     }
 }

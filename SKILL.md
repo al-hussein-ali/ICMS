@@ -83,6 +83,12 @@ The project follows the **Clean Architecture** pattern, ensuring separation of c
 
 ---
 
+## 🐞 Debugging & Troubleshooting
+
+For detailed instructions on how to trace, identify, and fix errors across the backend layers, refer to the **[Debugging Guide](./DEBUGGING_SKILLS.md)**.
+
+---
+
 > [!IMPORTANT]
 > **Code Review Checklist:**
 > - Does the code follow the dependency flow?

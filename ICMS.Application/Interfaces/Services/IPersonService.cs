@@ -32,6 +32,9 @@ namespace ICMS.Application.Interfaces.Services
         Task<bool> UpdateAsync(int id, PersonCreateDto updatedEntity, CancellationToken ct = default);
 
         Task<bool> DeleteAsync(int id, CancellationToken ct = default);
-
+        
+        Task<List<PersonReadDto>> GetByName(string fullName, CancellationToken ct = default);
+        
+        Task<List<PersonReadDto>> GetByPhone(string phoneNumber, CancellationToken ct = default);
     }
 }

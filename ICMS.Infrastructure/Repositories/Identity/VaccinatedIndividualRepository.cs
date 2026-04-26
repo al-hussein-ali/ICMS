@@ -11,8 +11,14 @@ namespace ICMS.Infrastructure.Repositories.Identity
     {
         public async Task<VaccinatedIndividual?> GetByIdAsync(int id, CancellationToken ct = default)
         {
-            return await _dbSet.Include(vi => vi.Person).Include(vi => vi.User)
-                .Where(vi => !vi.Person.IsDeleted).FirstOrDefaultAsync(vi => vi.Id == id, ct);
+            return await _dbSet
+                .Include(vi => vi.Person)
+                .Include(vi => vi.User)
+                .Include(vi => vi.Directorate)
+                    .ThenInclude(d => d.Governorate)
+                .Include(vi => vi.Neighborhood)
+                .Where(vi => !vi.Person.IsDeleted)
+                .FirstOrDefaultAsync(vi => vi.Id == id, ct);
         }
 
         public async Task<VaccinatedIndividual?> GetDetailsById(int id, CancellationToken ct = default)
@@ -21,6 +27,7 @@ namespace ICMS.Infrastructure.Repositories.Identity
                 .Include(vi => vi.Person)
                 .Include(vi => vi.User)
                 .Include(vi => vi.Directorate)
+                    .ThenInclude(d => d.Governorate)
                 .Include(vi => vi.Neighborhood)
                 .Include(vi => vi.ImmunizationRecords)
                 .Where(vi => !vi.Person.IsDeleted)
@@ -33,6 +40,7 @@ namespace ICMS.Infrastructure.Repositories.Identity
                 .Include(vi => vi.Person)
                 .Include(vi => vi.User)
                 .Include(vi => vi.Directorate)
+                    .ThenInclude(d => d.Governorate)
                 .Include(vi => vi.Neighborhood)
                 .Include(vi => vi.ImmunizationRecords)
                 .Where(vi => !vi.Person.IsDeleted)
@@ -84,6 +92,7 @@ namespace ICMS.Infrastructure.Repositories.Identity
             return _dbSet
                 .Include(vi => vi.Person)
                 .Include(vi => vi.Directorate)
+                    .ThenInclude(d => d.Governorate)
                 .Include(vi => vi.Neighborhood);
         }
 

@@ -7,6 +7,8 @@ using ICMS.Domain.Entites.Visits;
 using ICMS.Domain.Entites.Audit;
 using ICMS.Domain.Entites.Geography;
 using System;
+using ICMS.Domain.Entites.Geography;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -22,7 +24,9 @@ namespace ICMS.Application.Interfaces.Repositories
         Task<Person?> GetByPhoneNumberAsync(string phoneNumber, CancellationToken ct = default);
 
         Task<Person?> GetByAsync(string firstName, string lastName, string phoneNumber, DateOnly dateOfBirth,CancellationToken ct = default);
- 
 
+        Task<List<Person>> GetByName(string fullName, CancellationToken ct = default);
+        
+        Task<List<Person>> GetByPhone(string phoneNumber, CancellationToken ct = default);
     }
 }
