@@ -55,29 +55,39 @@ namespace ICMS.Application.Services
 
         public async Task<VaccinatedIndividualReadDto> AddAsync(VaccinatedIndividualCreateDto vaccinatedIndividualCreateDto, CancellationToken ct = default)
         {
-            int selectedPersonId;
+            Person? person;
 
             if (vaccinatedIndividualCreateDto.PersonId is > 0)
             {
-                var person = await unitOfWork.PersonRepository.GetByIdAsync(vaccinatedIndividualCreateDto.PersonId.Value, ct);
+                person = await unitOfWork.PersonRepository.GetByIdAsync(vaccinatedIndividualCreateDto.PersonId.Value, ct);
                 if (person == null) throw new NotFoundException("NotFound");
-                selectedPersonId = person.Id;
             }
             else
             {
                 if (vaccinatedIndividualCreateDto.PersonCreateDto == null) throw new DomainException("MissingPersonData");
-                var newPerson = Person.Create(
-                    vaccinatedIndividualCreateDto.PersonCreateDto.FirstName,
-                    vaccinatedIndividualCreateDto.PersonCreateDto.SecondName,
-                    vaccinatedIndividualCreateDto.PersonCreateDto.ThirdName,
-                    vaccinatedIndividualCreateDto.PersonCreateDto.LastName,
-                    Enum.Parse<ICMS.Domain.Enums.Gender>(vaccinatedIndividualCreateDto.PersonCreateDto.Gender, true),
-                    vaccinatedIndividualCreateDto.PersonCreateDto.DateOfBirth,
-                    vaccinatedIndividualCreateDto.PersonCreateDto.PhoneNumber);
 
-                await unitOfWork.PersonRepository.AddAsync(newPerson, ct);
-                await unitOfWork.SaveChangesAsync(ct);
-                selectedPersonId = newPerson.Id;
+                // 1. Check if person already exists by details to avoid UniqueConstraintException
+                person = await unitOfWork.PersonRepository.GetByAsync(
+                    vaccinatedIndividualCreateDto.PersonCreateDto.FirstName,
+                    vaccinatedIndividualCreateDto.PersonCreateDto.LastName,
+                    vaccinatedIndividualCreateDto.PersonCreateDto.PhoneNumber,
+                    vaccinatedIndividualCreateDto.PersonCreateDto.DateOfBirth,
+                    ct);
+
+                if (person == null)
+                {
+                    person = Person.Create(
+                        vaccinatedIndividualCreateDto.PersonCreateDto.FirstName,
+                        vaccinatedIndividualCreateDto.PersonCreateDto.SecondName,
+                        vaccinatedIndividualCreateDto.PersonCreateDto.ThirdName,
+                        vaccinatedIndividualCreateDto.PersonCreateDto.LastName,
+                        Enum.Parse<ICMS.Domain.Enums.Gender>(vaccinatedIndividualCreateDto.PersonCreateDto.Gender, true),
+                        vaccinatedIndividualCreateDto.PersonCreateDto.DateOfBirth,
+                        vaccinatedIndividualCreateDto.PersonCreateDto.PhoneNumber);
+
+                    await unitOfWork.PersonRepository.AddAsync(person, ct);
+                    await unitOfWork.SaveChangesAsync(ct);
+                }
             }
 
             var vaccinatedIndividual = VaccinatedIndividual.Create(
@@ -86,7 +96,9 @@ namespace ICMS.Application.Services
                 vaccinatedIndividualCreateDto.SubNeighborhoodId,
                 vaccinatedIndividualCreateDto.UserId);
 
-            vaccinatedIndividual.AssignExistingPersonById(selectedPersonId);
+            // 2. Assign the person object (sets both Id and Navigation property)
+            // This prevents NullReferenceException in ScheduleAllInitialVaccinesAsync
+            vaccinatedIndividual.AssignPerson(person);
 
             await ScheduleAllInitialVaccinesAsync([vaccinatedIndividual], ct);
 

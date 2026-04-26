@@ -6,9 +6,9 @@ namespace ICMS.Application.Extensions
     public static class VaccinatedIndividualExtensions
     {
         public static VaccinatedIndividualReadDto ToReadDto(this VaccinatedIndividual vi)
-            => new(vi.Id, vi.CardNumber, vi.DirectorateId, vi.Directorate.Name, vi.NeighborhoodId, vi.Neighborhood.Name, vi.SubNeighborhoodId, vi.PersonId, vi.UserId, vi.Person.ToReadDto());
+            => new(vi.Id, vi.CardNumber, vi.Directorate.GovernorateId, vi.Directorate.Governorate.Name, vi.DirectorateId, vi.Directorate.Name, vi.NeighborhoodId, vi.Neighborhood.Name, vi.SubNeighborhoodId, vi.PersonId, vi.UserId, vi.Person.ToReadDto());
 
         public static VaccinatedIndividualDetailsDto ToDetailsDto(this VaccinatedIndividual vi)
-            => new(vi.Id, vi.CardNumber, vi.DirectorateId, vi.Directorate.Name, vi.NeighborhoodId, vi.Neighborhood.Name, vi.SubNeighborhoodId, vi.PersonId, vi.UserId, vi.Person.ToReadDto());
+            => new(vi.Id, vi.CardNumber, vi.Directorate.GovernorateId, vi.Directorate.Governorate.Name, vi.DirectorateId, vi.Directorate.Name, vi.NeighborhoodId, vi.Neighborhood.Name, vi.SubNeighborhoodId, vi.PersonId, vi.UserId, vi.Person.ToReadDto());
     }
 }

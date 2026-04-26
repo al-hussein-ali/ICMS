@@ -58,28 +58,33 @@ namespace ICMS.Infrastructure.Persistence.Data
             // Seed Neighborhoods
             modelBuilder.Entity<Neighborhood>().HasData(
                 // منطقة فوة
-                new { Id = 1, Name = "فوة-المتضررين", DirectorateId = 1 },
-                new { Id = 2, Name = "فوة-ابن سيناء", DirectorateId = 1 },
-                new { Id = 3, Name = "فوة-المساكن", DirectorateId = 1 },
-                new { Id = 4, Name = "فوة-الإنشاءات", DirectorateId = 1 },
-                new { Id = 5, Name = "فوة-القديمة", DirectorateId = 1 },
+                new { Id = 1, Name = "فوة-المتضررين", DirectorateId = 11 },
+                new { Id = 2, Name = "فوة-ابن سيناء", DirectorateId = 11 },
+                new { Id = 3, Name = "فوة-المساكن", DirectorateId = 11 },
+                new { Id = 4, Name = "فوة-الإنشاءات", DirectorateId = 11 },
+                new { Id = 5, Name = "فوة-القديمة", DirectorateId = 11 },
 
                 // منطقة الشرج
-                new { Id = 6, Name = "الشرج-حي العمال", DirectorateId = 1 },
-                new { Id = 7, Name = "الشرج-باعبود", DirectorateId = 1 },
-                new { Id = 8, Name = "الشرج-المنورة", DirectorateId = 1 },
-                new { Id = 9, Name = "الشرج-حي أكتوبر", DirectorateId = 1 },
+                new { Id = 6, Name = "الشرج-حي العمال", DirectorateId = 11 },
+                new { Id = 7, Name = "الشرج-باعبود", DirectorateId = 11 },
+                new { Id = 8, Name = "الشرج-المنورة", DirectorateId = 11 },
+                new { Id = 9, Name = "الشرج-حي أكتوبر", DirectorateId = 11 },
 
                 // منطقة الديس
-                new { Id = 10, Name = "الديس-شعب البادية", DirectorateId = 1 },
-                new { Id = 11, Name = "الديس-الغويزي", DirectorateId = 1 },
-                new { Id = 12, Name = "الديس-حي 14 أكتوبر", DirectorateId = 1 },
-                new { Id = 13, Name = "الديس-جول الشفاء", DirectorateId = 1 },
+                new { Id = 10, Name = "الديس-شعب البادية", DirectorateId = 11 },
+                new { Id = 11, Name = "الديس-الغويزي", DirectorateId = 11 },
+                new { Id = 12, Name = "الديس-حي 14 أكتوبر", DirectorateId = 11 },
+                new { Id = 13, Name = "الديس-جول الشفاء", DirectorateId = 11 },
 
                 // المكلا القديمة
-                new { Id = 14, Name = "المكلا-حي الشهيد", DirectorateId = 1 },
-                new { Id = 15, Name = "المكلا-حي السلام", DirectorateId = 1 },
-                new { Id = 16, Name = "المكلا-حي الصيادين", DirectorateId = 1 }
+                new { Id = 14, Name = "المكلا-حي الشهيد", DirectorateId = 11 },
+                new { Id = 15, Name = "المكلا-حي السلام", DirectorateId = 11 },
+                new { Id = 16, Name = "المكلا-حي الصيادين", DirectorateId = 11 },
+
+                // منطقة السبعين - أمانة العاصمة
+                new { Id = 17, Name = "السبعين-حي الوحدة", DirectorateId = 1 },
+                new { Id = 18, Name = "السبعين-حي القادسية", DirectorateId = 1 },
+                new { Id = 19, Name = "السبعين-حي النصر", DirectorateId = 1 }
             );
 
             // Seed Sub-Neighborhoods
@@ -105,7 +110,24 @@ namespace ICMS.Infrastructure.Persistence.Data
                 // مربعات المكلا القديمة
                 new { Id = 11, Name = "حي الشهيد-سكة يعقوب", NeighborhoodId = 14 },
                 new { Id = 12, Name = "حي الشهيد-حارة البلاد", NeighborhoodId = 14 },
-                new { Id = 13, Name = "حي السلام-خلف البريد", NeighborhoodId = 15 }
+                new { Id = 13, Name = "حي السلام-خلف البريد", NeighborhoodId = 15 },
+
+                // Additional blocks for other neighborhoods
+                new { Id = 14, Name = "المساكن-المربع الأول", NeighborhoodId = 3 },
+                new { Id = 15, Name = "الإنشاءات-المربع التقني", NeighborhoodId = 4 },
+                new { Id = 16, Name = "فوة القديمة-حارة الساحل", NeighborhoodId = 5 },
+                new { Id = 17, Name = "باعبود-شارع الفنار", NeighborhoodId = 7 },
+                new { Id = 18, Name = "المنورة-المربع الغربي", NeighborhoodId = 8 },
+                new { Id = 19, Name = "حي أكتوبر-بلوك 5", NeighborhoodId = 9 },
+                new { Id = 20, Name = "الغويزي-بجانب القلعة", NeighborhoodId = 11 },
+                new { Id = 21, Name = "14 أكتوبر-بلوك 2", NeighborhoodId = 12 },
+                new { Id = 22, Name = "جول الشفاء-وحدة الهدى", NeighborhoodId = 13 },
+                new { Id = 23, Name = "حي الصيادين-المربع البحري", NeighborhoodId = 16 },
+
+                // مربعات السبعين
+                new { Id = 24, Name = "حي الوحدة-المربع أ", NeighborhoodId = 17 },
+                new { Id = 25, Name = "حي القادسية-المربع 1", NeighborhoodId = 18 },
+                new { Id = 26, Name = "حي النصر-المربع الشمالي", NeighborhoodId = 19 }
             );
         }
         public static void SeedIdentityData(this ModelBuilder modelBuilder)

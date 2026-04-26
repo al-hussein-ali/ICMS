@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using ICMS.Application.DTOs;
+using ICMS.Application.DTOs.Maternal;
 using ICMS.Application.DTOs.Pagination;
 using ICMS.Application.Interfaces.Services;
 
@@ -11,28 +11,28 @@ namespace ICMS.Application.Services
 {
     public class NewbornSerivce : INewbornService
     {
-        public Task<IReadOnlyList<TempDto>> GetAllAsync(PaginationParams paginationParams, CancellationToken ct = default)
+        public Task<IReadOnlyList<NewbornDto>> GetAllAsync(PaginationParams paginationParams, CancellationToken ct = default)
         {
             throw new NotImplementedException();
         }
 
-        public Task<TempDto?> GetByIdAsync(int id, CancellationToken ct = default)
+        public Task<NewbornDto?> GetByIdAsync(int id, CancellationToken ct = default)
         {
             throw new NotImplementedException();
         }
         
-        public Task<TempDto> AddAsync(TempDto entity, CancellationToken ct = default)
+        public Task<NewbornDto> AddAsync(NewbornDto entity, CancellationToken ct = default)
         {
             throw new NotImplementedException();
         }
 
-        public Task<bool> DeleteAsync(TempDto entity, CancellationToken ct = default)
+        public Task<bool> DeleteAsync(int id, CancellationToken ct = default)
         {
             throw new NotImplementedException();
         }
 
 
-        public Task<bool> UpdateAsync(TempDto updatedEntity, CancellationToken ct = default)
+        public Task<bool> UpdateAsync(int id, NewbornDto updatedEntity, CancellationToken ct = default)
         {
             throw new NotImplementedException();
         }
