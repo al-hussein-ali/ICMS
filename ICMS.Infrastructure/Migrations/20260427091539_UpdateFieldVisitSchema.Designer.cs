@@ -3,6 +3,7 @@ using System;
 using ICMS.Infrastructure.Persistence.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace ICMS.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260427091539_UpdateFieldVisitSchema")]
+    partial class UpdateFieldVisitSchema
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1623,13 +1626,19 @@ namespace ICMS.Infrastructure.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<int?>("AssignedUserId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateOnly?>("BeneficiaryFromDate")
+                        .HasColumnType("date");
+
+                    b.Property<DateOnly?>("BeneficiaryToDate")
+                        .HasColumnType("date");
+
                     b.Property<string>("CampaignName")
                         .IsRequired()
                         .HasMaxLength(250)
                         .HasColumnType("character varying(250)");
-
-                    b.Property<DateOnly>("FromDate")
-                        .HasColumnType("date");
 
                     b.Property<bool>("IsCompleted")
                         .ValueGeneratedOnAdd()
@@ -1639,17 +1648,31 @@ namespace ICMS.Infrastructure.Migrations
                     b.Property<int>("SubNeighborhoodId")
                         .HasColumnType("integer");
 
-                    b.Property<DateOnly>("ToDate")
-                        .HasColumnType("date");
-
                     b.Property<DateOnly>("VisitDate")
                         .HasColumnType("date");
 
                     b.HasKey("Id");
 
+                    b.HasIndex("AssignedUserId");
+
                     b.HasIndex("SubNeighborhoodId");
 
                     b.ToTable("FieldVisits");
+                });
+
+            modelBuilder.Entity("ICMS.Domain.Entites.Visits.FieldVisitTargetedBeneficiary", b =>
+                {
+                    b.Property<int>("FieldVisitId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("VaccinatedIndividualId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("FieldVisitId", "VaccinatedIndividualId");
+
+                    b.HasIndex("VaccinatedIndividualId");
+
+                    b.ToTable("FieldVisitTargetedBeneficiary");
                 });
 
             modelBuilder.Entity("ICMS.Domain.Entites.Visits.VisitDetails", b =>
@@ -2104,13 +2127,39 @@ namespace ICMS.Infrastructure.Migrations
 
             modelBuilder.Entity("ICMS.Domain.Entites.Visits.FieldVisit", b =>
                 {
+                    b.HasOne("ICMS.Domain.Entites.Identity.User", "AssignedUser")
+                        .WithMany()
+                        .HasForeignKey("AssignedUserId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("ICMS.Domain.Entites.Geography.SubNeighborhood", "SubNeighborhood")
                         .WithMany()
                         .HasForeignKey("SubNeighborhoodId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.Navigation("AssignedUser");
+
                     b.Navigation("SubNeighborhood");
+                });
+
+            modelBuilder.Entity("ICMS.Domain.Entites.Visits.FieldVisitTargetedBeneficiary", b =>
+                {
+                    b.HasOne("ICMS.Domain.Entites.Visits.FieldVisit", "FieldVisit")
+                        .WithMany("TargetedBeneficiaries")
+                        .HasForeignKey("FieldVisitId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ICMS.Domain.Entites.Identity.VaccinatedIndividual", "VaccinatedIndividual")
+                        .WithMany()
+                        .HasForeignKey("VaccinatedIndividualId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("FieldVisit");
+
+                    b.Navigation("VaccinatedIndividual");
                 });
 
             modelBuilder.Entity("ICMS.Domain.Entites.Visits.VisitDetails", b =>
@@ -2199,6 +2248,8 @@ namespace ICMS.Infrastructure.Migrations
             modelBuilder.Entity("ICMS.Domain.Entites.Visits.FieldVisit", b =>
                 {
                     b.Navigation("ImmunizationRecords");
+
+                    b.Navigation("TargetedBeneficiaries");
                 });
 #pragma warning restore 612, 618
         }

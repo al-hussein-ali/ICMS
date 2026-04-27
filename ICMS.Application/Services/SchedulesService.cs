@@ -45,7 +45,7 @@ namespace ICMS.Application.Services
             var toDate = query.ToDate ?? DateOnly.FromDateTime(DateTime.UtcNow.AddHours(3));
 
             return await _unitOfWork.VaccinationScheduleRepository
-                .GetMissedSchedulesDetailedAsync(query.FromDate, toDate, ct);
+                .GetMissedSchedulesDetailedAsync(query.FromDate, toDate, query.SubNeighborhoodId, ct);
         }
     }
 }

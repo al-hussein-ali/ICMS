@@ -3,6 +3,7 @@ using System;
 using ICMS.Infrastructure.Persistence.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace ICMS.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260427142427_RefactorFieldVisitAssignments")]
+    partial class RefactorFieldVisitAssignments
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1652,6 +1655,21 @@ namespace ICMS.Infrastructure.Migrations
                     b.ToTable("FieldVisits");
                 });
 
+            modelBuilder.Entity("ICMS.Domain.Entites.Visits.FieldVisitTargetedBeneficiary", b =>
+                {
+                    b.Property<int>("FieldVisitId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("VaccinatedIndividualId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("FieldVisitId", "VaccinatedIndividualId");
+
+                    b.HasIndex("VaccinatedIndividualId");
+
+                    b.ToTable("FieldVisitTargetedBeneficiary");
+                });
+
             modelBuilder.Entity("ICMS.Domain.Entites.Visits.VisitDetails", b =>
                 {
                     b.Property<int>("Id")
@@ -2113,6 +2131,25 @@ namespace ICMS.Infrastructure.Migrations
                     b.Navigation("SubNeighborhood");
                 });
 
+            modelBuilder.Entity("ICMS.Domain.Entites.Visits.FieldVisitTargetedBeneficiary", b =>
+                {
+                    b.HasOne("ICMS.Domain.Entites.Visits.FieldVisit", "FieldVisit")
+                        .WithMany("TargetedBeneficiaries")
+                        .HasForeignKey("FieldVisitId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ICMS.Domain.Entites.Identity.VaccinatedIndividual", "VaccinatedIndividual")
+                        .WithMany()
+                        .HasForeignKey("VaccinatedIndividualId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("FieldVisit");
+
+                    b.Navigation("VaccinatedIndividual");
+                });
+
             modelBuilder.Entity("ICMS.Domain.Entites.Visits.VisitDetails", b =>
                 {
                     b.HasOne("ICMS.Domain.Entites.Maternal.PregnancyDetails", "PregnancyDetails")
@@ -2199,6 +2236,8 @@ namespace ICMS.Infrastructure.Migrations
             modelBuilder.Entity("ICMS.Domain.Entites.Visits.FieldVisit", b =>
                 {
                     b.Navigation("ImmunizationRecords");
+
+                    b.Navigation("TargetedBeneficiaries");
                 });
 #pragma warning restore 612, 618
         }

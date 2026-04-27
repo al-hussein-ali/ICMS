@@ -8,7 +8,7 @@ namespace ICMS.Api.Controllers
 {
     [Route("api/schedules")]
     [ApiController]
-    [Authorize(Roles = Roles.Admin + "," + Roles.VaccinationManager)]
+    [Authorize(Roles = Roles.StaffRoles)]
     public class SchedulesController(ISchedulesService schedulesService, ILogger<SchedulesController> logger) : ControllerBase
     {
 
@@ -23,12 +23,13 @@ namespace ICMS.Api.Controllers
         public async Task<IActionResult> GetMissedSchedules(
             [FromQuery(Name = "fromDate")] DateOnly fromDate, 
             [FromQuery(Name = "toDate")] DateOnly? toDate, 
+            [FromQuery(Name = "subNeighborhoodId")] int? subNeighborhoodId,
             CancellationToken ct)
         {
-            var query = new MissedScheduleQueryDto { FromDate = fromDate, ToDate = toDate };
+            var query = new MissedScheduleQueryDto { FromDate = fromDate, ToDate = toDate, SubNeighborhoodId = subNeighborhoodId };
             
-            logger.LogInformation("Querying missed schedules: from {FromDate} to {ToDate}", 
-                query.FromDate, query.ToDate ?? DateOnly.FromDateTime(DateTime.UtcNow.AddHours(3)));
+            logger.LogInformation("Querying missed schedules: from {FromDate} to {ToDate} for SubNeighborhood {SubNeighborhoodId}", 
+                query.FromDate, query.ToDate ?? DateOnly.FromDateTime(DateTime.UtcNow.AddHours(3)), query.SubNeighborhoodId);
 
             var missedSchedules = await schedulesService.GetMissedSchedulesDetailedAsync(query, ct);
             return Ok(missedSchedules);

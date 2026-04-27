@@ -1,7 +1,6 @@
 using ICMS.Application.DTOs.FieldVisit;
 using ICMS.Application.DTOs.Pagination;
 using ICMS.Application.Interfaces;
-using ICMS.Application.Interfaces.Repositories;
 using ICMS.Application.Interfaces.Services;
 using ICMS.Application.Extensions;
 using ICMS.Domain.Entites.Visits;
@@ -19,12 +18,17 @@ namespace ICMS.Application.Services
             _unitOfWork = unitOfWork;
         }
 
-        public async Task<PagedResult<FieldVisitReadDto>> GetAllAsync(PaginationParams paginationParams, CancellationToken ct = default)
+        public async Task<PagedResult<FieldVisitReadDto>> GetAllAsync(PaginationParams paginationParams,
+            CancellationToken ct = default)
         {
-            var query = _unitOfWork.FieldVisitRepository.GetQueryable()
-                .Select(fv => fv.ToReadDto());
+            var pagedResult =
+                await _unitOfWork.FieldVisitRepository.GetPagedWithDetailsAsync(paginationParams.PageNumber,
+                    paginationParams.PageSize, ct);
 
-            return query.ApplyPagination(paginationParams.PageNumber, paginationParams.PageSize);
+            var items = pagedResult.Items.Select(fv => fv.ToReadDto()).ToList();
+
+            return new PagedResult<FieldVisitReadDto>(items, pagedResult.TotalCount, pagedResult.PageNumber,
+                pagedResult.PageSize);
         }
 
         public async Task<FieldVisitDetailsDto> GetByIdAsync(int id, CancellationToken ct = default)
@@ -39,7 +43,13 @@ namespace ICMS.Application.Services
 
         public async Task<FieldVisitReadDto> AddAsync(FieldVisitCreateDto dto, CancellationToken ct = default)
         {
-            var fieldVisit = FieldVisit.Create(dto.VisitDate, dto.SubNeighborhoodId);
+            var fieldVisit = FieldVisit.Create(
+                dto.CampaignName,
+                dto.VisitDate,
+                dto.SubNeighborhoodId,
+                dto.FromDate,
+                dto.ToDate);
+
 
             await _unitOfWork.FieldVisitRepository.AddAsync(fieldVisit, ct);
             await _unitOfWork.SaveChangesAsync(ct);
@@ -54,7 +64,13 @@ namespace ICMS.Application.Services
             if (fieldVisit == null)
                 throw new NotFoundException("NotFound");
 
-            fieldVisit.UpdateVisitInfo(dto.VisitDate, dto.SubNeighborhoodId);
+            fieldVisit.UpdateVisitInfo(
+                dto.CampaignName,
+                dto.VisitDate,
+                dto.SubNeighborhoodId,
+                dto.FromDate,
+                dto.ToDate);
+
 
             return await _unitOfWork.SaveChangesAsync(ct) > 0;
         }
@@ -76,11 +92,13 @@ namespace ICMS.Application.Services
             var fieldVisit = await _unitOfWork.FieldVisitRepository.GetByIdAsync(id, ct);
 
             if (fieldVisit == null)
-                throw new NotFoundException("NotFound");
+                throw new NotFoundException("Field Visit Not Found");
 
             fieldVisit.MarkCompleted();
+            await _unitOfWork.FieldVisitRepository.UpdateAsync(fieldVisit, ct);
 
-            return await _unitOfWork.SaveChangesAsync(ct) > 0;
+            var result = await _unitOfWork.SaveChangesAsync(ct);
+            return result >= 0;
         }
     }
 }

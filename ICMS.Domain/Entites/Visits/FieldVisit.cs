@@ -1,17 +1,7 @@
 using ICMS.Domain.Entites.Geography;
-using ICMS.Domain.Entites.Audit;
-using ICMS.Domain.Entites.Visits;
-using ICMS.Domain.Entites.Maternal;
 using ICMS.Domain.Entites.Clinical;
-using ICMS.Domain.Entites.Identity;
 using ICMS.Domain.Entites.Common;
 using ICMS.Domain.Exceptions;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace ICMS.Domain.Entites.Visits
 {
@@ -20,9 +10,13 @@ namespace ICMS.Domain.Entites.Visits
         private readonly List<ImmunizationRecord> _immunizationRecords = new();
 
         public IReadOnlyList<ImmunizationRecord> ImmunizationRecords => _immunizationRecords.AsReadOnly();
+
+        public string CampaignName { get; private set; } = string.Empty;
         public DateOnly VisitDate { get; private set; }
         public int SubNeighborhoodId { get; private set; }
         public SubNeighborhood SubNeighborhood { get; private set; } = null!;
+        public DateOnly FromDate { get; private set; }
+        public DateOnly ToDate { get; private set; }
         public bool IsCompleted { get; private set; }
 
 
@@ -30,17 +24,32 @@ namespace ICMS.Domain.Entites.Visits
         {
         }
 
-        public static FieldVisit Create(DateOnly visitDate, int subNeighborhoodId, bool isCompleted = false)
+        public static FieldVisit Create(
+            string campaignName,
+            DateOnly visitDate,
+            int subNeighborhoodId,
+            DateOnly fromDate,
+            DateOnly toDate)
         {
+            if (string.IsNullOrWhiteSpace(campaignName)) throw new DomainException("Campaign name is required");
             if (subNeighborhoodId <= 0) throw new DomainException("Valid SubNeighborhoodId is required");
 
-            return new FieldVisit { VisitDate = visitDate, SubNeighborhoodId = subNeighborhoodId, IsCompleted = isCompleted };
+            return new FieldVisit
+            {
+                CampaignName = campaignName,
+                VisitDate = visitDate,
+                SubNeighborhoodId = subNeighborhoodId,
+                FromDate = fromDate,
+                ToDate = toDate,
+                IsCompleted = false
+            };
         }
 
         public void AddImmunizationRecord(ImmunizationRecord ir)
         {
             if (ir == null) throw new DomainException("Immunization record is required");
-            if (_immunizationRecords.Any(x => x.Id == ir.Id)) throw new DomainException("Immunization record already added");
+            if (_immunizationRecords.Any(x => x.Id == ir.Id))
+                throw new DomainException("Immunization record already added");
 
             _immunizationRecords.Add(ir);
         }
@@ -50,13 +59,21 @@ namespace ICMS.Domain.Entites.Visits
             IsCompleted = true;
         }
 
-        public void UpdateVisitInfo(DateOnly visitDate, int subNeighborhoodId)
+        public void UpdateVisitInfo(
+            string campaignName,
+            DateOnly visitDate,
+            int subNeighborhoodId,
+            DateOnly fromDate,
+            DateOnly toDate)
         {
+            if (string.IsNullOrWhiteSpace(campaignName)) throw new DomainException("Campaign name is required");
             if (subNeighborhoodId <= 0) throw new DomainException("Valid SubNeighborhoodId is required");
 
+            CampaignName = campaignName;
             VisitDate = visitDate;
             SubNeighborhoodId = subNeighborhoodId;
+            FromDate = fromDate;
+            ToDate = toDate;
         }
-
     }
 }

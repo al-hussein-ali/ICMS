@@ -18,6 +18,7 @@ namespace ICMS.Infrastructure.Persistence.Config.Visits
 
             builder.Property(fv => fv.Id).HasColumnName("FieldVisitId");
 
+            builder.Property(fv => fv.CampaignName).IsRequired().HasMaxLength(250);
             builder.Property(fv => fv.VisitDate).IsRequired();
             builder.HasOne(fv => fv.SubNeighborhood)
                    .WithMany()
@@ -26,12 +27,14 @@ namespace ICMS.Infrastructure.Persistence.Config.Visits
                    
             builder.Property(fv => fv.IsCompleted).HasDefaultValue(false);
 
+            builder.Property(fv => fv.FromDate).IsRequired();
+            builder.Property(fv => fv.ToDate).IsRequired();
+
 
             builder.Navigation(nameof(FieldVisit.ImmunizationRecords))?
                 .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasField("_immunizationRecords");
 
-    
 
             builder.HasMany(fv => fv.ImmunizationRecords)
                 .WithOne(ir => ir.FieldVisit)

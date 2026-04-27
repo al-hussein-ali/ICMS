@@ -108,12 +108,15 @@ namespace ICMS.Application.Services
                 if (totalAvailable < dto.Quantity)
                     throw new DomainException("InsufficientStock");
 
+                string permissionNumber = string.IsNullOrWhiteSpace(dto.PermissionNumber) ? $"IMM-SUB-{DateTime.Now:yyyyMMddHHmmss}" : dto.PermissionNumber;
+                string destination = string.IsNullOrWhiteSpace(dto.Destination) ? "The Center" : dto.Destination;
+
                 foreach (var batch in batches)
                 {
                     if (remainingToSubtract <= 0) break;
 
                     int toSubtractFromThisBatch = Math.Min(batch.TotalQuantity, remainingToSubtract);
-                    batch.RemoveInventory(toSubtractFromThisBatch, dto.PermissionNumber, dto.Destination, userId);
+                    batch.RemoveInventory(toSubtractFromThisBatch, permissionNumber, destination, userId);
                     remainingToSubtract -= toSubtractFromThisBatch;
                     cacheService.Remove($"batch:{batch.Id}");
                 }

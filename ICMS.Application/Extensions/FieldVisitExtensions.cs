@@ -8,11 +8,23 @@ namespace ICMS.Application.Extensions
     {
         public static FieldVisitReadDto ToReadDto(this FieldVisit fv)
         {
+            string location = "Unknown";
+            if (fv.SubNeighborhood != null && fv.SubNeighborhood.Neighborhood?.Directorate?.Governorate != null)
+            {
+                location = $"{fv.SubNeighborhood.Neighborhood.Directorate.Governorate.Name} - {fv.SubNeighborhood.Neighborhood.Directorate.Name} - {fv.SubNeighborhood.Neighborhood.Name} - {fv.SubNeighborhood.Name}";
+            }
+            else if (fv.SubNeighborhood != null)
+            {
+                location = fv.SubNeighborhood.Name;
+            }
+
             return new FieldVisitReadDto(
                 fv.Id,
+                fv.CampaignName,
                 fv.VisitDate,
                 fv.SubNeighborhoodId,
-                fv.SubNeighborhood?.Name ?? string.Empty,
+                location,
+                0, 
                 fv.IsCompleted
             );
         }
@@ -21,9 +33,15 @@ namespace ICMS.Application.Extensions
         {
             return new FieldVisitDetailsDto(
                 fv.Id,
+                fv.CampaignName,
                 fv.VisitDate,
                 fv.SubNeighborhoodId,
-                fv.SubNeighborhood?.Name ?? string.Empty,
+                fv.SubNeighborhood?.Name ?? "N/A",
+                fv.SubNeighborhood?.NeighborhoodId ?? 0,
+                fv.SubNeighborhood?.Neighborhood?.DirectorateId ?? 0,
+                fv.SubNeighborhood?.Neighborhood?.Directorate?.GovernorateId ?? 0,
+                fv.FromDate,
+                fv.ToDate,
                 fv.IsCompleted,
                 fv.ImmunizationRecords.Count
             );

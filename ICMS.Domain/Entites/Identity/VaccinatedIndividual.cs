@@ -25,6 +25,7 @@ namespace ICMS.Domain.Entites.Identity
         public Person Person { get; private set; } = null!;
         public Directorate Directorate { get; private set; } = null!;
         public Neighborhood Neighborhood { get; private set; } = null!;
+        public SubNeighborhood? SubNeighborhood { get; private set; }
 
 
         private VaccinatedIndividual()
