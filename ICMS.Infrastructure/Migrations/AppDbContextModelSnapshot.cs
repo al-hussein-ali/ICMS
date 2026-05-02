@@ -67,7 +67,7 @@ namespace ICMS.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Transactions");
+                    b.ToTable("Transactions", (string)null);
                 });
 
             modelBuilder.Entity("ICMS.Domain.Entites.Clinical.Batch", b =>
@@ -135,7 +135,7 @@ namespace ICMS.Infrastructure.Migrations
                     b.HasIndex("DoseId", "CountryOfOrigin", "CookNumber")
                         .IsUnique();
 
-                    b.ToTable("Batches");
+                    b.ToTable("Batches", (string)null);
                 });
 
             modelBuilder.Entity("ICMS.Domain.Entites.Clinical.Dose", b =>
@@ -180,7 +180,7 @@ namespace ICMS.Infrastructure.Migrations
 
                     b.HasIndex("VaccineId");
 
-                    b.ToTable("Doses");
+                    b.ToTable("Doses", (string)null);
                 });
 
             modelBuilder.Entity("ICMS.Domain.Entites.Clinical.DoseReport", b =>
@@ -215,7 +215,7 @@ namespace ICMS.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("DoseReports");
+                    b.ToTable("DoseReports", (string)null);
                 });
 
             modelBuilder.Entity("ICMS.Domain.Entites.Clinical.HealthAdvisory", b =>
@@ -265,7 +265,7 @@ namespace ICMS.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("HealthAdvisories");
+                    b.ToTable("HealthAdvisories", (string)null);
                 });
 
             modelBuilder.Entity("ICMS.Domain.Entites.Clinical.ImmunizationRecord", b =>
@@ -314,7 +314,7 @@ namespace ICMS.Infrastructure.Migrations
                     b.HasIndex("IndividualId", "DoseId")
                         .IsUnique();
 
-                    b.ToTable("ImmunizationRecords");
+                    b.ToTable("ImmunizationRecords", (string)null);
                 });
 
             modelBuilder.Entity("ICMS.Domain.Entites.Clinical.VaccinationSchedule", b =>
@@ -354,7 +354,7 @@ namespace ICMS.Infrastructure.Migrations
 
                     b.HasIndex("VaccinatedIndividualId");
 
-                    b.ToTable("VaccinationSchedules");
+                    b.ToTable("VaccinationSchedules", (string)null);
                 });
 
             modelBuilder.Entity("ICMS.Domain.Entites.Clinical.Vaccine", b =>
@@ -405,7 +405,7 @@ namespace ICMS.Infrastructure.Migrations
                     b.HasIndex("VaccineCode")
                         .IsUnique();
 
-                    b.ToTable("Vaccines");
+                    b.ToTable("Vaccines", (string)null);
                 });
 
             modelBuilder.Entity("ICMS.Domain.Entites.Geography.Directorate", b =>
@@ -428,7 +428,7 @@ namespace ICMS.Infrastructure.Migrations
 
                     b.HasIndex("GovernorateId");
 
-                    b.ToTable("Directorates");
+                    b.ToTable("Directorates", (string)null);
 
                     b.HasData(
                         new
@@ -538,7 +538,7 @@ namespace ICMS.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Governorates");
+                    b.ToTable("Governorates", (string)null);
 
                     b.HasData(
                         new
@@ -673,7 +673,7 @@ namespace ICMS.Infrastructure.Migrations
 
                     b.HasIndex("DirectorateId");
 
-                    b.ToTable("Neighborhoods");
+                    b.ToTable("Neighborhoods", (string)null);
 
                     b.HasData(
                         new
@@ -812,7 +812,7 @@ namespace ICMS.Infrastructure.Migrations
 
                     b.HasIndex("NeighborhoodId");
 
-                    b.ToTable("SubNeighborhoods");
+                    b.ToTable("SubNeighborhoods", (string)null);
 
                     b.HasData(
                         new
@@ -1032,7 +1032,7 @@ namespace ICMS.Infrastructure.Migrations
                         .IsUnique()
                         .HasFilter("\"IsDeleted\" = false");
 
-                    b.ToTable("People");
+                    b.ToTable("People", (string)null);
 
                     b.HasData(
                         new
@@ -1078,7 +1078,7 @@ namespace ICMS.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("RefreshTokens");
+                    b.ToTable("RefreshTokens", (string)null);
                 });
 
             modelBuilder.Entity("ICMS.Domain.Entites.Identity.Role", b =>
@@ -1098,7 +1098,7 @@ namespace ICMS.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Roles");
+                    b.ToTable("Roles", (string)null);
 
                     b.HasData(
                         new
@@ -1169,7 +1169,7 @@ namespace ICMS.Infrastructure.Migrations
                     b.HasIndex("UserName")
                         .IsUnique();
 
-                    b.ToTable("Users");
+                    b.ToTable("Users", (string)null);
 
                     b.HasData(
                         new
@@ -1210,7 +1210,7 @@ namespace ICMS.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("UserDevices");
+                    b.ToTable("UserDevices", (string)null);
                 });
 
             modelBuilder.Entity("ICMS.Domain.Entites.Identity.UserRole", b =>
@@ -1225,7 +1225,7 @@ namespace ICMS.Infrastructure.Migrations
 
                     b.HasIndex("RoleId");
 
-                    b.ToTable("UserRoles");
+                    b.ToTable("UserRoles", (string)null);
 
                     b.HasData(
                         new
@@ -1286,7 +1286,7 @@ namespace ICMS.Infrastructure.Migrations
 
                     b.HasIndex(new[] { "PersonId", "UserId" }, "IX_VaccinatedIndividuals_People_Users");
 
-                    b.ToTable("VaccinatedIndividuals");
+                    b.ToTable("VaccinatedIndividuals", (string)null);
                 });
 
             modelBuilder.Entity("ICMS.Domain.Entites.Maternal.Newborn", b =>
@@ -1322,7 +1322,7 @@ namespace ICMS.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Newborns");
+                    b.ToTable("Newborns", (string)null);
                 });
 
             modelBuilder.Entity("ICMS.Domain.Entites.Maternal.PregnancyDetails", b =>
@@ -1431,7 +1431,7 @@ namespace ICMS.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("PregnancyDetails");
+                    b.ToTable("PregnancyDetails", (string)null);
                 });
 
             modelBuilder.Entity("ICMS.Domain.Entites.Maternal.PregnantWoman", b =>
@@ -1476,7 +1476,7 @@ namespace ICMS.Infrastructure.Migrations
 
                     b.HasIndex(new[] { "PersonId", "UserId" }, "IX_PregnantWomen_People_Users");
 
-                    b.ToTable("PregnantWomen");
+                    b.ToTable("PregnantWomen", (string)null);
                 });
 
             modelBuilder.Entity("ICMS.Domain.Entites.Maternal.PreviousPostpartumComplications", b =>
@@ -1521,7 +1521,7 @@ namespace ICMS.Infrastructure.Migrations
                     b.HasIndex("PregnancyDetailId")
                         .IsUnique();
 
-                    b.ToTable("PreviousPostpartumComplications");
+                    b.ToTable("PreviousPostpartumComplications", (string)null);
                 });
 
             modelBuilder.Entity("ICMS.Domain.Entites.Maternal.PreviousPregnancyComplications", b =>
@@ -1576,7 +1576,7 @@ namespace ICMS.Infrastructure.Migrations
                     b.HasIndex("PregnancyDetailId")
                         .IsUnique();
 
-                    b.ToTable("PreviousPregnancyComplications");
+                    b.ToTable("PreviousPregnancyComplications", (string)null);
                 });
 
             modelBuilder.Entity("ICMS.Domain.Entites.Maternal.PreviousPregnancyDeliveryComplications", b =>
@@ -1611,7 +1611,7 @@ namespace ICMS.Infrastructure.Migrations
                     b.HasIndex("PregnancyDetailId")
                         .IsUnique();
 
-                    b.ToTable("PreviousPregnancyDeliveryComplications");
+                    b.ToTable("PreviousPregnancyDeliveryComplications", (string)null);
                 });
 
             modelBuilder.Entity("ICMS.Domain.Entites.Visits.FieldVisit", b =>
@@ -1649,7 +1649,7 @@ namespace ICMS.Infrastructure.Migrations
 
                     b.HasIndex("SubNeighborhoodId");
 
-                    b.ToTable("FieldVisits");
+                    b.ToTable("FieldVisits", (string)null);
                 });
 
             modelBuilder.Entity("ICMS.Domain.Entites.Visits.VisitDetails", b =>
@@ -1745,7 +1745,7 @@ namespace ICMS.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("VisitDetails");
+                    b.ToTable("VisitDetails", (string)null);
                 });
 
             modelBuilder.Entity("ICMS.Domain.Entites.Audit.Transaction", b =>
