@@ -49,7 +49,12 @@ builder.Services.AddScoped<ICMS.Application.Interfaces.Services.IReportNotificat
     return new ICMS.Infrastructure.ExternalServices.SignalRReportNotificationService(hubContext);
 });
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
+        options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
+    });
 
 var jwtOptions = builder.Configuration.GetSection("JwtOptions").Get<JwtOptions>() ??
                  throw new InvalidOperationException("JwtOptions are missing");

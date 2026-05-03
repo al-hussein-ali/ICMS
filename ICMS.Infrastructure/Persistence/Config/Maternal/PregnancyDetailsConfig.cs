@@ -77,27 +77,27 @@ namespace ICMS.Infrastructure.Persistence.Config.Maternal
             builder.HasOne(pd => pd.PregnantWoman)
                 .WithMany(pw => pw.PregnancyDetails)
                 .HasForeignKey(pd => pd.PregnantWomanId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.Cascade);
 
             builder.HasOne(pd => pd.PreviousPregnancyComplications)
                 .WithOne(ppc => ppc.PregnancyDetails)
                 .HasForeignKey<PreviousPregnancyComplications>(ppc => ppc.PregnancyDetailId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.Cascade);
 
             builder.HasOne(pd => pd.PreviousPostpartumComplications)
                 .WithOne(pp => pp.PregnancyDetails)
                 .HasForeignKey<PreviousPostpartumComplications>(pp => pp.PregnancyDetailId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.Cascade);
 
             builder.HasOne(pd => pd.PreviousPregnancyDeliveryComplications)
                 .WithOne(ppd => ppd.PregnancyDetails)
                 .HasForeignKey<PreviousPregnancyDeliveryComplications>(ppd => ppd.PregnancyDetailId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.Cascade);
 
             builder.HasMany(pd => pd.VisitDetails)
                 .WithOne(vd => vd.PregnancyDetails)
                 .HasForeignKey(vd => vd.PregnancyDetailsId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.Cascade);
 
             builder.Metadata.FindNavigation(nameof(PregnancyDetails.VisitDetails))?
                 .SetPropertyAccessMode(PropertyAccessMode.Field);
@@ -105,7 +105,7 @@ namespace ICMS.Infrastructure.Persistence.Config.Maternal
             builder.HasMany(pd => pd.Newborns)
                 .WithOne(n => n.PregnancyDetails)
                 .HasForeignKey(n => n.PregnancyDetailsId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.Cascade);
 
             builder.Metadata.FindNavigation(nameof(PregnancyDetails.Newborns))?
                 .SetPropertyAccessMode(PropertyAccessMode.Field);

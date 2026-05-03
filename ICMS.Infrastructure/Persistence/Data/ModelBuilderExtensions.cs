@@ -1,4 +1,6 @@
 using ICMS.Domain.Entites.Geography;
+using ICMS.Domain.Entites.Clinical;
+using ICMS.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 
 namespace ICMS.Infrastructure.Persistence.Data
@@ -138,7 +140,9 @@ namespace ICMS.Infrastructure.Persistence.Data
                 new { Id = 1002, RoleName = ICMS.Domain.Constants.Roles.InventoryManager },
                 new { Id = 1003, RoleName = ICMS.Domain.Constants.Roles.VaccinationManager },
                 new { Id = 1004, RoleName = ICMS.Domain.Constants.Roles.ReproductiveHealthManager },
-                new { Id = 1005, RoleName = ICMS.Domain.Constants.Roles.FieldVisitWorker }
+                new { Id = 1005, RoleName = ICMS.Domain.Constants.Roles.FieldVisitWorker },
+                new { Id = 1006, RoleName = ICMS.Domain.Constants.Roles.VaccinatedIndividual },
+                new { Id = 1007, RoleName = ICMS.Domain.Constants.Roles.PregnantWoman }
             );
 
             // Seed Admin Person
@@ -174,6 +178,58 @@ namespace ICMS.Infrastructure.Persistence.Data
             // Assign Admin Role to Admin User
             modelBuilder.Entity<ICMS.Domain.Entites.Identity.UserRole>().HasData(
                 new { UserId = 999, RoleId = 1001 }
+            );
+        }
+
+        public static void SeedVaccineData(this ModelBuilder modelBuilder)
+        {
+            // Seed Vaccines
+            modelBuilder.Entity<Vaccine>().HasData(
+                new { Id = 1, VaccineName = "BCG", VaccineCode = "BCG", TotalDosages = (byte)1, MinEligibleAgeInMonths = 0, MaxEligibleAgeInMonths = 1, IsActive = true, Audience = TargetAudience.InfantRoutine },
+                new { Id = 2, VaccineName = "Oral Polio (OPV)", VaccineCode = "OPV", TotalDosages = (byte)4, MinEligibleAgeInMonths = 0, MaxEligibleAgeInMonths = 60, IsActive = true, Audience = TargetAudience.InfantRoutine },
+                new { Id = 3, VaccineName = "Pentavalent", VaccineCode = "PENTA", TotalDosages = (byte)3, MinEligibleAgeInMonths = 1, MaxEligibleAgeInMonths = 12, IsActive = true, Audience = TargetAudience.InfantRoutine },
+                new { Id = 4, VaccineName = "Rotavirus", VaccineCode = "ROTA", TotalDosages = (byte)2, MinEligibleAgeInMonths = 1, MaxEligibleAgeInMonths = 8, IsActive = true, Audience = TargetAudience.InfantRoutine },
+                new { Id = 5, VaccineName = "Pneumococcal (PCV)", VaccineCode = "PCV", TotalDosages = (byte)3, MinEligibleAgeInMonths = 1, MaxEligibleAgeInMonths = 24, IsActive = true, Audience = TargetAudience.InfantRoutine },
+                new { Id = 6, VaccineName = "Measles & Rubella (MR)", VaccineCode = "MR", TotalDosages = (byte)2, MinEligibleAgeInMonths = 9, MaxEligibleAgeInMonths = 60, IsActive = true, Audience = TargetAudience.InfantRoutine },
+                new { Id = 7, VaccineName = "Inactivated Polio (IPV)", VaccineCode = "IPV", TotalDosages = (byte)1, MinEligibleAgeInMonths = 3, MaxEligibleAgeInMonths = 12, IsActive = true, Audience = TargetAudience.InfantRoutine },
+                new { Id = 8, VaccineName = "Vitamin A", VaccineCode = "VITA", TotalDosages = (byte)2, MinEligibleAgeInMonths = 6, MaxEligibleAgeInMonths = 60, IsActive = true, Audience = TargetAudience.InfantRoutine },
+                new { Id = 9, VaccineName = "Tetanus Toxoid", VaccineCode = "TT", TotalDosages = (byte)5, MinEligibleAgeInMonths = 180, MaxEligibleAgeInMonths = 600, IsActive = true, Audience = TargetAudience.Pregnancy }
+            );
+
+            // Seed Doses
+            modelBuilder.Entity<Dose>().HasData(
+                // BCG
+                new { Id = 1, VaccineId = 1, DoseName = "BCG", DoseOrder = (byte)1, RecommendedAgeInMonths = 0, RecommendedAgeGroup = "atBirth" },
+                // OPV
+                new { Id = 2, VaccineId = 2, DoseName = "OPV 0", DoseOrder = (byte)1, RecommendedAgeInMonths = 0, RecommendedAgeGroup = "atBirth" },
+                new { Id = 3, VaccineId = 2, DoseName = "OPV 1", DoseOrder = (byte)2, RecommendedAgeInMonths = 2, RecommendedAgeGroup = "2months" },
+                new { Id = 4, VaccineId = 2, DoseName = "OPV 2", DoseOrder = (byte)3, RecommendedAgeInMonths = 4, RecommendedAgeGroup = "4months" },
+                new { Id = 5, VaccineId = 2, DoseName = "OPV 3", DoseOrder = (byte)4, RecommendedAgeInMonths = 6, RecommendedAgeGroup = "6months" },
+                // PENTA
+                new { Id = 6, VaccineId = 3, DoseName = "Penta 1", DoseOrder = (byte)1, RecommendedAgeInMonths = 2, RecommendedAgeGroup = "2months" },
+                new { Id = 7, VaccineId = 3, DoseName = "Penta 2", DoseOrder = (byte)2, RecommendedAgeInMonths = 4, RecommendedAgeGroup = "4months" },
+                new { Id = 8, VaccineId = 3, DoseName = "Penta 3", DoseOrder = (byte)3, RecommendedAgeInMonths = 6, RecommendedAgeGroup = "6months" },
+                // ROTA
+                new { Id = 9, VaccineId = 4, DoseName = "Rota 1", DoseOrder = (byte)1, RecommendedAgeInMonths = 2, RecommendedAgeGroup = "2months" },
+                new { Id = 10, VaccineId = 4, DoseName = "Rota 2", DoseOrder = (byte)2, RecommendedAgeInMonths = 4, RecommendedAgeGroup = "4months" },
+                // PCV
+                new { Id = 11, VaccineId = 5, DoseName = "PCV 1", DoseOrder = (byte)1, RecommendedAgeInMonths = 2, RecommendedAgeGroup = "2months" },
+                new { Id = 12, VaccineId = 5, DoseName = "PCV 2", DoseOrder = (byte)2, RecommendedAgeInMonths = 4, RecommendedAgeGroup = "4months" },
+                new { Id = 13, VaccineId = 5, DoseName = "PCV 3", DoseOrder = (byte)3, RecommendedAgeInMonths = 6, RecommendedAgeGroup = "6months" },
+                // MR
+                new { Id = 14, VaccineId = 6, DoseName = "MR 1", DoseOrder = (byte)1, RecommendedAgeInMonths = 9, RecommendedAgeGroup = "9months" },
+                new { Id = 15, VaccineId = 6, DoseName = "MR 2", DoseOrder = (byte)2, RecommendedAgeInMonths = 18, RecommendedAgeGroup = "18months" },
+                // IPV
+                new { Id = 16, VaccineId = 7, DoseName = "IPV", DoseOrder = (byte)1, RecommendedAgeInMonths = 4, RecommendedAgeGroup = "4months" },
+                // VITA
+                new { Id = 17, VaccineId = 8, DoseName = "Vit A 1", DoseOrder = (byte)1, RecommendedAgeInMonths = 6, RecommendedAgeGroup = "6months" },
+                new { Id = 18, VaccineId = 8, DoseName = "Vit A 2", DoseOrder = (byte)2, RecommendedAgeInMonths = 12, RecommendedAgeGroup = "12months" },
+                // TT (Pregnancy)
+                new { Id = 19, VaccineId = 9, DoseName = "TT 1", DoseOrder = (byte)1, RecommendedAgeInMonths = 0, RecommendedAgeGroup = "pregnancy" },
+                new { Id = 20, VaccineId = 9, DoseName = "TT 2", DoseOrder = (byte)2, RecommendedAgeInMonths = 1, RecommendedAgeGroup = "pregnancy" },
+                new { Id = 21, VaccineId = 9, DoseName = "TT 3", DoseOrder = (byte)3, RecommendedAgeInMonths = 6, RecommendedAgeGroup = "pregnancy" },
+                new { Id = 22, VaccineId = 9, DoseName = "TT 4", DoseOrder = (byte)4, RecommendedAgeInMonths = 12, RecommendedAgeGroup = "pregnancy" },
+                new { Id = 23, VaccineId = 9, DoseName = "TT 5", DoseOrder = (byte)5, RecommendedAgeInMonths = 24, RecommendedAgeGroup = "pregnancy" }
             );
         }
     }

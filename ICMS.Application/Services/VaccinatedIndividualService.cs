@@ -283,20 +283,40 @@ namespace ICMS.Application.Services
                 return new GeneratedAccountDto(existingUser?.UserName ?? "Unknown", "********", false);
             }
 
-            string username = $"iv_{id}";
+            // Check if a user already exists for this person (e.g. from another module)
+            var user = await unitOfWork.UserRepository.FirstOrDefaultAsync(u => u.PersonId == individual.PersonId, ct);
+
+            string username;
             string password = PasswordHasher.GenerateSimplePassword();
             string passwordHash = PasswordHasher.HashPassword(password);
 
-            var user = User.Create(username, passwordHash, individual.PersonId);
-            
-            await unitOfWork.UserRepository.AddAsync(user, ct);
-            await unitOfWork.SaveChangesAsync(ct);
+            if (user != null)
+            {
+                // Use existing user, but update password for this request
+                username = user.UserName;
+                user.ChangePassword(passwordHash);
 
-            // Assign Multi-Role using IdentityService
-            await identityService.AssignRolesToUserAsync(user.Id, [Roles.VaccinatedIndividual], ct);
+                // Assign role if missing
+                await identityService.AssignRolesToUserAsync(user.Id, [Roles.VaccinatedIndividual], ct);
 
-            individual.AssignExistingUserById(user.Id);
-            await unitOfWork.SaveChangesAsync(ct);
+                individual.AssignExistingUserById(user.Id);
+                await unitOfWork.SaveChangesAsync(ct);
+            }
+            else
+            {
+                // Create new user
+                username = $"iv_{id}";
+                user = User.Create(username, passwordHash, individual.PersonId);
+
+                await unitOfWork.UserRepository.AddAsync(user, ct);
+                await unitOfWork.SaveChangesAsync(ct);
+
+                // Assign Multi-Role using IdentityService
+                await identityService.AssignRolesToUserAsync(user.Id, [Roles.VaccinatedIndividual], ct);
+
+                individual.AssignExistingUserById(user.Id);
+                await unitOfWork.SaveChangesAsync(ct);
+            }
 
             return new GeneratedAccountDto(username, password, true);
         }

@@ -3,6 +3,7 @@ using System;
 using ICMS.Infrastructure.Persistence.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace ICMS.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260503120712_SeedVaccinesAndDoses")]
+    partial class SeedVaccinesAndDoses
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -2010,9 +2013,6 @@ namespace ICMS.Infrastructure.Migrations
                         .IsUnicode(true)
                         .HasColumnType("character varying(30)");
 
-                    b.Property<string>("FetalHeartbeatValue")
-                        .HasColumnType("text");
-
                     b.Property<string>("FetalMovement")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -2044,9 +2044,6 @@ namespace ICMS.Infrastructure.Migrations
 
                     b.Property<int>("PregnancyDurationInWeeks")
                         .HasColumnType("integer");
-
-                    b.Property<string>("TreatmentsGiven")
-                        .HasColumnType("text");
 
                     b.Property<int>("UserId")
                         .HasColumnType("integer");
@@ -2344,7 +2341,7 @@ namespace ICMS.Infrastructure.Migrations
                     b.HasOne("ICMS.Domain.Entites.Maternal.PregnancyDetails", "PregnancyDetails")
                         .WithMany("Newborns")
                         .HasForeignKey("PregnancyDetailsId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("ICMS.Domain.Entites.Identity.User", "User")
@@ -2363,7 +2360,7 @@ namespace ICMS.Infrastructure.Migrations
                     b.HasOne("ICMS.Domain.Entites.Maternal.PregnantWoman", "PregnantWoman")
                         .WithMany("PregnancyDetails")
                         .HasForeignKey("PregnantWomanId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("ICMS.Domain.Entites.Identity.User", "User")

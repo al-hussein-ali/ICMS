@@ -5,15 +5,25 @@ using ICMS.Domain.Enums;
 namespace ICMS.Application.DTOs.Maternal
 {
     public record PreviousPregnancyComplicationsDto(
-        bool VaginalBleeding, bool RecurrentMiscarriage, bool Diabetes,
-        bool Epilepsy, bool HeartDisease, bool Preeclampsia, bool PretermBirth);
+        bool VaginalBleeding,
+        bool RecurrentMiscarriage,
+        bool Diabetes,
+        bool Epilepsy,
+        bool HeartDisease,
+        bool Preeclampsia,
+        bool PretermBirth);
 
     public record PreviousPregnancyDeliveryComplicationsDto(
-        bool CesareanSection, bool AssistedDelivery, bool StillbirthOrMultipleDeaths);
+        bool CesareanSection,
+        bool AssistedDelivery,
+        bool StillbirthOrMultipleDeaths);
 
     public record PreviousPostpartumComplicationsDto(
-        bool VaginalBleeding, bool PlacentaRetention, bool VaginalFistula,
-        bool PuerperalSepsis, bool NeonatalDeath);
+        bool VaginalBleeding,
+        bool PlacentaRetention,
+        bool VaginalFistula,
+        bool PuerperalSepsis,
+        bool NeonatalDeath);
 
     public record StartPregnancyDto(
         int PersonId,
@@ -22,6 +32,12 @@ namespace ICMS.Application.DTOs.Maternal
         PreviousPregnancyComplicationsDto? PreviousPregnancyComplications,
         PreviousPregnancyDeliveryComplicationsDto? PreviousPregnancyDeliveryComplications,
         PreviousPostpartumComplicationsDto? PreviousPostpartumComplications
+    );
+
+    public record UpdatePregnancyDto(
+        DateOnly LMP,
+        DateOnly EDD,
+        PregnancyType PregnancyType
     );
 
     public record AddAncVisitDto(
@@ -34,9 +50,15 @@ namespace ICMS.Application.DTOs.Maternal
         string AppInUrineTest = "N/A",
         string OgttInUrineTest = "N/A",
         string FetalHeartbeat = "N/A",
+        string? FetalHeartbeatValue = null,
         string FetalMovement = "N/A",
         string FetalPosition = "N/A",
-        string AnaemiaOrHemoglobinType = "N/A"
+        string AnaemiaOrHemoglobinType = "N/A",
+        int? Id = null,
+        string? ClinicalExaminationAndObservation = null,
+        string? TreatmentsGiven = null,
+        bool LegsSwelling = false,
+        bool VaginalBleeding = false
     );
 
     public record NewbornDto(
@@ -54,13 +76,14 @@ namespace ICMS.Application.DTOs.Maternal
         string PostpartumComplications,
         List<NewbornDto> Newborns
     );
+
     public record PregnantWomanCreateDto(
         string AgeRange,
         byte PregnancyCount,
         BloodGroup BloodGroup,
         RhFactor RhFactor,
         int? UserId,
-        ICMS.Application.DTOs.Person.PersonCreateDto? PersonCreateDto,
+        Person.PersonCreateDto? PersonCreateDto,
         int? PersonId
     );
 
@@ -71,7 +94,12 @@ namespace ICMS.Application.DTOs.Maternal
         BloodGroup BloodGroup,
         RhFactor RhFactor,
         int PersonId,
-        int? UserId
+        int? UserId,
+        string? FirstName = null,
+        string? SecondName = null,
+        string? ThirdName = null,
+        string? LastName = null,
+        string? Gender = null
     );
 
     public record PregnantWomanDetailsDto(

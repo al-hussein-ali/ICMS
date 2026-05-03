@@ -42,8 +42,14 @@ namespace ICMS.Application.Extensions
                 vd.APPInUrineTest,
                 vd.OGTTInUrineTest,
                 vd.FetalHeartbeat,
+                vd.FetalHeartbeatValue,
                 vd.FetalMovement,
                 vd.FetalPosition,
-                vd.AnaemiaOrHemoglobinType);
+                vd.AnaemiaOrHemoglobinType,
+                vd.Id,
+                vd.ClinicalExaminationAndObservation,
+                vd.TreatmentsGiven,
+                vd.LegsSwelling,
+                vd.VaginalBleeding);
     }
 }

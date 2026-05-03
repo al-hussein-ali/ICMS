@@ -67,10 +67,24 @@ namespace ICMS.API.Controllers
             return Ok(result);
         }
 
+        [HttpGet("pregnancies/{id}")]
+        public async Task<IActionResult> GetPregnancyById([FromRoute] int id, CancellationToken ct)
+        {
+            var result = await reproductiveHealthService.GetPregnancyByIdAsync(id, ct);
+            return Ok(result);
+        }
+
         [HttpGet("{pregnancyId}/visits")]
         public async Task<IActionResult> GetVisits([FromRoute] int pregnancyId, CancellationToken ct)
         {
             var result = await reproductiveHealthService.GetVisitsAsync(pregnancyId, ct);
+            return Ok(result);
+        }
+
+        [HttpGet("visits/{id}")]
+        public async Task<IActionResult> GetVisitById([FromRoute] int id, CancellationToken ct)
+        {
+            var result = await reproductiveHealthService.GetVisitByIdAsync(id, ct);
             return Ok(result);
         }
 
@@ -100,6 +114,34 @@ namespace ICMS.API.Controllers
         {
             var result = await reproductiveHealthService.GenerateAccountAsync(id);
             return Ok(result);
+        }
+
+        [HttpPut("pregnancies/{id}")]
+        public async Task<IActionResult> UpdatePregnancy(int id, [FromBody] UpdatePregnancyDto request, CancellationToken ct)
+        {
+            await reproductiveHealthService.UpdatePregnancyAsync(id, request, ct);
+            return NoContent();
+        }
+
+        [HttpDelete("pregnancies/{id}")]
+        public async Task<IActionResult> DeletePregnancy(int id, CancellationToken ct)
+        {
+            await reproductiveHealthService.DeletePregnancyAsync(id, ct);
+            return NoContent();
+        }
+
+        [HttpPut("visits/{id}")]
+        public async Task<IActionResult> UpdateVisit(int id, [FromBody] AddAncVisitDto request, CancellationToken ct)
+        {
+            await reproductiveHealthService.UpdateVisitAsync(id, request, ct);
+            return NoContent();
+        }
+
+        [HttpDelete("visits/{id}")]
+        public async Task<IActionResult> DeleteVisit(int id, CancellationToken ct)
+        {
+            await reproductiveHealthService.DeleteVisitAsync(id, ct);
+            return NoContent();
         }
     }
 }

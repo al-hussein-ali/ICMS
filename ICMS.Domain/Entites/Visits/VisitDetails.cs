@@ -15,12 +15,14 @@ namespace ICMS.Domain.Entites.Visits
         public string APPInUrineTest { get; private set; } = string.Empty;
         public string OGTTInUrineTest { get; private set; } = string.Empty;
         public string FetalHeartbeat { get; private set; } = string.Empty;
+        public string? FetalHeartbeatValue { get; private set; }
         public string FetalMovement { get; private set; } = string.Empty;
         public string FetalPosition { get; private set; } = string.Empty;
         public int PregnancyDurationInWeeks { get; private set; }
         public string AnaemiaOrHemoglobinType { get; private set; } = string.Empty;
         public bool LegsSwelling { get; private set; }
         public bool VaginalBleeding { get; private set; }
+        public string? TreatmentsGiven { get; private set; }
         public Maternal.PregnancyDetails? PregnancyDetails { get; private set; }
 
         public int UserId { get; private set; }
@@ -31,7 +33,7 @@ namespace ICMS.Domain.Entites.Visits
         {
         }
 
-        public static VisitDetails Create(int pregnancyDetailsId, DateOnly visitDate, decimal weightInKilo, int pregnancyDurationInWeeks, string bloodPressure, string appInUrineTest, string ogttInUrineTest, string fetalHeartbeat, string fetalMovement, string fetalPosition, string anaemiaOrHemoglobinType, int userId, bool legsSwelling = false, bool vaginalBleeding = false, string? clinicalExaminationAndObservation = null, DateOnly? nextVisitDate = null)
+        public static VisitDetails Create(int pregnancyDetailsId, DateOnly visitDate, decimal weightInKilo, int pregnancyDurationInWeeks, string bloodPressure, string appInUrineTest, string ogttInUrineTest, string fetalHeartbeat, string fetalMovement, string fetalPosition, string anaemiaOrHemoglobinType, int userId, bool legsSwelling = false, bool vaginalBleeding = false, string? clinicalExaminationAndObservation = null, DateOnly? nextVisitDate = null, string? treatmentsGiven = null, string? fetalHeartbeatValue = null)
         {
             if (pregnancyDetailsId <= 0) throw new DomainException("Invalid pregnancy details id");
             if (userId <= 0) throw new DomainException("Invalid user id");
@@ -56,8 +58,30 @@ namespace ICMS.Domain.Entites.Visits
                 AnaemiaOrHemoglobinType = anaemiaOrHemoglobinType,
                 UserId = userId,
                 LegsSwelling = legsSwelling,
-                VaginalBleeding = vaginalBleeding
+                VaginalBleeding = vaginalBleeding,
+                TreatmentsGiven = treatmentsGiven,
+                FetalHeartbeatValue = fetalHeartbeatValue
             };
+        }
+
+        public void Update(DateOnly visitDate, decimal weightInKilo, int pregnancyDurationInWeeks, string bloodPressure, string appInUrineTest, string ogttInUrineTest, string fetalHeartbeat, string fetalMovement, string fetalPosition, string anaemiaOrHemoglobinType, bool legsSwelling = false, bool vaginalBleeding = false, string? clinicalExaminationAndObservation = null, DateOnly? nextVisitDate = null, string? treatmentsGiven = null, string? fetalHeartbeatValue = null)
+        {
+            VisitDate = visitDate;
+            WeightInKilo = weightInKilo;
+            PregnancyDurationInWeeks = pregnancyDurationInWeeks;
+            BloodPressure = bloodPressure;
+            APPInUrineTest = appInUrineTest;
+            OGTTInUrineTest = ogttInUrineTest;
+            FetalHeartbeat = fetalHeartbeat;
+            FetalMovement = fetalMovement;
+            FetalPosition = fetalPosition;
+            AnaemiaOrHemoglobinType = anaemiaOrHemoglobinType;
+            LegsSwelling = legsSwelling;
+            VaginalBleeding = vaginalBleeding;
+            ClinicalExaminationAndObservation = clinicalExaminationAndObservation;
+            NextVisitDate = nextVisitDate;
+            TreatmentsGiven = treatmentsGiven;
+            FetalHeartbeatValue = fetalHeartbeatValue;
         }
 
         public void AssignPregnancyDetails(Maternal.PregnancyDetails pd)

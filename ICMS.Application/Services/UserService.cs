@@ -58,6 +58,10 @@ namespace ICMS.Application.Services
 
             if (personId == 0) throw new DomainException("Person details or PersonId must be provided");
 
+            // Prevent duplicate users for the same person
+            var existingUser = await unitOfWork.UserRepository.FirstOrDefaultAsync(u => u.PersonId == personId, ct);
+            if (existingUser != null) throw new DomainException("A user account already exists for this person.");
+
             string hashedPassword = BCrypt.Net.BCrypt.HashPassword(entity.Password);
             var user = entity.ToDomain(hashedPassword, personId);
             

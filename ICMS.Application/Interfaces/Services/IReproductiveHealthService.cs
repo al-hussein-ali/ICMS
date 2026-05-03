@@ -20,6 +20,13 @@ namespace ICMS.Application.Interfaces.Services
         
         Task<GeneratedAccountDto> GenerateAccountAsync(int id, CancellationToken ct = default);
         Task<List<PregnancyDetailsReadDto>> GetPregnancyHistoryAsync(int pregnantWomanId, CancellationToken ct = default);
+        Task<PregnancyDetailsReadDto> GetPregnancyByIdAsync(int id, CancellationToken ct = default);
         Task<List<AddAncVisitDto>> GetVisitsAsync(int pregnancyId, CancellationToken ct = default);
+        Task<AddAncVisitDto> GetVisitByIdAsync(int visitId, CancellationToken ct = default);
+
+        Task UpdatePregnancyAsync(int id, UpdatePregnancyDto request, CancellationToken ct = default);
+        Task DeletePregnancyAsync(int id, CancellationToken ct = default);
+        Task UpdateVisitAsync(int id, AddAncVisitDto request, CancellationToken ct = default);
+        Task DeleteVisitAsync(int id, CancellationToken ct = default);
     }
 }

@@ -103,6 +103,16 @@ namespace ICMS.Domain.Entites.Maternal
             IsPregnancyDone = true;
         }
 
+        public void UpdateDetails(DateOnly lmp, DateOnly edd, PregnancyType pregnancyType)
+        {
+            if (edd < lmp)
+                throw new DomainException("Expected delivery date cannot be before last menstrual period date");
+            
+            LastMenstrualPeriodDate = lmp;
+            ExpectedDeliveryDate = edd;
+            PregnancyType = pregnancyType;
+        }
+
         public void AddVisit(VisitDetails vd)
         {
             if (vd == null) throw new DomainException("Visit details required");
@@ -174,9 +184,14 @@ namespace ICMS.Domain.Entites.Maternal
             string appInUrineTest = "N/A",
             string ogttInUrineTest = "N/A",
             string fetalHeartbeat = "N/A",
+            string? fetalHeartbeatValue = null,
             string fetalMovement = "N/A",
             string fetalPosition = "N/A",
-            string anaemiaOrHemoglobinType = "N/A")
+            string anaemiaOrHemoglobinType = "N/A",
+            string? clinicalExaminationAndObservation = null,
+            string? treatmentsGiven = null,
+            bool legsSwelling = false,
+            bool vaginalBleeding = false)
         {
             if (IsPregnancyDone)
                 throw new InvalidOperationException("Cannot add visit: Pregnancy is already marked as done.");
@@ -213,7 +228,12 @@ namespace ICMS.Domain.Entites.Maternal
                 fetalPosition: fetalPosition,
                 anaemiaOrHemoglobinType: anaemiaOrHemoglobinType,
                 nextVisitDate: nextVisitDate,
-                userId: userId
+                userId: userId,
+                legsSwelling: legsSwelling,
+                vaginalBleeding: vaginalBleeding,
+                clinicalExaminationAndObservation: clinicalExaminationAndObservation,
+                treatmentsGiven: treatmentsGiven,
+                fetalHeartbeatValue: fetalHeartbeatValue
             );
 
             _visitDetails.Add(visit);

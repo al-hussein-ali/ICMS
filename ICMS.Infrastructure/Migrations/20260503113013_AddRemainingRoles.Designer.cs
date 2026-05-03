@@ -3,6 +3,7 @@ using System;
 using ICMS.Infrastructure.Persistence.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace ICMS.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260503113013_AddRemainingRoles")]
+    partial class AddRemainingRoles
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -181,215 +184,6 @@ namespace ICMS.Infrastructure.Migrations
                     b.HasIndex("VaccineId");
 
                     b.ToTable("Doses");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            DoseName = "BCG",
-                            DoseOrder = (byte)1,
-                            RecommendedAgeGroup = "atBirth",
-                            RecommendedAgeInMonths = 0,
-                            VaccineId = 1
-                        },
-                        new
-                        {
-                            Id = 2,
-                            DoseName = "OPV 0",
-                            DoseOrder = (byte)1,
-                            RecommendedAgeGroup = "atBirth",
-                            RecommendedAgeInMonths = 0,
-                            VaccineId = 2
-                        },
-                        new
-                        {
-                            Id = 3,
-                            DoseName = "OPV 1",
-                            DoseOrder = (byte)2,
-                            RecommendedAgeGroup = "2months",
-                            RecommendedAgeInMonths = 2,
-                            VaccineId = 2
-                        },
-                        new
-                        {
-                            Id = 4,
-                            DoseName = "OPV 2",
-                            DoseOrder = (byte)3,
-                            RecommendedAgeGroup = "4months",
-                            RecommendedAgeInMonths = 4,
-                            VaccineId = 2
-                        },
-                        new
-                        {
-                            Id = 5,
-                            DoseName = "OPV 3",
-                            DoseOrder = (byte)4,
-                            RecommendedAgeGroup = "6months",
-                            RecommendedAgeInMonths = 6,
-                            VaccineId = 2
-                        },
-                        new
-                        {
-                            Id = 6,
-                            DoseName = "Penta 1",
-                            DoseOrder = (byte)1,
-                            RecommendedAgeGroup = "2months",
-                            RecommendedAgeInMonths = 2,
-                            VaccineId = 3
-                        },
-                        new
-                        {
-                            Id = 7,
-                            DoseName = "Penta 2",
-                            DoseOrder = (byte)2,
-                            RecommendedAgeGroup = "4months",
-                            RecommendedAgeInMonths = 4,
-                            VaccineId = 3
-                        },
-                        new
-                        {
-                            Id = 8,
-                            DoseName = "Penta 3",
-                            DoseOrder = (byte)3,
-                            RecommendedAgeGroup = "6months",
-                            RecommendedAgeInMonths = 6,
-                            VaccineId = 3
-                        },
-                        new
-                        {
-                            Id = 9,
-                            DoseName = "Rota 1",
-                            DoseOrder = (byte)1,
-                            RecommendedAgeGroup = "2months",
-                            RecommendedAgeInMonths = 2,
-                            VaccineId = 4
-                        },
-                        new
-                        {
-                            Id = 10,
-                            DoseName = "Rota 2",
-                            DoseOrder = (byte)2,
-                            RecommendedAgeGroup = "4months",
-                            RecommendedAgeInMonths = 4,
-                            VaccineId = 4
-                        },
-                        new
-                        {
-                            Id = 11,
-                            DoseName = "PCV 1",
-                            DoseOrder = (byte)1,
-                            RecommendedAgeGroup = "2months",
-                            RecommendedAgeInMonths = 2,
-                            VaccineId = 5
-                        },
-                        new
-                        {
-                            Id = 12,
-                            DoseName = "PCV 2",
-                            DoseOrder = (byte)2,
-                            RecommendedAgeGroup = "4months",
-                            RecommendedAgeInMonths = 4,
-                            VaccineId = 5
-                        },
-                        new
-                        {
-                            Id = 13,
-                            DoseName = "PCV 3",
-                            DoseOrder = (byte)3,
-                            RecommendedAgeGroup = "6months",
-                            RecommendedAgeInMonths = 6,
-                            VaccineId = 5
-                        },
-                        new
-                        {
-                            Id = 14,
-                            DoseName = "MR 1",
-                            DoseOrder = (byte)1,
-                            RecommendedAgeGroup = "9months",
-                            RecommendedAgeInMonths = 9,
-                            VaccineId = 6
-                        },
-                        new
-                        {
-                            Id = 15,
-                            DoseName = "MR 2",
-                            DoseOrder = (byte)2,
-                            RecommendedAgeGroup = "18months",
-                            RecommendedAgeInMonths = 18,
-                            VaccineId = 6
-                        },
-                        new
-                        {
-                            Id = 16,
-                            DoseName = "IPV",
-                            DoseOrder = (byte)1,
-                            RecommendedAgeGroup = "4months",
-                            RecommendedAgeInMonths = 4,
-                            VaccineId = 7
-                        },
-                        new
-                        {
-                            Id = 17,
-                            DoseName = "Vit A 1",
-                            DoseOrder = (byte)1,
-                            RecommendedAgeGroup = "6months",
-                            RecommendedAgeInMonths = 6,
-                            VaccineId = 8
-                        },
-                        new
-                        {
-                            Id = 18,
-                            DoseName = "Vit A 2",
-                            DoseOrder = (byte)2,
-                            RecommendedAgeGroup = "12months",
-                            RecommendedAgeInMonths = 12,
-                            VaccineId = 8
-                        },
-                        new
-                        {
-                            Id = 19,
-                            DoseName = "TT 1",
-                            DoseOrder = (byte)1,
-                            RecommendedAgeGroup = "pregnancy",
-                            RecommendedAgeInMonths = 0,
-                            VaccineId = 9
-                        },
-                        new
-                        {
-                            Id = 20,
-                            DoseName = "TT 2",
-                            DoseOrder = (byte)2,
-                            RecommendedAgeGroup = "pregnancy",
-                            RecommendedAgeInMonths = 1,
-                            VaccineId = 9
-                        },
-                        new
-                        {
-                            Id = 21,
-                            DoseName = "TT 3",
-                            DoseOrder = (byte)3,
-                            RecommendedAgeGroup = "pregnancy",
-                            RecommendedAgeInMonths = 6,
-                            VaccineId = 9
-                        },
-                        new
-                        {
-                            Id = 22,
-                            DoseName = "TT 4",
-                            DoseOrder = (byte)4,
-                            RecommendedAgeGroup = "pregnancy",
-                            RecommendedAgeInMonths = 12,
-                            VaccineId = 9
-                        },
-                        new
-                        {
-                            Id = 23,
-                            DoseName = "TT 5",
-                            DoseOrder = (byte)5,
-                            RecommendedAgeGroup = "pregnancy",
-                            RecommendedAgeInMonths = 24,
-                            VaccineId = 9
-                        });
                 });
 
             modelBuilder.Entity("ICMS.Domain.Entites.Clinical.DoseReport", b =>
@@ -615,107 +409,6 @@ namespace ICMS.Infrastructure.Migrations
                         .IsUnique();
 
                     b.ToTable("Vaccines");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            Audience = 1,
-                            IsActive = true,
-                            MaxEligibleAgeInMonths = 1,
-                            MinEligibleAgeInMonths = 0,
-                            TotalDosages = (byte)1,
-                            VaccineCode = "BCG",
-                            VaccineName = "BCG"
-                        },
-                        new
-                        {
-                            Id = 2,
-                            Audience = 1,
-                            IsActive = true,
-                            MaxEligibleAgeInMonths = 60,
-                            MinEligibleAgeInMonths = 0,
-                            TotalDosages = (byte)4,
-                            VaccineCode = "OPV",
-                            VaccineName = "Oral Polio (OPV)"
-                        },
-                        new
-                        {
-                            Id = 3,
-                            Audience = 1,
-                            IsActive = true,
-                            MaxEligibleAgeInMonths = 12,
-                            MinEligibleAgeInMonths = 1,
-                            TotalDosages = (byte)3,
-                            VaccineCode = "PENTA",
-                            VaccineName = "Pentavalent"
-                        },
-                        new
-                        {
-                            Id = 4,
-                            Audience = 1,
-                            IsActive = true,
-                            MaxEligibleAgeInMonths = 8,
-                            MinEligibleAgeInMonths = 1,
-                            TotalDosages = (byte)2,
-                            VaccineCode = "ROTA",
-                            VaccineName = "Rotavirus"
-                        },
-                        new
-                        {
-                            Id = 5,
-                            Audience = 1,
-                            IsActive = true,
-                            MaxEligibleAgeInMonths = 24,
-                            MinEligibleAgeInMonths = 1,
-                            TotalDosages = (byte)3,
-                            VaccineCode = "PCV",
-                            VaccineName = "Pneumococcal (PCV)"
-                        },
-                        new
-                        {
-                            Id = 6,
-                            Audience = 1,
-                            IsActive = true,
-                            MaxEligibleAgeInMonths = 60,
-                            MinEligibleAgeInMonths = 9,
-                            TotalDosages = (byte)2,
-                            VaccineCode = "MR",
-                            VaccineName = "Measles & Rubella (MR)"
-                        },
-                        new
-                        {
-                            Id = 7,
-                            Audience = 1,
-                            IsActive = true,
-                            MaxEligibleAgeInMonths = 12,
-                            MinEligibleAgeInMonths = 3,
-                            TotalDosages = (byte)1,
-                            VaccineCode = "IPV",
-                            VaccineName = "Inactivated Polio (IPV)"
-                        },
-                        new
-                        {
-                            Id = 8,
-                            Audience = 1,
-                            IsActive = true,
-                            MaxEligibleAgeInMonths = 60,
-                            MinEligibleAgeInMonths = 6,
-                            TotalDosages = (byte)2,
-                            VaccineCode = "VITA",
-                            VaccineName = "Vitamin A"
-                        },
-                        new
-                        {
-                            Id = 9,
-                            Audience = 2,
-                            IsActive = true,
-                            MaxEligibleAgeInMonths = 600,
-                            MinEligibleAgeInMonths = 180,
-                            TotalDosages = (byte)5,
-                            VaccineCode = "TT",
-                            VaccineName = "Tetanus Toxoid"
-                        });
                 });
 
             modelBuilder.Entity("ICMS.Domain.Entites.Geography.Directorate", b =>
@@ -2010,9 +1703,6 @@ namespace ICMS.Infrastructure.Migrations
                         .IsUnicode(true)
                         .HasColumnType("character varying(30)");
 
-                    b.Property<string>("FetalHeartbeatValue")
-                        .HasColumnType("text");
-
                     b.Property<string>("FetalMovement")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -2044,9 +1734,6 @@ namespace ICMS.Infrastructure.Migrations
 
                     b.Property<int>("PregnancyDurationInWeeks")
                         .HasColumnType("integer");
-
-                    b.Property<string>("TreatmentsGiven")
-                        .HasColumnType("text");
 
                     b.Property<int>("UserId")
                         .HasColumnType("integer");
@@ -2344,7 +2031,7 @@ namespace ICMS.Infrastructure.Migrations
                     b.HasOne("ICMS.Domain.Entites.Maternal.PregnancyDetails", "PregnancyDetails")
                         .WithMany("Newborns")
                         .HasForeignKey("PregnancyDetailsId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("ICMS.Domain.Entites.Identity.User", "User")
@@ -2363,7 +2050,7 @@ namespace ICMS.Infrastructure.Migrations
                     b.HasOne("ICMS.Domain.Entites.Maternal.PregnantWoman", "PregnantWoman")
                         .WithMany("PregnancyDetails")
                         .HasForeignKey("PregnantWomanId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("ICMS.Domain.Entites.Identity.User", "User")

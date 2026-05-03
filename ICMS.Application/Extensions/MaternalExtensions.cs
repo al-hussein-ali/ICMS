@@ -17,7 +17,12 @@ namespace ICMS.Application.Extensions
                 pw.BloodGroup,
                 pw.RhFactor,
                 pw.PersonId,
-                pw.UserId
+                pw.UserId,
+                pw.Person?.FirstName,
+                pw.Person?.SecondName,
+                pw.Person?.ThirdName,
+                pw.Person?.LastName,
+                pw.Person?.Gender.ToString()
             );
         }
 
@@ -61,9 +66,15 @@ namespace ICMS.Application.Extensions
                     v.APPInUrineTest,
                     v.OGTTInUrineTest,
                     v.FetalHeartbeat,
+                    v.FetalHeartbeatValue,
                     v.FetalMovement,
                     v.FetalPosition,
-                    v.AnaemiaOrHemoglobinType)).ToList(),
+                    v.AnaemiaOrHemoglobinType,
+                    v.Id,
+                    v.ClinicalExaminationAndObservation,
+                    v.TreatmentsGiven,
+                    v.LegsSwelling,
+                    v.VaginalBleeding)).ToList(),
                 p.Newborns.Select(n => new NewbornDto(
                     n.NewbornStatus,
                     n.NewbornWeightInGrams,
