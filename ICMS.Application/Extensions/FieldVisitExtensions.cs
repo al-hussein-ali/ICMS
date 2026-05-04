@@ -22,6 +22,8 @@ namespace ICMS.Application.Extensions
                 fv.Id,
                 fv.CampaignName,
                 fv.VisitDate,
+                fv.SubNeighborhood?.Neighborhood?.DirectorateId ?? 0,
+                fv.SubNeighborhood?.NeighborhoodId ?? 0,
                 fv.SubNeighborhoodId,
                 location,
                 0, 

@@ -4,7 +4,9 @@ namespace ICMS.Application.DTOs.FieldVisit
         int Id,
         string CampaignName,
         DateOnly VisitDate,
-        int SubNeighborhoodId,
+        int DirectorateId,
+        int NeighborhoodId,
+        int? SubNeighborhoodId,
         string TargetedLocation,
         int TargetedCount,
         bool IsCompleted);

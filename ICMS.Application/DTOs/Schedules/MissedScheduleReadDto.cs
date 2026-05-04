@@ -6,8 +6,7 @@ namespace ICMS.Application.DTOs.Schedules
         int IndividualId,
         string FirstName,
         string LastName,
-        string DoseName,
-        DateOnly ScheduledDate,
-        string? DirectorateName
+        int DoseId,
+        string DoseName
     );
 }

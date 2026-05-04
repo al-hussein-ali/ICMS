@@ -47,9 +47,8 @@ namespace ICMS.Infrastructure.Repositories.Clinical
                     s.VaccinatedIndividualId,
                     s.VaccinatedIndividual.Person.FirstName,
                     s.VaccinatedIndividual.Person.LastName,
-                    s.Dose.DoseName,
-                    s.ScheduledDate,
-                    s.VaccinatedIndividual.SubNeighborhood != null ? s.VaccinatedIndividual.SubNeighborhood.Name : "N/A"
+                    s.DoseId,
+                    s.Dose.DoseName
                 ))
                 .ToListAsync(ct);
         }
