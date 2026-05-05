@@ -36,6 +36,10 @@ namespace ICMS.Application.Extensions
                 p.VisitsCount,
                 p.NewbornCount,
                 p.IsPregnancyDone,
+                p.PregnancyType,
+                p.BirthNature,
+                p.BirthLocationType,
+                p.BirthLocationDetails,
                 p.ComplicationsDuringChildbirth,
                 p.PostpartumComplications,
                 p.PreviousPregnancyComplications != null ? new PreviousPregnancyComplicationsDto(

@@ -1,5 +1,4 @@
-using System.Security.Cryptography;
-using System.Text;
+using BCrypt.Net;
 
 namespace ICMS.Application.Utilities
 {
@@ -7,14 +6,32 @@ namespace ICMS.Application.Utilities
     {
         public static string HashPassword(string password)
         {
-            using var sha256 = SHA256.Create();
-            var hashedBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
-            return Convert.ToBase64String(hashedBytes);
+            return BCrypt.Net.BCrypt.HashPassword(password);
         }
 
         public static bool VerifyPassword(string password, string hashedPassword)
         {
-            return HashPassword(password) == hashedPassword;
+            if (string.IsNullOrEmpty(hashedPassword)) return false;
+
+            try
+            {
+                // BCrypt hashes start with $2a$, $2b$ or $2y$
+                if (hashedPassword.StartsWith("$2"))
+                {
+                    return BCrypt.Net.BCrypt.Verify(password, hashedPassword);
+                }
+
+                // Legacy SHA256 Fallback
+                using var sha256 = System.Security.Cryptography.SHA256.Create();
+                var hashedBytes = sha256.ComputeHash(System.Text.Encoding.UTF8.GetBytes(password));
+                var sha256Hash = Convert.ToBase64String(hashedBytes);
+                
+                return sha256Hash == hashedPassword;
+            }
+            catch
+            {
+                return false;
+            }
         }
 
         public static string GenerateSimplePassword(int length = 6)

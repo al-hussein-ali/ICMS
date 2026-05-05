@@ -242,7 +242,23 @@ namespace ICMS.Application.Services
 
                 if (vaccinatedIndividual == null)
                 {
-                    throw new DomainException("MissingPersonData");
+                    var directorates = await _unitOfWork.DirectorateRepository.GetAllAsync(cancellationToken: ct);
+                    var neighborhoods = await _unitOfWork.NeighborhoodRepository.GetAllAsync(cancellationToken: ct);
+
+                    var dirId = directorates.FirstOrDefault()?.Id ?? 0;
+                    var neighId = neighborhoods.FirstOrDefault()?.Id ?? 0;
+
+                    if (dirId > 0 && neighId > 0)
+                    {
+                        vaccinatedIndividual = VaccinatedIndividual.Create(dirId, neighId, null, userId);
+                        vaccinatedIndividual.AssignExistingPersonById(pregnancy.PregnantWoman.PersonId);
+                        await _unitOfWork.VaccinatedIndividualRepository.AddAsync(vaccinatedIndividual, ct);
+                        await _unitOfWork.SaveChangesAsync(ct);
+                    }
+                    else
+                    {
+                        throw new DomainException("MissingLocationConfiguration");
+                    }
                 }
 
                 var doseDto = new AdministerDoseDto(

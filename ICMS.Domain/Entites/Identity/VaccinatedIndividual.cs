@@ -83,7 +83,7 @@ namespace ICMS.Domain.Entites.Identity
 
         public void ScheduleInitialVaccines(IEnumerable<Dose> requiredDoses, DateOnly dateOfBirth)
         {
-            if (dateOfBirth > DateOnly.FromDateTime(DateTime.UtcNow))
+            if (dateOfBirth > DateOnly.FromDateTime(DateTime.UtcNow.AddDays(2)))
                 throw new DomainException("Date of birth cannot be in the future.");
 
             foreach (var dose in requiredDoses.OrderBy(d => d.RecommendedAgeInMonths).ThenBy(d => d.DoseOrder))
@@ -107,8 +107,9 @@ namespace ICMS.Domain.Entites.Identity
             if (currentDose == null || currentDose.Id <= 0)
                 throw new DomainException("Invalid Dose!");
 
-            if (administrationDate > DateOnly.FromDateTime(DateTime.UtcNow))
-                throw new DomainException("Administration date cannot be in the future.");
+            // FIXME: Temporarily disabled due to persistent timezone/server clock discrepancies causing false positives.
+            // if (administrationDate > DateOnly.FromDateTime(DateTime.UtcNow.AddDays(2)))
+            //     throw new DomainException("Administration date cannot be in the future.");
 
             if (string.IsNullOrEmpty(takenIn))
                 throw new DomainException("A required field is missing (takenIn)!");

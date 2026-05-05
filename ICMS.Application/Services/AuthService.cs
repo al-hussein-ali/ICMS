@@ -2,6 +2,7 @@ using ICMS.Application.DTOs.Auth;
 using ICMS.Application.Interfaces;
 using ICMS.Application.Interfaces.Services;
 using ICMS.Domain.Exceptions;
+using ICMS.Application.Utilities;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -22,7 +23,7 @@ namespace ICMS.Application.Services
                 throw new DomainException("UserNotFoundOrInactive");
             }
 
-            if (!BCrypt.Net.BCrypt.Verify(loginDto.Password, user.PasswordHash))
+            if (!PasswordHasher.VerifyPassword(loginDto.Password, user.PasswordHash))
             {
                 throw new DomainException("InvalidCredentials");
             }

@@ -130,7 +130,7 @@ namespace ICMS.Domain.Entites.Maternal
                 throw new DomainException("Pregnancy detail id mismatch");
 
             PreviousPregnancyComplications = p;
-            PreviousPregnancyComplicationsId = p.Id;
+            if (p.Id != 0) PreviousPregnancyComplicationsId = p.Id;
         }
 
         public void AssignPreviousPostpartumComplications(PreviousPostpartumComplications p)
@@ -141,7 +141,7 @@ namespace ICMS.Domain.Entites.Maternal
                 throw new DomainException("Pregnancy detail id mismatch");
 
             this.PreviousPostpartumComplications = p;
-            this.PreviousPostpartumComplicationsId = p.Id;
+            if (p.Id != 0) this.PreviousPostpartumComplicationsId = p.Id;
         }
 
         public void AssignPreviousPregnancyDeliveryComplications(PreviousPregnancyDeliveryComplications p)
@@ -152,7 +152,7 @@ namespace ICMS.Domain.Entites.Maternal
                 throw new DomainException("Pregnancy detail id mismatch");
 
             this.PreviousPregnancyDeliveryComplications = p;
-            this.PreviousPregnancyDeliveryComplicationsId = p.Id;
+            if (p.Id != 0) this.PreviousPregnancyDeliveryComplicationsId = p.Id;
         }
 
         public static PregnancyDetails CreateForNewPregnancy(DateOnly lmp, DateOnly edd, int pregnantWomanId, int userId)
@@ -266,6 +266,14 @@ namespace ICMS.Domain.Entites.Maternal
             {
                 _newborns.AddRange(newborns);
                 NewbornCount = (byte)_newborns.Count;
+
+                // Automatically update PregnancyType based on the actual count of newborns
+                PregnancyType = NewbornCount switch
+                {
+                    1 => PregnancyType.Single,
+                    2 => PregnancyType.Twins,
+                    _ => PregnancyType.Multiple
+                };
             }
 
             IsPregnancyDone = true;
