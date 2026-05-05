@@ -47,6 +47,7 @@ namespace ICMS.Infrastructure.Repositories.Clinical
                     s.VaccinatedIndividualId,
                     s.VaccinatedIndividual.Person.FirstName,
                     s.VaccinatedIndividual.Person.LastName,
+                    s.VaccinatedIndividual.Person.PhoneNumber,
                     s.DoseId,
                     s.Dose.DoseName
                 ))
