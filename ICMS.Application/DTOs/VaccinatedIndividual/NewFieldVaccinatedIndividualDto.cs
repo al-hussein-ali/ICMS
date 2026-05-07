@@ -10,6 +10,7 @@ namespace ICMS.Application.DTOs.VaccinatedIndividual
         int DoseId,
         DateOnly VaccinationDate,
         string TakenIn,
+        string? CorrelationId = null,
         int? FieldVisitId = null,
         string? Note = null);
 }

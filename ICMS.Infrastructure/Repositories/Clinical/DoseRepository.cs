@@ -26,20 +26,23 @@ namespace ICMS.Infrastructure.Repositories.Clinical
 
         public async Task<IReadOnlyList<Dose>> GetAllAsync(int? vaccineId, CancellationToken ct = default)
         {
-            if (vaccineId == null)
-                return await _dbSet.AsNoTracking().ToListAsync();
+            var query = _dbSet.Include(x => x.Vaccine).AsNoTracking();
 
-            return await _dbSet.Where(x => x.VaccineId == vaccineId).AsNoTracking().ToListAsync();
+            if (vaccineId != null)
+                query = query.Where(x => x.VaccineId == vaccineId);
+
+            return await query.ToListAsync(ct);
         }
 
         public async Task<Dose?> GetByAsync(Expression<Func<Dose, bool>> expression, CancellationToken ct = default)
         {
-            return await _dbSet.FirstOrDefaultAsync(expression,ct);
+            return await _dbSet.Include(x => x.Vaccine).FirstOrDefaultAsync(expression, ct);
         }
 
         public async Task<Dose?> GetNextDoseInSequenceAsync(int vaccineId, byte currentDoseOrder, CancellationToken ct = default)
         {
             return await _dbSet
+                .Include(x => x.Vaccine)
                 .Where(d => d.VaccineId == vaccineId && d.DoseOrder > currentDoseOrder)
                 .OrderBy(d => d.DoseOrder)
                 .FirstOrDefaultAsync(ct);

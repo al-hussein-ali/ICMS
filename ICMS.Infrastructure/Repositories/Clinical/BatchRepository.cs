@@ -56,9 +56,12 @@ namespace ICMS.Infrastructure.Repositories.Clinical
             return new PagedResult<Batch>(items, totalCount, paginationParams.PageNumber, paginationParams.PageSize);
         }
 
-        public async Task<Batch?> GetByIdWithDetailsAsync(int id, CancellationToken ct = default)
+        public async Task<Batch?> GetByIdWithDetailsAsync(int id, CancellationToken ct = default, bool track = false)
         {
-            return await _context.Batches
+            var query = _context.Batches.AsQueryable();
+            if (!track) query = query.AsNoTracking();
+
+            return await query
                 .Include(b => b.Dose)
                 .Include(b => b.User)
                 .FirstOrDefaultAsync(b => b.Id == id, ct);

@@ -1,4 +1,4 @@
-﻿namespace ICMS.Application.DTOs.VaccinatedIndividual
+namespace ICMS.Application.DTOs.VaccinatedIndividual
 {
     public record UpdateFieldVisitIndividualDto(
         int IndividualId,
@@ -6,5 +6,6 @@
         int FieldVisitId,
         DateOnly VaccinationDate,
         string TakenIn,
-        string? Note);
+        string? CorrelationId = null,
+        string? Note = null);
 }

@@ -4,6 +4,8 @@ using ICMS.Application.DTOs.Transaction;
 using ICMS.Application.Extensions;
 using ICMS.Application.Interfaces;
 using ICMS.Application.Interfaces.Services;
+using ICMS.Domain.Entites.Audit;
+using ICMS.Domain.Enums;
 using ICMS.Domain.Exceptions;
 using ICMS.Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
@@ -47,8 +49,31 @@ namespace ICMS.Application.Services
         public async Task<BatchReadDto> AddAsync(BatchCreateDto dto, int userId, CancellationToken ct = default)
         {
             var batch = dto.ToDomain(userId);
+            
+            // 1. Add and save the batch first to generate its primary key (BatchId)
             await unitOfWork.BatchRepository.AddAsync(batch, ct);
             await unitOfWork.SaveChangesAsync(ct);
+
+            // 2. Now record the initial stock as a transaction using the newly generated BatchId
+            if (dto.TotalQuantity > 0)
+            {
+                // We use batch.Id here which is now populated
+                batch.AddTransaction(Transaction.Create(
+                    batch.Id, 
+                    TransactionType.In, 
+                    DateTime.UtcNow, 
+                    dto.TotalQuantity, 
+                    "INITIAL", 
+                    "Initial Stock", 
+                    userId, 
+                    "Auto-generated on batch creation"
+                ));
+                
+                var initialTransaction = batch.Transactions.Last();
+                await unitOfWork.TransactionRepository.AddAsync(initialTransaction, ct);
+                await unitOfWork.SaveChangesAsync(ct);
+            }
+
             return batch.ToReadDto();
         }
 
@@ -72,7 +97,17 @@ namespace ICMS.Application.Services
                 var batch = await unitOfWork.BatchRepository.GetByIdAsync(batchId, ct);
                 if (batch == null) throw new NotFoundException("NotFound");
 
-                batch.AddInventory(dto.Quantity, dto.PermissionNumber, dto.SourceOrDestination, userId, dto.TransactionDate, dto.Notes);
+                // Ensure UTC kind for PostgreSQL
+                var transactionDate = dto.TransactionDate.HasValue 
+                    ? DateTime.SpecifyKind(dto.TransactionDate.Value, DateTimeKind.Utc) 
+                    : DateTime.UtcNow;
+
+                batch.AddInventory(dto.Quantity, dto.PermissionNumber, dto.SourceOrDestination, userId, transactionDate, dto.Notes);
+                
+                // Explicitly add the new transaction to the context to ensure it is saved
+                var lastTransaction = batch.Transactions.Last();
+                await unitOfWork.TransactionRepository.AddAsync(lastTransaction, ct);
+
                 await unitOfWork.SaveChangesAsync(ct);
                 cacheService.Remove($"batch:{batchId}");
             });
@@ -86,8 +121,17 @@ namespace ICMS.Application.Services
                 var batch = await unitOfWork.BatchRepository.GetByIdAsync(batchId, ct);
                 if (batch == null) throw new NotFoundException("NotFound");
 
+                // Ensure UTC kind for PostgreSQL
+                var transactionDate = dto.TransactionDate.HasValue 
+                    ? DateTime.SpecifyKind(dto.TransactionDate.Value, DateTimeKind.Utc) 
+                    : DateTime.UtcNow;
 
-                batch.RemoveInventory(dto.Quantity, dto.PermissionNumber, dto.SourceOrDestination, userId, dto.TransactionDate, dto.Notes);
+                batch.RemoveInventory(dto.Quantity, dto.PermissionNumber, dto.SourceOrDestination, userId, transactionDate, dto.Notes);
+                
+                // Explicitly add the new transaction to the context to ensure it is saved
+                var lastTransaction = batch.Transactions.Last();
+                await unitOfWork.TransactionRepository.AddAsync(lastTransaction, ct);
+
                 await unitOfWork.SaveChangesAsync(ct);
                 cacheService.Remove($"batch:{batchId}");
             });
@@ -118,6 +162,11 @@ namespace ICMS.Application.Services
 
                     int toSubtractFromThisBatch = Math.Min(batch.TotalQuantity, remainingToSubtract);
                     batch.RemoveInventory(toSubtractFromThisBatch, permissionNumber, destination, userId);
+                    
+                    // Explicitly add the new transaction to the context
+                    var lastTransaction = batch.Transactions.Last();
+                    await unitOfWork.TransactionRepository.AddAsync(lastTransaction, ct);
+
                     remainingToSubtract -= toSubtractFromThisBatch;
                     cacheService.Remove($"batch:{batch.Id}");
                 }

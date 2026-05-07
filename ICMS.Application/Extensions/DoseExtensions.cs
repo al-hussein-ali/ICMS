@@ -12,7 +12,7 @@ namespace ICMS.Application.Extensions
     public static class DoseExtensions
     {
         public static DoseReadDto ToReadDto(this Dose d)
-            => new(d.Id, d.VaccineId, d.DoseName, d.DoseOrder);
+            => new(d.Id, d.VaccineId, d.Vaccine?.VaccineName ?? "N/A", d.DoseName, d.DoseOrder);
 
         public static DoseDetailsDto ToDetailsDto(this Dose d)
             => new(d.Id, d.VaccineId, d.DoseName, d.DoseOrder, d.Notes);

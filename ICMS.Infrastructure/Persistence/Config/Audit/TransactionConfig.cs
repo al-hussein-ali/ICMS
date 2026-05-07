@@ -13,7 +13,7 @@ namespace ICMS.Infrastructure.Persistence.Config.Audit
 {
     public  class TransactionConfig : IEntityTypeConfiguration<Transaction>
     {
-        private string[] _transactionTypes = { "In", "Out" };
+        private string[] _transactionTypes = { "ARRIVAL", "ISSUE" };
 
         public void Configure(EntityTypeBuilder<Transaction> builder)
         {
@@ -25,7 +25,7 @@ namespace ICMS.Infrastructure.Persistence.Config.Audit
                 v => v == _transactionTypes[0] ? TransactionType.In : TransactionType.Out
             ).HasMaxLength(50).IsUnicode(true).IsRequired();
 
-            builder.Property(t => t.TransactionDate).HasDefaultValueSql("TIMEZONE('utc', NOW())").ValueGeneratedOnAdd();
+            builder.Property(t => t.TransactionDate).HasDefaultValueSql("TIMEZONE('utc', NOW())");
             builder.Property(t => t.PermissionNumber).HasMaxLength(200).IsUnicode(true).IsRequired();
             builder.Property(t => t.SourceOrDestination).HasMaxLength(250).IsUnicode(true).IsRequired();
             builder.Property(t => t.Quantity).IsRequired();

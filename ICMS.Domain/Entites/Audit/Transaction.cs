@@ -35,13 +35,13 @@ namespace ICMS.Domain.Entites.Audit
 
         public static Transaction Create(int batchId, TransactionType transactionType, DateTime transactionDate, int quantity, string permissionNumber, string sourceOrDestination, int userId, string? notes = null)
         {
-            if (batchId <= 0) throw new DomainException("Invalid batch id");
             if (userId <= 0) throw new DomainException("Invalid user id");
             if (quantity <= 0) throw new DomainException("Quantity must be greater than zero");
             if (string.IsNullOrWhiteSpace(permissionNumber)) throw new DomainException("Permission number is required");
 
             return new Transaction 
             { 
+                Id = Guid.NewGuid(), // Ensure unique ID for GUID primary key
                 BatchId = batchId, 
                 TransactionType = transactionType, 
                 TransactionDate = transactionDate, 
@@ -56,11 +56,13 @@ namespace ICMS.Domain.Entites.Audit
         public void AssignBatch(Batch batch)
         {
             if (batch == null) throw new DomainException("Batch is required");
-            if (Batch != null) throw new DomainException("Batch already assigned");
-            if (batch.Id != 0 && batch.Id != BatchId) throw new DomainException("Batch id mismatch");
-
+            if (Batch != null && Batch != batch) throw new DomainException("Batch already assigned");
+            
             Batch = batch;
-            BatchId = batch.Id;
+            if (batch.Id != 0)
+            {
+                BatchId = batch.Id;
+            }
         }
     }
 }
