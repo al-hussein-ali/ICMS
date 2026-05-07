@@ -6,6 +6,7 @@ using ICMS.Application.Interfaces;
 using ICMS.Application.Interfaces.Services;
 using ICMS.Domain.Exceptions;
 using ICMS.Domain.ValueObjects;
+using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -71,7 +72,7 @@ namespace ICMS.Application.Services
                 var batch = await unitOfWork.BatchRepository.GetByIdAsync(batchId, ct);
                 if (batch == null) throw new NotFoundException("NotFound");
 
-                batch.AddInventory(dto.Quantity, dto.PermissionNumber, dto.SourceOrDestination, userId);
+                batch.AddInventory(dto.Quantity, dto.PermissionNumber, dto.SourceOrDestination, userId, dto.TransactionDate, dto.Notes);
                 await unitOfWork.SaveChangesAsync(ct);
                 cacheService.Remove($"batch:{batchId}");
             });
@@ -86,7 +87,7 @@ namespace ICMS.Application.Services
                 if (batch == null) throw new NotFoundException("NotFound");
 
 
-                batch.RemoveInventory(dto.Quantity, dto.PermissionNumber, dto.SourceOrDestination, userId);
+                batch.RemoveInventory(dto.Quantity, dto.PermissionNumber, dto.SourceOrDestination, userId, dto.TransactionDate, dto.Notes);
                 await unitOfWork.SaveChangesAsync(ct);
                 cacheService.Remove($"batch:{batchId}");
             });
@@ -129,6 +130,10 @@ namespace ICMS.Application.Services
             TransactionFilterDto filter, PaginationParams paginationParams, CancellationToken ct = default)
         {
             var query = unitOfWork.TransactionRepository.GetQueryable()
+                .Include(t => t.Batch)
+                    .ThenInclude(b => b.Dose)
+                        .ThenInclude(d => d.Vaccine)
+                .Include(t => t.User)
                 .Where(t => t.BatchId == batchId);
 
             if (filter.TransactionType.HasValue)
@@ -150,6 +155,42 @@ namespace ICMS.Application.Services
                 totalCount,
                 paginationParams.PageNumber,
                 paginationParams.PageSize));
+        }
+
+        public async Task<PagedResult<TransactionReadDto>> GetAllTransactionsAsync(TransactionFilterDto filter,
+            PaginationParams paginationParams, CancellationToken ct = default)
+        {
+            var query = unitOfWork.TransactionRepository.GetQueryable()
+                .Include(t => t.Batch)
+                    .ThenInclude(b => b.Dose)
+                        .ThenInclude(d => d.Vaccine)
+                .Include(t => t.User)
+                .AsNoTracking();
+
+            if (filter.TransactionType.HasValue)
+            {
+                query = query.Where(t => t.TransactionType == filter.TransactionType.Value);
+            }
+
+            if (filter.BatchId.HasValue)
+            {
+                query = query.Where(t => t.BatchId == filter.BatchId.Value);
+            }
+
+            query = query.OrderByDescending(t => t.TransactionDate);
+
+            var totalCount = await query.CountAsync(ct);
+            var items = await query.Skip((paginationParams.PageNumber - 1) * paginationParams.PageSize)
+                .Take(paginationParams.PageSize)
+                .ToListAsync(ct);
+
+            var dtos = items.Select(t => t.ToReadDto()).ToList();
+
+            return new PagedResult<TransactionReadDto>(
+                dtos,
+                totalCount,
+                paginationParams.PageNumber,
+                paginationParams.PageSize);
         }
 
         public async Task<bool> DeactivateAsync(int batchId, CancellationToken ct = default)

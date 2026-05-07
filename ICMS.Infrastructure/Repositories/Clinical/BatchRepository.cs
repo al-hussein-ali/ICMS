@@ -19,6 +19,7 @@ namespace ICMS.Infrastructure.Repositories.Clinical
         {
             var query = _context.Batches
                 .Include(b => b.Dose)
+                    .ThenInclude(d => d.Vaccine)
                 .AsNoTracking();
 
             if (!filter.IncludeInactive)

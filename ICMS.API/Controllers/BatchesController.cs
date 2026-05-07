@@ -4,10 +4,9 @@ using ICMS.Application.DTOs.Pagination;
 using ICMS.Application.DTOs.Transaction;
 using ICMS.Application.Interfaces.Services;
 using ICMS.Domain.Constants;
-using ICMS.Domain.ValueObjects;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Collections.Generic;
+using ICMS.Domain.ValueObjects;
 using System.Threading.Tasks;
 
 namespace ICMS.API.Controllers
@@ -21,6 +20,13 @@ namespace ICMS.API.Controllers
         public async Task<ActionResult<PagedResult<BatchReadDto>>> GetAllAsync([FromQuery] BatchFilterDto filter, [FromQuery] PaginationParams paginationParams)
         {
             var result = await batchService.GetAllAsync(filter, paginationParams);
+            return Ok(result);
+        }
+
+        [HttpGet("transactions")]
+        public async Task<ActionResult<PagedResult<TransactionReadDto>>> GetAllTransactionsAsync([FromQuery] TransactionFilterDto filter, [FromQuery] PaginationParams paginationParams)
+        {
+            var result = await batchService.GetAllTransactionsAsync(filter, paginationParams);
             return Ok(result);
         }
 

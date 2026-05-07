@@ -30,7 +30,7 @@ namespace ICMS.Application.Validators.Transaction
                 .MaximumLength(200)
                 .WithMessage(x => localizer["InvalidField", "This field"]);
 
-            RuleFor(x => x.SourceorDestination)
+            RuleFor(x => x.SourceOrDestination)
                 .NotEmpty()
                 .WithMessage(x => localizer["RequiredField", "This field"])
                 .MaximumLength(250)

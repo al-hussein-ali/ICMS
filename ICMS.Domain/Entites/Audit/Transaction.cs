@@ -20,8 +20,9 @@ namespace ICMS.Domain.Entites.Audit
         public TransactionType TransactionType { get; private set; }
         public DateTime TransactionDate { get; private set; }
         public string PermissionNumber { get; private set; } = string.Empty;
-        public string SourceorDestination { get; private set; } = string.Empty;
+        public string SourceOrDestination { get; private set; } = string.Empty;
         public int Quantity { get; private set; }
+        public string? Notes { get; private set; }
         public int BatchId { get; private set; }
         public Batch? Batch { get; private set; }
 
@@ -32,14 +33,24 @@ namespace ICMS.Domain.Entites.Audit
         {
         }
 
-        public static Transaction Create(int batchId, TransactionType transactionType, DateTime transactionDate, int quantity, string permissionNumber, string sourceOrDestination, int userId)
+        public static Transaction Create(int batchId, TransactionType transactionType, DateTime transactionDate, int quantity, string permissionNumber, string sourceOrDestination, int userId, string? notes = null)
         {
             if (batchId <= 0) throw new DomainException("Invalid batch id");
             if (userId <= 0) throw new DomainException("Invalid user id");
             if (quantity <= 0) throw new DomainException("Quantity must be greater than zero");
             if (string.IsNullOrWhiteSpace(permissionNumber)) throw new DomainException("Permission number is required");
 
-            return new Transaction { BatchId = batchId, TransactionType = transactionType, TransactionDate = transactionDate, Quantity = quantity, PermissionNumber = permissionNumber, SourceorDestination = sourceOrDestination, UserId = userId };
+            return new Transaction 
+            { 
+                BatchId = batchId, 
+                TransactionType = transactionType, 
+                TransactionDate = transactionDate, 
+                Quantity = quantity, 
+                PermissionNumber = permissionNumber, 
+                SourceOrDestination = sourceOrDestination, 
+                UserId = userId,
+                Notes = notes
+            };
         }
 
         public void AssignBatch(Batch batch)

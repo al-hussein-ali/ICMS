@@ -27,6 +27,7 @@ namespace ICMS.Domain.Entites.Clinical
         public DateOnly ExpiryDate { get; private set; }
         public DateOnly CreationDate { get; private set; }
         public int TotalQuantity { get; private set; }
+        public int ConsumedQuantity { get; private set; }
         public string? Notes { get; private set; }
         public bool IsActive { get; private set; } = true;
 
@@ -73,7 +74,7 @@ namespace ICMS.Domain.Entites.Clinical
             Notes = notes;
         }
 
-        public void AddInventory(int quantity, string permissionNumber, string source, int userId, DateTime? date = null)
+        public void AddInventory(int quantity, string permissionNumber, string source, int userId, DateTime? date = null, string? notes = null)
         {
             if (quantity <= 0) throw new DomainException("Added quantity must be positive");
             
@@ -84,13 +85,14 @@ namespace ICMS.Domain.Entites.Clinical
                 quantity, 
                 permissionNumber, 
                 source, 
-                userId);
+                userId,
+                notes);
 
             _transactions.Add(transaction);
             TotalQuantity += quantity;
         }
 
-        public void RemoveInventory(int quantity, string permissionNumber, string destination, int userId, DateTime? date = null)
+        public void RemoveInventory(int quantity, string permissionNumber, string destination, int userId, DateTime? date = null, string? notes = null)
         {
             if (quantity <= 0) throw new DomainException("Removed quantity must be positive");
             if (TotalQuantity < quantity) throw new DomainException("Insufficient inventory in batch");
@@ -102,10 +104,12 @@ namespace ICMS.Domain.Entites.Clinical
                 quantity, 
                 permissionNumber, 
                 destination, 
-                userId);
+                userId,
+                notes);
 
             _transactions.Add(transaction);
             TotalQuantity -= quantity;
+            ConsumedQuantity += quantity;
         }
 
         public void AssignDose(Dose dose)

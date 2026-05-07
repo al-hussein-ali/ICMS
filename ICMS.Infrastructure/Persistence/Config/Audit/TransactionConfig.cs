@@ -27,7 +27,7 @@ namespace ICMS.Infrastructure.Persistence.Config.Audit
 
             builder.Property(t => t.TransactionDate).HasDefaultValueSql("TIMEZONE('utc', NOW())").ValueGeneratedOnAdd();
             builder.Property(t => t.PermissionNumber).HasMaxLength(200).IsUnicode(true).IsRequired();
-            builder.Property(t => t.SourceorDestination).HasMaxLength(250).IsUnicode(true).IsRequired();
+            builder.Property(t => t.SourceOrDestination).HasMaxLength(250).IsUnicode(true).IsRequired();
             builder.Property(t => t.Quantity).IsRequired();
 
 

@@ -18,6 +18,7 @@ namespace ICMS.Application.Interfaces.Services
         Task RemoveStockAsync(int batchId, InventoryUpdateDto dto, int userId, CancellationToken ct = default);
         Task RemoveStockByDoseAsync(InventoryRemoveByDoseDto dto, int userId, CancellationToken ct = default);
         Task<PagedResult<TransactionReadDto>> GetTransactionsAsync(int batchId, TransactionFilterDto filter, PaginationParams paginationParams, CancellationToken ct = default);
+        Task<PagedResult<TransactionReadDto>> GetAllTransactionsAsync(TransactionFilterDto filter, PaginationParams paginationParams, CancellationToken ct = default);
         Task<bool> DeactivateAsync(int batchId, CancellationToken ct = default);
     }
 }
