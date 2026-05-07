@@ -22,7 +22,9 @@ namespace ICMS.Application.Extensions
                 pw.Person?.SecondName,
                 pw.Person?.ThirdName,
                 pw.Person?.LastName,
-                pw.Person?.Gender.ToString()
+                pw.Person?.Gender.ToString(),
+                pw.Person?.PhoneNumber,
+                pw.CurrentAddress
             );
         }
 
@@ -113,6 +115,7 @@ namespace ICMS.Application.Extensions
                 pw.RhFactor,
                 pw.PersonId,
                 pw.UserId,
+                pw.CurrentAddress,
                 personDto,
                 pregnancies
             );

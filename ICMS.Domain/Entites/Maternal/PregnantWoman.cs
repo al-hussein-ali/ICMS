@@ -19,6 +19,7 @@ public class PregnantWoman : BaseEntity<int>
     public RhFactor RhFactor { get; private set; }
     public int PersonId { get; private set; }
     public int? UserId { get; private set; }
+    public string CurrentAddress { get; private set; } = string.Empty;
 
     public Person? Person { get; private set; }
 
@@ -29,7 +30,7 @@ public class PregnantWoman : BaseEntity<int>
     }
 
     public static PregnantWoman Create(string ageRange, byte pregnancyCount, BloodGroup bloodGroup, RhFactor rhFactor,
-        int personId, int? userId = null)
+        int personId, string? currentAddress = null, int? userId = null)
     {
         if (string.IsNullOrWhiteSpace(ageRange)) throw new DomainException("Age range is required");
         if (personId <= 0) throw new DomainException("Invalid person id");
@@ -41,12 +42,13 @@ public class PregnantWoman : BaseEntity<int>
             BloodGroup = bloodGroup,
             RhFactor = rhFactor,
             PersonId = personId,
+            CurrentAddress = currentAddress ?? string.Empty,
             UserId = userId
         };
     }
 
     public void Update(string ageRange, byte pregnancyCount, BloodGroup bloodGroup, RhFactor rhFactor,
-        int? userId = null)
+        string? currentAddress = null, int? userId = null)
     {
         if (string.IsNullOrWhiteSpace(ageRange)) throw new DomainException("Age range is required");
 
@@ -54,6 +56,7 @@ public class PregnantWoman : BaseEntity<int>
         PregnancyCount = pregnancyCount;
         BloodGroup = bloodGroup;
         RhFactor = rhFactor;
+        if (currentAddress != null) CurrentAddress = currentAddress;
 
         if (userId.HasValue && userId.Value > 0)
         {

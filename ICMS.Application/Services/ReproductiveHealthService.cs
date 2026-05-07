@@ -116,7 +116,7 @@ namespace ICMS.Application.Services
             }
 
             var pregnantWoman = PregnantWoman.Create(request.AgeRange, request.PregnancyCount, request.BloodGroup,
-                request.RhFactor, selectedPersonId, request.UserId > 0 ? request.UserId : null);
+                request.RhFactor, selectedPersonId, request.CurrentAddress, request.UserId > 0 ? request.UserId : null);
             await _unitOfWork.PregnantWomanRepository.AddAsync(pregnantWoman, ct);
             await _unitOfWork.SaveChangesAsync(ct);
 
@@ -126,10 +126,28 @@ namespace ICMS.Application.Services
         public async Task<bool> UpdatePregnantWomanAsync(int id, PregnantWomanCreateDto request,
             CancellationToken ct = default)
         {
-            var pw = await _unitOfWork.PregnantWomanRepository.GetByIdAsync(id, ct);
+            var pw = await _unitOfWork.PregnantWomanRepository.GetQueryable(true, ct)
+                .Include(pw => pw.Person)
+                .FirstOrDefaultAsync(x => x.Id == id, ct);
+
             if (pw == null) throw new NotFoundException("NotFound");
 
-            pw.Update(request.AgeRange, request.PregnancyCount, request.BloodGroup, request.RhFactor, request.UserId);
+            // Update PregnantWoman fields
+            pw.Update(request.AgeRange, request.PregnancyCount, request.BloodGroup, request.RhFactor, request.CurrentAddress, request.UserId);
+
+            // Update linked Person fields if data is provided
+            if (request.PersonCreateDto != null && pw.Person != null)
+            {
+                pw.Person.UpdatePersonInfo(
+                    request.PersonCreateDto.FirstName,
+                    request.PersonCreateDto.SecondName,
+                    request.PersonCreateDto.ThirdName,
+                    request.PersonCreateDto.LastName,
+                    Enum.Parse<ICMS.Domain.Enums.Gender>(request.PersonCreateDto.Gender, true),
+                    request.PersonCreateDto.DateOfBirth,
+                    request.PersonCreateDto.PhoneNumber
+                );
+            }
 
             await _unitOfWork.PregnantWomanRepository.UpdateAsync(pw, ct);
             await _unitOfWork.SaveChangesAsync(ct);

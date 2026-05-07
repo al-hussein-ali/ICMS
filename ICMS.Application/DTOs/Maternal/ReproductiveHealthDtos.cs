@@ -84,7 +84,8 @@ namespace ICMS.Application.DTOs.Maternal
         RhFactor RhFactor,
         int? UserId,
         Person.PersonCreateDto? PersonCreateDto,
-        int? PersonId
+        int? PersonId,
+        string? CurrentAddress = null
     );
 
     public record PregnantWomanReadDto(
@@ -99,7 +100,9 @@ namespace ICMS.Application.DTOs.Maternal
         string? SecondName = null,
         string? ThirdName = null,
         string? LastName = null,
-        string? Gender = null
+        string? Gender = null,
+        string? PhoneNumber = null,
+        string? CurrentAddress = null
     );
 
     public record PregnantWomanDetailsDto(
@@ -110,6 +113,7 @@ namespace ICMS.Application.DTOs.Maternal
         RhFactor RhFactor,
         int PersonId,
         int? UserId,
+        string? CurrentAddress,
         ICMS.Application.DTOs.Person.PersonReadDto? Person,
         List<PregnancyDetailsReadDto> Pregnancies
     );
