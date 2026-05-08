@@ -293,6 +293,19 @@ namespace ICMS.Application.Services
                 {
                     try
                     {
+                        // Reset IDs since EF Core might have populated them during the failed batch SaveChangesAsync
+                        item.Entity.Id = 0;
+                        if (item.Entity.Person != null)
+                        {
+                            item.Entity.Person.Id = 0;
+                        }
+                        
+                        // Also reset schedule IDs if any were generated
+                        foreach (var schedule in item.Entity.Schedules)
+                        {
+                            schedule.Id = 0;
+                        }
+
                         await unitOfWork.VaccinatedIndividualRepository.AddAsync(item.Entity, ct);
                         await unitOfWork.SaveChangesAsync(ct);
                         
