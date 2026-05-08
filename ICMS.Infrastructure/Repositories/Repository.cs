@@ -92,6 +92,12 @@ namespace ICMS.Infrastructure.Repositories
             return await _dbSet.FirstOrDefaultAsync(predicate, cancellationToken);
         }
 
+        public async Task<TEntity?> FirstOrDefaultAsync(Expression<Func<TEntity, bool>> predicate, CancellationToken cancellationToken = default, params Expression<Func<TEntity, object>>[] includes)
+        {
+            var query = GetQueryable(true, cancellationToken, includes);
+            return await query.FirstOrDefaultAsync(predicate, cancellationToken);
+        }
+
         public async Task<IReadOnlyList<TEntity>> GetPagedAsync(int pageNumber, int pageSize, bool track = false, CancellationToken cancellationToken = default, params Expression<Func<TEntity, object>>[] includes)
         {
             var query = GetQueryable(track, cancellationToken, includes);

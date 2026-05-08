@@ -32,7 +32,7 @@ namespace ICMS.Domain.Entites.Clinical
 
         public static ImmunizationRecord Create(int individualId, int doseId, DateOnly vaccinationDate, string takenIn, int userId, int? fieldVisitId = null, string? notes = null)
         {
-            if (individualId <= 0) throw new DomainException("Invalid individual id");
+            // Allowed to be 0 for new individuals being created in the same transaction
             if (doseId <= 0) throw new DomainException("Invalid dose id");
             if (userId <= 0) throw new DomainException("Invalid user id");
             if (string.IsNullOrWhiteSpace(takenIn)) throw new DomainException("TakenIn is required");

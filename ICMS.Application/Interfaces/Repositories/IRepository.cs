@@ -26,6 +26,7 @@ namespace ICMS.Application.Interfaces.Repositories
         Task<bool> ExistAsync(TKey id, CancellationToken cancellationToken = default);
         Task<bool> ExistAsync(Expression<Func<TEntity, bool>> predicate, CancellationToken cancellationToken = default);
         Task<TEntity?> FirstOrDefaultAsync(Expression<Func<TEntity, bool>> predicate, CancellationToken cancellationToken = default);
+        Task<TEntity?> FirstOrDefaultAsync(Expression<Func<TEntity, bool>> predicate, CancellationToken cancellationToken = default, params Expression<Func<TEntity, object>>[] includes);
 
         Task<IReadOnlyList<TEntity>> GetPagedAsync(int pageNumber, int pageSize, bool track = false, CancellationToken cancellationToken = default, params Expression<Func<TEntity, object>>[] includes);
 

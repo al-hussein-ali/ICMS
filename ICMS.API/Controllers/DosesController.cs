@@ -8,7 +8,7 @@ namespace ICMS.API.Controllers
 {
     [ApiController]
     [Route("api/doses")]
-    [Authorize(Roles = Roles.Admin + "," + Roles.VaccinationManager)]
+    [Authorize(Roles = Roles.StaffRoles)]
     public class DosesController(IDoseService doseService) : ControllerBase
     {
         [HttpGet()]
@@ -60,6 +60,5 @@ namespace ICMS.API.Controllers
 
             return NoContent();
         }
-
     }
 }

@@ -10,7 +10,7 @@ namespace ICMS.Api.Controllers
 {
     [Route("api/field-visits")]
     [ApiController]
-    [Authorize(Roles = Roles.Admin + "," + Roles.FieldVisitWorker)]
+    [Authorize(Roles = Roles.StaffRoles)]
     public class FieldVisitsController(IFieldVisitService fieldVisitService) : ControllerBase
     {
         [HttpGet]

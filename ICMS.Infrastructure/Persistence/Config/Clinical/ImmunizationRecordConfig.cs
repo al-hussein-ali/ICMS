@@ -33,7 +33,7 @@ namespace ICMS.Infrastructure.Persistence.Config.Clinical
             builder.HasOne(ir => ir.VaccinatedIndividual)
                 .WithMany(vi => vi.ImmunizationRecords)
                 .HasForeignKey(ir => ir.IndividualId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.Cascade);
 
             builder.HasOne(ir => ir.Dose)
                 .WithMany()

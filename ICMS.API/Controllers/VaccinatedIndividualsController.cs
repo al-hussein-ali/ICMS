@@ -12,7 +12,7 @@ namespace ICMS.API.Controllers
 {
     [Route("api/vaccinated-individuals")]
     [ApiController]
-    [Authorize(Roles = Roles.Admin + "," + Roles.VaccinationManager)]
+    [Authorize(Roles = Roles.StaffRoles)]
     public class VaccinatedIndividualsController(IVaccinatedIndividualService vaccinatedIndividualService) : ControllerBase
     {
 

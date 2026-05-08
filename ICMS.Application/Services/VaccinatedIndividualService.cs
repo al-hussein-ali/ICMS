@@ -210,7 +210,8 @@ namespace ICMS.Application.Services
             var allDoses = await unitOfWork.DoseRepository.GetAllAsync(dose.VaccineId, ct);
             var nextDose = allDoses.OrderBy(d => d.DoseOrder).FirstOrDefault(d => d.DoseOrder > dose.DoseOrder);
 
-            individual.AdministerDose(dose, dto.VaccinationDate, dto.TakenIn, userId, nextDose, notes: dto.Notes);
+            individual.AdministerDose(dose, dto.VaccinationDate, dto.TakenIn, userId, nextDose,
+                fieldVisitId: dto.FieldVisitId, notes: dto.Notes);
 
             await unitOfWork.SaveChangesAsync(ct);
             return true;
@@ -222,7 +223,7 @@ namespace ICMS.Application.Services
         {
             var result = new BulkSyncResultDto();
             var allDoses = await unitOfWork.DoseRepository.GetAllAsync(false, ct);
-            
+
             // Step 1: Prepare all entities in memory
             var staging = new List<(NewFieldVaccinatedIndividualDto Dto, VaccinatedIndividual Entity)>();
 
@@ -242,8 +243,11 @@ namespace ICMS.Application.Services
                         personDto.DateOfBirth,
                         personDto.PhoneNumber ?? "");
 
-                    var individual = VaccinatedIndividual.Create(dto.DirectorateId, dto.NeighborhoodId, dto.SubNeighborhoodId);
+                    var individual =
+                        VaccinatedIndividual.Create(dto.DirectorateId, dto.NeighborhoodId, dto.SubNeighborhoodId);
                     individual.AssignPerson(person);
+
+                    // Optimized scheduling using prefetched doses
                     individual.ScheduleInitialVaccines(allDoses, person.DateOfBirth);
 
                     if (dto.DoseId > 0)
@@ -252,17 +256,21 @@ namespace ICMS.Application.Services
                         if (dose != null)
                         {
                             var vaccineDoses = allDoses.Where(d => d.VaccineId == dose.VaccineId).ToList();
-                            var nextDose = vaccineDoses.OrderBy(d => d.DoseOrder).FirstOrDefault(d => d.DoseOrder > dose.DoseOrder);
-                            individual.AdministerDose(dose, dto.VaccinationDate, dto.TakenIn, userId, nextDose, notes: dto.Note);
+                            var nextDose = vaccineDoses.OrderBy(d => d.DoseOrder)
+                                .FirstOrDefault(d => d.DoseOrder > dose.DoseOrder);
+
+                            individual.AdministerDose(dose, dto.VaccinationDate, dto.TakenIn, userId, nextDose,
+                                fieldVisitId: dto.FieldVisitId, notes: dto.Note);
                         }
                     }
 
+                    await unitOfWork.VaccinatedIndividualRepository.AddAsync(individual, ct);
                     staging.Add((dto, individual));
                 }
                 catch (Exception ex)
                 {
-                    result.Failures.Add(new SyncFailureDetail(dto.CorrelationId, 
-                        $"{dto.Person?.FirstName} {dto.Person?.LastName}".Trim(), 
+                    result.Failures.Add(new SyncFailureDetail(dto.CorrelationId,
+                        $"{dto.Person?.FirstName} {dto.Person?.LastName}".Trim(),
                         ex.Message));
                 }
             }
@@ -270,11 +278,6 @@ namespace ICMS.Application.Services
             // Step 2: Attempt Batch Save
             try
             {
-                foreach (var item in staging)
-                {
-                    await unitOfWork.VaccinatedIndividualRepository.AddAsync(item.Entity, ct);
-                }
-
                 await unitOfWork.SaveChangesAsync(ct);
 
                 // If we reach here, the whole batch succeeded
@@ -293,30 +296,46 @@ namespace ICMS.Application.Services
                 {
                     try
                     {
-                        // Reset IDs since EF Core might have populated them during the failed batch SaveChangesAsync
-                        item.Entity.Id = 0;
-                        if (item.Entity.Person != null)
+                        // We re-create the entities for the individual retry to ensure a fresh state
+                        var personDto = item.Dto.Person;
+                        var person = Person.Create(
+                            personDto.FirstName ?? "Unknown",
+                            personDto.SecondName,
+                            personDto.ThirdName,
+                            personDto.LastName ?? "Unknown",
+                            Enum.Parse<ICMS.Domain.Enums.Gender>(personDto.Gender ?? "Male", true),
+                            personDto.DateOfBirth,
+                            personDto.PhoneNumber ?? "");
+
+                        var individual = VaccinatedIndividual.Create(item.Dto.DirectorateId, item.Dto.NeighborhoodId,
+                            item.Dto.SubNeighborhoodId);
+                        individual.AssignPerson(person);
+                        individual.ScheduleInitialVaccines(allDoses, person.DateOfBirth);
+
+                        if (item.Dto.DoseId > 0)
                         {
-                            item.Entity.Person.Id = 0;
-                        }
-                        
-                        // Also reset schedule IDs if any were generated
-                        foreach (var schedule in item.Entity.Schedules)
-                        {
-                            schedule.Id = 0;
+                            var dose = allDoses.FirstOrDefault(d => d.Id == item.Dto.DoseId);
+                            if (dose != null)
+                            {
+                                var vaccineDoses = allDoses.Where(d => d.VaccineId == dose.VaccineId).ToList();
+                                var nextDose = vaccineDoses.OrderBy(d => d.DoseOrder)
+                                    .FirstOrDefault(d => d.DoseOrder > dose.DoseOrder);
+                                individual.AdministerDose(dose, item.Dto.VaccinationDate, item.Dto.TakenIn, userId,
+                                    nextDose, fieldVisitId: item.Dto.FieldVisitId, notes: item.Dto.Note);
+                            }
                         }
 
-                        await unitOfWork.VaccinatedIndividualRepository.AddAsync(item.Entity, ct);
+                        await unitOfWork.VaccinatedIndividualRepository.AddAsync(individual, ct);
                         await unitOfWork.SaveChangesAsync(ct);
-                        
-                        result.Successes.Add(new SyncSuccessDetail(item.Dto.CorrelationId, item.Entity.Id));
+
+                        result.Successes.Add(new SyncSuccessDetail(item.Dto.CorrelationId, individual.Id));
                         result.SuccessCount++;
                     }
                     catch (Exception ex)
                     {
                         unitOfWork.RollbackTracker();
-                        result.Failures.Add(new SyncFailureDetail(item.Dto.CorrelationId, 
-                            $"{item.Dto.Person?.FirstName} {item.Dto.Person?.LastName}".Trim(), 
+                        result.Failures.Add(new SyncFailureDetail(item.Dto.CorrelationId,
+                            $"{item.Dto.Person?.FirstName} {item.Dto.Person?.LastName}".Trim(),
                             ex.InnerException?.Message ?? ex.Message));
                     }
                 }
@@ -330,9 +349,10 @@ namespace ICMS.Application.Services
         {
             var result = new BulkSyncResultDto();
             var ids = dtos.Select(d => d.IndividualId).ToList();
-            
+
             // Optimization: Fetch all needed data upfront
-            var individuals = await unitOfWork.VaccinatedIndividualRepository.GetByIdsWithImmunizationRecordsAsync(ids, ct);
+            var individuals =
+                await unitOfWork.VaccinatedIndividualRepository.GetByIdsWithImmunizationRecordsAsync(ids, ct);
             var allDoses = await unitOfWork.DoseRepository.GetAllAsync(false, ct);
 
             var staging = new List<(UpdateFieldVisitIndividualDto Dto, VaccinatedIndividual Entity)>();
@@ -344,23 +364,26 @@ namespace ICMS.Application.Services
                     var individual = individuals.FirstOrDefault(vi => vi.Id == dto.IndividualId);
                     if (individual == null)
                     {
-                        result.Failures.Add(new SyncFailureDetail(dto.CorrelationId, "Unknown", $"Individual ID {dto.IndividualId} not found."));
+                        result.Failures.Add(new SyncFailureDetail(dto.CorrelationId, "Unknown",
+                            $"Individual ID {dto.IndividualId} not found."));
                         continue;
                     }
 
                     var dose = allDoses.FirstOrDefault(d => d.Id == dto.DoseId);
                     if (dose == null)
                     {
-                        result.Failures.Add(new SyncFailureDetail(dto.CorrelationId, 
-                            $"{individual.Person?.FirstName} {individual.Person?.LastName}".Trim(), 
+                        result.Failures.Add(new SyncFailureDetail(dto.CorrelationId,
+                            $"{individual.Person?.FirstName} {individual.Person?.LastName}".Trim(),
                             $"Dose ID {dto.DoseId} not found."));
                         continue;
                     }
 
                     var vaccineDoses = allDoses.Where(d => d.VaccineId == dose.VaccineId).ToList();
-                    var nextDose = vaccineDoses.OrderBy(d => d.DoseOrder).FirstOrDefault(d => d.DoseOrder > dose.DoseOrder);
+                    var nextDose = vaccineDoses.OrderBy(d => d.DoseOrder)
+                        .FirstOrDefault(d => d.DoseOrder > dose.DoseOrder);
 
-                    individual.AdministerDose(dose, dto.VaccinationDate, dto.TakenIn, userId, nextDose, notes: dto.Note);
+                    individual.AdministerDose(dose, dto.VaccinationDate, dto.TakenIn, userId, nextDose,
+                        fieldVisitId: dto.FieldVisitId, notes: dto.Note);
                     staging.Add((dto, individual));
                 }
                 catch (Exception ex)
@@ -387,7 +410,8 @@ namespace ICMS.Application.Services
                 unitOfWork.RollbackTracker();
 
                 // Re-fetch clean entities for individual retries to avoid tracker conflicts
-                var freshIndividuals = await unitOfWork.VaccinatedIndividualRepository.GetByIdsWithImmunizationRecordsAsync(ids, ct);
+                var freshIndividuals =
+                    await unitOfWork.VaccinatedIndividualRepository.GetByIdsWithImmunizationRecordsAsync(ids, ct);
 
                 foreach (var dto in dtos)
                 {
@@ -401,19 +425,22 @@ namespace ICMS.Application.Services
 
                         var dose = allDoses.FirstOrDefault(d => d.Id == dto.DoseId);
                         var vaccineDoses = allDoses.Where(d => d.VaccineId == dose!.VaccineId).ToList();
-                        var nextDose = vaccineDoses.OrderBy(d => d.DoseOrder).FirstOrDefault(d => d.DoseOrder > dose!.DoseOrder);
+                        var nextDose = vaccineDoses.OrderBy(d => d.DoseOrder)
+                            .FirstOrDefault(d => d.DoseOrder > dose!.DoseOrder);
 
-                        individual.AdministerDose(dose!, dto.VaccinationDate, dto.TakenIn, userId, nextDose, notes: dto.Note);
-                        
+                        individual.AdministerDose(dose!, dto.VaccinationDate, dto.TakenIn, userId, nextDose,
+                            fieldVisitId: dto.FieldVisitId, notes: dto.Note);
+
                         await unitOfWork.SaveChangesAsync(ct);
-                        
+
                         result.Successes.Add(new SyncSuccessDetail(dto.CorrelationId, individual.Id));
                         result.SuccessCount++;
                     }
                     catch (Exception ex)
                     {
                         unitOfWork.RollbackTracker();
-                        result.Failures.Add(new SyncFailureDetail(dto.CorrelationId, "Unknown", ex.InnerException?.Message ?? ex.Message));
+                        result.Failures.Add(new SyncFailureDetail(dto.CorrelationId, "Unknown",
+                            ex.InnerException?.Message ?? ex.Message));
                     }
                 }
             }

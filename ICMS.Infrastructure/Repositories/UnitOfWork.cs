@@ -7,9 +7,6 @@ using ICMS.Infrastructure.Repositories.Identity;
 using ICMS.Infrastructure.Repositories.Maternal;
 using ICMS.Infrastructure.Repositories.Visits;
 using ICMS.Infrastructure.Repositories.Audit; // Assuming TransactionRepository might be here
-using System;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace ICMS.Infrastructure.Repositories
 {
@@ -29,7 +26,12 @@ namespace ICMS.Infrastructure.Repositories
         public IPregnantWomanRepository PregnantWomanRepository { get; }
         public IPreviousPregnancyComplicationsRepository PreviousPregnancyComplicationsRepository { get; }
         public IPreviousPostpartumComplicationsRepository PreviousPostpartumComplicationsRepository { get; }
-        public IPreviousPregnancyDeliveryComplicationsRepository PreviousPregnancyDeliveryComplicationsRepository { get; }
+
+        public IPreviousPregnancyDeliveryComplicationsRepository PreviousPregnancyDeliveryComplicationsRepository
+        {
+            get;
+        }
+
         public IRoleRepository RoleRepository { get; }
         public ITransactionRepository TransactionRepository { get; }
         public IUserRepository UserRepository { get; }
@@ -61,7 +63,8 @@ namespace ICMS.Infrastructure.Repositories
             PregnantWomanRepository = new PregnantWomanRepository(_context);
             PreviousPregnancyComplicationsRepository = new PreviousPregnancyComplicationsRepository(_context);
             PreviousPostpartumComplicationsRepository = new PreviousPostpartumComplicationsRepository(_context);
-            PreviousPregnancyDeliveryComplicationsRepository = new PreviousPregnancyDeliveryComplicationsRepository(_context);
+            PreviousPregnancyDeliveryComplicationsRepository =
+                new PreviousPregnancyDeliveryComplicationsRepository(_context);
             RoleRepository = new RoleRepository(_context);
             TransactionRepository = new TransactionRepository(_context);
             UserRepository = new UserRepository(_context);
@@ -82,6 +85,11 @@ namespace ICMS.Infrastructure.Repositories
         {
             cancellationToken.ThrowIfCancellationRequested();
             return await _context.SaveChangesAsync(cancellationToken);
+        }
+
+        public void RollbackTracker()
+        {
+            _context.ChangeTracker.Clear();
         }
 
         public async Task ExecuteInTransactionAsync(Func<Task> action)
@@ -145,11 +153,6 @@ namespace ICMS.Infrastructure.Repositories
                 await _context.DisposeAsync();
 
             GC.SuppressFinalize(this);
-        }
-
-        public void RollbackTracker()
-        {
-            _context.ChangeTracker.Clear();
         }
     }
 }

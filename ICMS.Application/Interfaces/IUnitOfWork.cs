@@ -1,15 +1,10 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
 using ICMS.Application.Interfaces.Repositories;
 
 namespace ICMS.Application.Interfaces
 {
-    public interface IUnitOfWork : IDisposable,IAsyncDisposable
+    public interface IUnitOfWork : IDisposable, IAsyncDisposable
     {
-
         IBatchRepository BatchRepository { get; }
         IDoseReportRepository DoseReportRepository { get; }
         IDoseRepository DoseRepository { get; }
@@ -20,7 +15,7 @@ namespace ICMS.Application.Interfaces
         IPersonRepository PersonRepository { get; }
         IPregnancyDetailsRepository PregnancyDetailsRepository { get; }
         IPregnantWomanRepository PregnantWomanRepository { get; }
-        IPreviousPregnancyComplicationsRepository PreviousPregnancyComplicationsRepository{ get; }
+        IPreviousPregnancyComplicationsRepository PreviousPregnancyComplicationsRepository { get; }
         IPreviousPostpartumComplicationsRepository PreviousPostpartumComplicationsRepository { get; }
         IPreviousPregnancyDeliveryComplicationsRepository PreviousPregnancyDeliveryComplicationsRepository { get; }
         IRoleRepository RoleRepository { get; }
@@ -29,7 +24,7 @@ namespace ICMS.Application.Interfaces
         IUserDeviceRepository UserDeviceRepository { get; }
         IUserRoleRepository UserRoleRepository { get; }
         IVaccinatedIndividualRepository VaccinatedIndividualRepository { get; }
-        IVaccineRepository VaccineRepository { get;}
+        IVaccineRepository VaccineRepository { get; }
         IGovernorateRepository GovernorateRepository { get; }
         IDirectorateRepository DirectorateRepository { get; }
         INeighborhoodRepository NeighborhoodRepository { get; }
@@ -40,10 +35,10 @@ namespace ICMS.Application.Interfaces
 
 
         Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
+        void RollbackTracker();
 
 
         Task ExecuteInTransactionAsync(Func<Task> action);
         Task<T> ExecuteInTransactionAsync<T>(Func<Task<T>> action);
-        void RollbackTracker();
     }
 }

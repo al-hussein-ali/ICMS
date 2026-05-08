@@ -3,6 +3,7 @@ using ICMS.Application.Interfaces;
 using ICMS.Application.Interfaces.Services;
 using ICMS.Domain.Exceptions;
 using ICMS.Application.Utilities;
+using ICMS.Application.Extensions;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -17,7 +18,7 @@ namespace ICMS.Application.Services
     {
         public async Task<AuthResponseDto> LoginAsync(LoginDto loginDto, CancellationToken ct = default)
         {
-            var user = await unitOfWork.UserRepository.FirstOrDefaultAsync(u => u.UserName == loginDto.UserName, ct);
+            var user = await unitOfWork.UserRepository.FirstOrDefaultAsync(u => u.UserName == loginDto.UserName, ct, u => u.Person);
             if (user == null || !user.IsActive)
             {
                 throw new DomainException("UserNotFoundOrInactive");
@@ -32,9 +33,9 @@ namespace ICMS.Application.Services
             
             var accessToken = tokenService.GenerateAccessToken(user, roles);
             var refreshToken = await tokenService.GenerateRefreshToken(user.Id, ct);
-            await unitOfWork.SaveChangesAsync(ct); // Ensure refresh token is persisted
+            await unitOfWork.SaveChangesAsync(ct); 
 
-            return new AuthResponseDto(accessToken, refreshToken);
+            return new AuthResponseDto(accessToken, refreshToken, user.ToReadDto(roles));
         }
 
         public async Task<AuthResponseDto> RefreshTokenAsync(RefreshTokenRequestDto refreshDto, CancellationToken ct = default)
@@ -56,11 +57,9 @@ namespace ICMS.Application.Services
                 throw new DomainException("InvalidRefreshToken:Expired");
             }
 
-            // Invalidate the old token to prevent reuse (Rotation)
             await refreshTokenService.InvalidateRefreshTokenAsync(tokenEntity, ct);
 
-            // Get user to generate new token
-            var user = await unitOfWork.UserRepository.GetByIdAsync(tokenEntity.UserId, ct);
+            var user = await unitOfWork.UserRepository.GetByIdAsync(tokenEntity.UserId, ct, u => u.Person);
             if (user == null || !user.IsActive)
             {
                 throw new DomainException("UserNotFoundOrInactive");
@@ -72,7 +71,7 @@ namespace ICMS.Application.Services
             var newRefreshToken = await tokenService.GenerateRefreshToken(user.Id, ct);
             await unitOfWork.SaveChangesAsync(ct);
 
-            return new AuthResponseDto(accessToken, newRefreshToken);
+            return new AuthResponseDto(accessToken, newRefreshToken, user.ToReadDto(roles));
         }
     }
 }

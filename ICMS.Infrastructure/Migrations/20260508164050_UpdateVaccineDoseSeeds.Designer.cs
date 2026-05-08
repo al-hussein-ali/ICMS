@@ -3,6 +3,7 @@ using System;
 using ICMS.Infrastructure.Persistence.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace ICMS.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260508164050_UpdateVaccineDoseSeeds")]
+    partial class UpdateVaccineDoseSeeds
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -2179,7 +2182,7 @@ namespace ICMS.Infrastructure.Migrations
                     b.HasOne("ICMS.Domain.Entites.Identity.VaccinatedIndividual", "VaccinatedIndividual")
                         .WithMany("ImmunizationRecords")
                         .HasForeignKey("IndividualId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("ICMS.Domain.Entites.Identity.User", "User")

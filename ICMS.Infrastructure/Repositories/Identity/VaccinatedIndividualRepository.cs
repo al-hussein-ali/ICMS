@@ -76,7 +76,10 @@ namespace ICMS.Infrastructure.Repositories.Identity
 
         public async Task<List<VaccinatedIndividual>> GetByIdsWithImmunizationRecordsAsync(List<int> ids, CancellationToken ct = default)
         {
-            return await _dbSet.Include(vi => vi.ImmunizationRecords)
+            return await _dbSet
+                .Include(vi => vi.Person)
+                .Include(vi => vi.ImmunizationRecords)
+                .Include(vi => vi.Schedules)
                 .Where(vi => ids.Contains(vi.Id))
                 .ToListAsync(ct);
         }

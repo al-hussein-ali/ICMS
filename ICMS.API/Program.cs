@@ -172,7 +172,11 @@ builder.Services.AddCors(options =>
                 "http://127.0.0.1:5173", "https://127.0.0.1:5173",
                 "http://127.0.0.1:5174", "https://127.0.0.1:5174",
                 "http://127.0.0.1:5175", "https://127.0.0.1:5175",
-                "http://127.0.0.1:5176", "https://127.0.0.1:5176"
+                "http://127.0.0.1:5176", "https://127.0.0.1:5176",
+                "http://192.168.1.101:5173", "https://192.168.1.101:5173",
+                "http://192.168.1.101:5174", "https://192.168.1.101:5174",
+                "http://192.168.1.101:5175", "https://192.168.1.101:5175",
+                "http://192.168.1.101:5176", "https://192.168.1.101:5176"
             )
             .AllowAnyMethod()
             .AllowAnyHeader()
@@ -200,7 +204,10 @@ if (app.Environment.IsDevelopment())
     });
 }
 
-app.UseHttpsRedirection();
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
 app.UseStaticFiles();
 
 app.UseRequestLocalization(options =>

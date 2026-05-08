@@ -8,10 +8,9 @@ namespace ICMS.API.Controllers
 {
     [Route("api/vaccines")]
     [ApiController]
-    [Authorize(Roles = Roles.Admin + "," + Roles.VaccinationManager)]
+    [Authorize(Roles = Roles.StaffRoles)]
     public class VaccinesController(IVaccineService vaccineService) : ControllerBase
     {
-
         [HttpGet]
         public async Task<ActionResult<IReadOnlyList<VaccineReadDto>>> GetAllAsync([FromQuery] string? name = null)
         {
