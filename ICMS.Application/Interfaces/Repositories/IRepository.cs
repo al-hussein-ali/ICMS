@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace ICMS.Application.Interfaces.Repositories
@@ -12,7 +13,7 @@ namespace ICMS.Application.Interfaces.Repositories
     {
         Task<IReadOnlyList<TEntity>> GetAllAsync(bool track = false,CancellationToken cancellationToken = default, params Expression<Func<TEntity, object>>[] includes);
 
-        Task<TEntity?> GetByIdAsync(TKey id, CancellationToken cancellationToken = default, bool track = true, params Expression<Func<TEntity, object>>[] includes);
+        Task<TEntity?> GetByIdAsync(TKey id, CancellationToken cancellationToken = default, params Expression<Func<TEntity, object>>[] includes);
 
         Task<TEntity> AddAsync(TEntity entity, CancellationToken cancellationToken = default);
 

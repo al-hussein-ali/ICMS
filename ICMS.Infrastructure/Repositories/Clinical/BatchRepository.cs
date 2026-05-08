@@ -5,6 +5,7 @@ using ICMS.Domain.Entites.Clinical;
 using ICMS.Domain.ValueObjects;
 using ICMS.Infrastructure.Persistence.Data;
 using Microsoft.EntityFrameworkCore;
+using System.Threading;
 
 namespace ICMS.Infrastructure.Repositories.Clinical
 {
@@ -56,10 +57,9 @@ namespace ICMS.Infrastructure.Repositories.Clinical
             return new PagedResult<Batch>(items, totalCount, paginationParams.PageNumber, paginationParams.PageSize);
         }
 
-        public async Task<Batch?> GetByIdWithDetailsAsync(int id, CancellationToken ct = default, bool track = false)
+        public async Task<Batch?> GetByIdWithDetailsAsync(int id, CancellationToken ct = default)
         {
-            var query = _context.Batches.AsQueryable();
-            if (!track) query = query.AsNoTracking();
+            var query = _context.Batches.AsNoTracking();
 
             return await query
                 .Include(b => b.Dose)

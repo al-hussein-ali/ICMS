@@ -20,15 +20,20 @@ using System;
 
 namespace ICMS.Application.Services
 {
-    public class VaccinatedIndividualService(IUnitOfWork unitOfWork, IIdentityService identityService) : IVaccinatedIndividualService
+    public class VaccinatedIndividualService(IUnitOfWork unitOfWork, IIdentityService identityService)
+        : IVaccinatedIndividualService
     {
-        public async Task<PagedResult<VaccinatedIndividualReadDto>> GetAllAsync(PaginationParams paginationParams, CancellationToken ct = default)
+        public async Task<PagedResult<VaccinatedIndividualReadDto>> GetAllAsync(PaginationParams paginationParams,
+            CancellationToken ct = default)
         {
-            var pagedResult = await unitOfWork.VaccinatedIndividualRepository.GetPagedWithDetailsAsync(paginationParams.PageNumber, paginationParams.PageSize, ct);
-            
+            var pagedResult =
+                await unitOfWork.VaccinatedIndividualRepository.GetPagedWithDetailsAsync(paginationParams.PageNumber,
+                    paginationParams.PageSize, ct);
+
             var items = pagedResult.Items.Select(vi => vi.ToReadDto()).ToList();
-            
-            return new PagedResult<VaccinatedIndividualReadDto>(items, pagedResult.TotalCount, pagedResult.PageNumber, pagedResult.PageSize);
+
+            return new PagedResult<VaccinatedIndividualReadDto>(items, pagedResult.TotalCount, pagedResult.PageNumber,
+                pagedResult.PageSize);
         }
 
         public async Task<VaccinatedIndividualDetailsDto> GetByIdAsync(int id, CancellationToken ct = default)
@@ -42,7 +47,8 @@ namespace ICMS.Application.Services
             return individual.ToDetailsDto();
         }
 
-        public async Task<VaccinatedIndividualDetailsDto> GetByCardNumberAsync(string cardNumber, CancellationToken ct = default)
+        public async Task<VaccinatedIndividualDetailsDto> GetByCardNumberAsync(string cardNumber,
+            CancellationToken ct = default)
         {
             var individual = await unitOfWork.VaccinatedIndividualRepository.GetDetailsByCardNumber(cardNumber, ct);
             if (individual == null)
@@ -53,18 +59,21 @@ namespace ICMS.Application.Services
             return individual.ToDetailsDto();
         }
 
-        public async Task<VaccinatedIndividualReadDto> AddAsync(VaccinatedIndividualCreateDto vaccinatedIndividualCreateDto, CancellationToken ct = default)
+        public async Task<VaccinatedIndividualReadDto> AddAsync(
+            VaccinatedIndividualCreateDto vaccinatedIndividualCreateDto, CancellationToken ct = default)
         {
             Person? person;
 
             if (vaccinatedIndividualCreateDto.PersonId is > 0)
             {
-                person = await unitOfWork.PersonRepository.GetByIdAsync(vaccinatedIndividualCreateDto.PersonId.Value, ct);
+                person = await unitOfWork.PersonRepository.GetByIdAsync(vaccinatedIndividualCreateDto.PersonId.Value,
+                    ct);
                 if (person == null) throw new NotFoundException("NotFound");
             }
             else
             {
-                if (vaccinatedIndividualCreateDto.PersonCreateDto == null) throw new DomainException("MissingPersonData");
+                if (vaccinatedIndividualCreateDto.PersonCreateDto == null)
+                    throw new DomainException("MissingPersonData");
 
                 // 1. Check if person already exists by details to avoid UniqueConstraintException
                 person = await unitOfWork.PersonRepository.GetByAsync(
@@ -81,7 +90,8 @@ namespace ICMS.Application.Services
                         vaccinatedIndividualCreateDto.PersonCreateDto.SecondName,
                         vaccinatedIndividualCreateDto.PersonCreateDto.ThirdName,
                         vaccinatedIndividualCreateDto.PersonCreateDto.LastName,
-                        Enum.Parse<ICMS.Domain.Enums.Gender>(vaccinatedIndividualCreateDto.PersonCreateDto.Gender, true),
+                        Enum.Parse<ICMS.Domain.Enums.Gender>(vaccinatedIndividualCreateDto.PersonCreateDto.Gender,
+                            true),
                         vaccinatedIndividualCreateDto.PersonCreateDto.DateOfBirth,
                         vaccinatedIndividualCreateDto.PersonCreateDto.PhoneNumber);
 
@@ -108,13 +118,15 @@ namespace ICMS.Application.Services
             await unitOfWork.SaveChangesAsync(ct);
 
             // Fetch the full object with details to avoid NullReferenceException in ToReadDto
-            var fullIndividual = await unitOfWork.VaccinatedIndividualRepository.GetByIdAsync(vaccinatedIndividual.Id, ct);
+            var fullIndividual =
+                await unitOfWork.VaccinatedIndividualRepository.GetByIdAsync(vaccinatedIndividual.Id, ct);
             if (fullIndividual == null) throw new NotFoundException("NotFound");
 
             return fullIndividual.ToReadDto();
         }
 
-        public async Task<bool> UpdateAsync(int id, VaccinatedIndividualCreateDto updatedEntity, CancellationToken ct = default)
+        public async Task<bool> UpdateAsync(int id, VaccinatedIndividualCreateDto updatedEntity,
+            CancellationToken ct = default)
         {
             var individual = await unitOfWork.VaccinatedIndividualRepository.GetByIdAsync(id, ct);
             if (individual == null)
@@ -122,7 +134,8 @@ namespace ICMS.Application.Services
                 throw new NotFoundException("NotFound");
             }
 
-            individual.UpdateIndividualInfo(updatedEntity.DirectorateId, updatedEntity.NeighborhoodId, updatedEntity.SubNeighborhoodId);
+            individual.UpdateIndividualInfo(updatedEntity.DirectorateId, updatedEntity.NeighborhoodId,
+                updatedEntity.SubNeighborhoodId);
 
             // Handle switching to a different existing person
             if (updatedEntity.PersonId > 0 && updatedEntity.PersonId != individual.PersonId)
@@ -168,7 +181,7 @@ namespace ICMS.Application.Services
             int personId = individual.PersonId;
 
             await unitOfWork.VaccinatedIndividualRepository.DeleteAsync(individual, ct);
-            
+
             if (deletePersonalInfo)
             {
                 var person = await unitOfWork.PersonRepository.GetByIdAsync(personId, ct);
@@ -185,11 +198,12 @@ namespace ICMS.Application.Services
 
         public async Task<bool> GiveDose(ImmunizationRecordCreateDto dto, int userId, CancellationToken ct = default)
         {
-            var individual = await unitOfWork.VaccinatedIndividualRepository.GetIndividualWithSchedulesAsync(dto.IndividualId, ct);
+            var individual =
+                await unitOfWork.VaccinatedIndividualRepository.GetIndividualWithSchedulesAsync(dto.IndividualId, ct);
             if (individual == null)
                 throw new NotFoundException("NotFound");
 
-            var dose = await unitOfWork.DoseRepository.GetByIdAsync(dto.DoseId, ct);
+            var dose = await unitOfWork.DoseRepository.GetByIdAsync(dto.DoseId, cancellationToken: ct);
             if (dose == null)
                 throw new NotFoundException("NotFound");
 
@@ -202,7 +216,9 @@ namespace ICMS.Application.Services
             return true;
         }
 
-        public async Task<BulkSyncResultDto> BulkInsertIndividualAsync(List<NewFieldVaccinatedIndividualDto> newFieldVaccinatedIndividuals, int userId, CancellationToken ct = default)
+        public async Task<BulkSyncResultDto> BulkInsertIndividualAsync(
+            List<NewFieldVaccinatedIndividualDto> newFieldVaccinatedIndividuals, int userId,
+            CancellationToken ct = default)
         {
             var result = new BulkSyncResultDto();
             var allDoses = await unitOfWork.DoseRepository.GetAllAsync(false, ct);
@@ -215,25 +231,28 @@ namespace ICMS.Application.Services
                     var personDto = dto.Person;
                     if (personDto == null) throw new ArgumentNullException(nameof(dto.Person));
                     var person = Person.Create(
-                        personDto.FirstName ?? "Unknown", 
-                        personDto.SecondName, 
-                        personDto.ThirdName, 
-                        personDto.LastName ?? "Unknown", 
-                        Enum.Parse<ICMS.Domain.Enums.Gender>(personDto.Gender ?? "Male", true), 
-                        personDto.DateOfBirth, 
+                        personDto.FirstName ?? "Unknown",
+                        personDto.SecondName,
+                        personDto.ThirdName,
+                        personDto.LastName ?? "Unknown",
+                        Enum.Parse<ICMS.Domain.Enums.Gender>(personDto.Gender ?? "Male", true),
+                        personDto.DateOfBirth,
                         personDto.PhoneNumber ?? "");
-                    var individual = VaccinatedIndividual.Create(dto.DirectorateId, dto.NeighborhoodId, dto.SubNeighborhoodId);
+                    var individual =
+                        VaccinatedIndividual.Create(dto.DirectorateId, dto.NeighborhoodId, dto.SubNeighborhoodId);
                     individual.AssignPerson(person);
 
                     individual.ScheduleInitialVaccines(allDoses, person.DateOfBirth);
 
-                    var dose = await unitOfWork.DoseRepository.GetByIdAsync(dto.DoseId, ct);
+                    var dose = await unitOfWork.DoseRepository.GetByIdAsync(dto.DoseId, cancellationToken: ct);
                     if (dose != null)
                     {
                         var vaccineDoses = await unitOfWork.DoseRepository.GetAllAsync(dose.VaccineId, ct);
-                        var nextDose = vaccineDoses.OrderBy(d => d.DoseOrder).FirstOrDefault(d => d.DoseOrder > dose.DoseOrder);
+                        var nextDose = vaccineDoses.OrderBy(d => d.DoseOrder)
+                            .FirstOrDefault(d => d.DoseOrder > dose.DoseOrder);
 
-                        individual.AdministerDose(dose, dto.VaccinationDate, dto.TakenIn, userId, nextDose, notes: dto.Note);
+                        individual.AdministerDose(dose, dto.VaccinationDate, dto.TakenIn, userId, nextDose,
+                            notes: dto.Note);
                     }
 
                     await unitOfWork.VaccinatedIndividualRepository.AddAsync(individual, ct);
@@ -244,18 +263,22 @@ namespace ICMS.Application.Services
                 }
                 catch (Exception ex)
                 {
-                    result.Failures.Add(new SyncFailureDetail(dto.CorrelationId, string.IsNullOrEmpty(fullName) ? "Unknown" : fullName, ex.InnerException?.Message ?? ex.Message));
+                    result.Failures.Add(new SyncFailureDetail(dto.CorrelationId,
+                        string.IsNullOrEmpty(fullName) ? "Unknown" : fullName,
+                        ex.InnerException?.Message ?? ex.Message));
                 }
             }
 
             return result;
         }
 
-        public async Task<BulkSyncResultDto> BulkUpdateFieldVisitIndividualAsync(List<UpdateFieldVisitIndividualDto> dtos, int userId, CancellationToken ct = default)
+        public async Task<BulkSyncResultDto> BulkUpdateFieldVisitIndividualAsync(
+            List<UpdateFieldVisitIndividualDto> dtos, int userId, CancellationToken ct = default)
         {
             var result = new BulkSyncResultDto();
             var ids = dtos.Select(d => d.IndividualId).ToList();
-            var individuals = await unitOfWork.VaccinatedIndividualRepository.GetByIdsWithImmunizationRecordsAsync(ids, ct);
+            var individuals =
+                await unitOfWork.VaccinatedIndividualRepository.GetByIdsWithImmunizationRecordsAsync(ids, ct);
 
             foreach (var dto in dtos)
             {
@@ -264,31 +287,37 @@ namespace ICMS.Application.Services
                     var individual = individuals.FirstOrDefault(vi => vi.Id == dto.IndividualId);
                     if (individual == null)
                     {
-                        result.Failures.Add(new SyncFailureDetail(dto.CorrelationId, "Unknown", $"Individual ID {dto.IndividualId} not found."));
+                        result.Failures.Add(new SyncFailureDetail(dto.CorrelationId, "Unknown",
+                            $"Individual ID {dto.IndividualId} not found."));
                         continue;
                     }
 
-                    var dose = await unitOfWork.DoseRepository.GetByIdAsync(dto.DoseId, ct);
+                    var dose = await unitOfWork.DoseRepository.GetByIdAsync(dto.DoseId, cancellationToken: ct);
                     if (dose != null)
                     {
                         var allDoses = await unitOfWork.DoseRepository.GetAllAsync(dose.VaccineId, ct);
-                        var nextDose = allDoses.OrderBy(d => d.DoseOrder).FirstOrDefault(d => d.DoseOrder > dose.DoseOrder);
+                        var nextDose = allDoses.OrderBy(d => d.DoseOrder)
+                            .FirstOrDefault(d => d.DoseOrder > dose.DoseOrder);
 
-                        individual.AdministerDose(dose, dto.VaccinationDate, dto.TakenIn, userId, nextDose, notes: dto.Note);
-                        
+                        individual.AdministerDose(dose, dto.VaccinationDate, dto.TakenIn, userId, nextDose,
+                            notes: dto.Note);
+
                         await unitOfWork.SaveChangesAsync(ct);
-                        
+
                         result.Successes.Add(new SyncSuccessDetail(dto.CorrelationId, individual.Id));
                         result.SuccessCount++;
                     }
                     else
                     {
-                        result.Failures.Add(new SyncFailureDetail(dto.CorrelationId, $"{individual.Person?.FirstName} {individual.Person?.LastName}".Trim(), $"Dose ID {dto.DoseId} not found."));
+                        result.Failures.Add(new SyncFailureDetail(dto.CorrelationId,
+                            $"{individual.Person?.FirstName} {individual.Person?.LastName}".Trim(),
+                            $"Dose ID {dto.DoseId} not found."));
                     }
                 }
                 catch (Exception ex)
                 {
-                    result.Failures.Add(new SyncFailureDetail(dto.CorrelationId, "Unknown", ex.InnerException?.Message ?? ex.Message));
+                    result.Failures.Add(new SyncFailureDetail(dto.CorrelationId, "Unknown",
+                        ex.InnerException?.Message ?? ex.Message));
                 }
             }
 
@@ -303,7 +332,8 @@ namespace ICMS.Application.Services
 
             if (individual.UserId.HasValue)
             {
-                var existingUser = await unitOfWork.UserRepository.GetByIdAsync(individual.UserId.Value, ct);
+                var existingUser =
+                    await unitOfWork.UserRepository.GetByIdAsync(individual.UserId.Value, cancellationToken: ct);
                 return new GeneratedAccountDto(existingUser?.UserName ?? "Unknown", "********", false);
             }
 
@@ -344,7 +374,6 @@ namespace ICMS.Application.Services
 
             return new GeneratedAccountDto(username, password, true);
         }
-
 
 
         private async Task ScheduleAllInitialVaccinesAsync(List<VaccinatedIndividual> individuals, CancellationToken ct)

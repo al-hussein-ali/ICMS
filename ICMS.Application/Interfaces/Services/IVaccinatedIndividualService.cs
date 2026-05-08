@@ -3,6 +3,7 @@ using ICMS.Application.DTOs.VaccinatedIndividual;
 using ICMS.Application.DTOs.Pagination;
 using ICMS.Application.DTOs.ImmunizationRecord;
 using ICMS.Application.DTOs.Account;
+using ICMS.Domain.ValueObjects;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
