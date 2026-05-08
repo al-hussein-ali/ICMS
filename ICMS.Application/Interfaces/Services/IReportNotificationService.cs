@@ -9,5 +9,6 @@ namespace ICMS.Application.Interfaces.Services
     {
         Task NotifyReportReadyAsync(string userId, string jobId, string downloadUrl, CancellationToken ct = default);
         Task NotifyReportFailedAsync(string userId, string jobId, string errorMessage, CancellationToken ct = default);
+        Task NotifyGeneralAlertAsync(string type, string title, string message, CancellationToken ct = default);
     }
 }

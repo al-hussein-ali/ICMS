@@ -108,6 +108,31 @@ namespace ICMS.Infrastructure.Repositories
             }
         }
 
+        public async Task<T> ExecuteInTransactionAsync<T>(Func<Task<T>> action)
+        {
+            var isInMemory = _context.Database.ProviderName == "Microsoft.EntityFrameworkCore.InMemory";
+            if (isInMemory || _context.Database.CurrentTransaction != null)
+            {
+                var result = await action();
+                await _context.SaveChangesAsync();
+                return result;
+            }
+
+            await using var transaction = await _context.Database.BeginTransactionAsync();
+            try
+            {
+                var result = await action();
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+                return result;
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
+        }
+
         public void Dispose()
         {
             _context?.Dispose();

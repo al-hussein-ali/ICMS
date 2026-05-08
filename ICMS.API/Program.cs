@@ -232,6 +232,12 @@ using (var scope = app.Services.CreateScope())
         "DailyHealthAdvisoryDispatcher",
         service => service.DispatchPendingAdvisoriesAsync(default),
         "0 5 * * *");
+
+    // Register Batch Expiration tracker to run daily at 7:00 AM (UTC+3 => 04:00 UTC)
+    recurringJobManager.AddOrUpdate<ICMS.Application.Interfaces.Services.IBatchExpirationTrackerService>(
+        "DailyBatchExpirationTracker",
+        service => service.TrackExpiringBatchesAsync(default),
+        "0 4 * * *");
 }
 
 // Ensure reports output directory exists

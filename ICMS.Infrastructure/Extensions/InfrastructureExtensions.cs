@@ -63,6 +63,7 @@ namespace ICMS.Infrastructure.Extensions
             services.AddScoped<IHealthAdvisoryService, HealthAdvisoryService>();
             services.AddScoped<IUserDeviceService, UserDeviceService>();
             services.AddScoped<IAdvisoryDispatchBackgroundService, AdvisoryDispatchBackgroundService>();
+            services.AddScoped<IBatchExpirationTrackerService, BatchExpirationTrackerService>();
 
             // Report generation: strategy pattern — fetchers and renderers
             services.AddScoped<IReportDataFetcher, VaccinatedIndividualsReportFetcher>();

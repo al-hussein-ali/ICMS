@@ -29,21 +29,27 @@ namespace ICMS.Application.Services
 
         public async Task<DoseReportReadDto> AddAsync(DoseReportCreateDto dto, int userId, CancellationToken ct = default)
         {
-            var batch = await unitOfWork.BatchRepository.GetByIdAsync(dto.BatchId, ct);
-            if (batch == null) throw new NotFoundException("NotFound");
-
-            // Automatically zero out stock for reported batches to prevent further use
-            if (batch.TotalQuantity > 0)
+            return await unitOfWork.ExecuteInTransactionAsync<DoseReportReadDto>(async () =>
             {
-                batch.RemoveInventory(batch.TotalQuantity, "REPORTED", "DISCARDED", userId);
-            }
+                var batch = await unitOfWork.BatchRepository.GetByIdAsync(dto.BatchId, ct);
+                if (batch == null) throw new NotFoundException("NotFound");
 
-            var report = dto.ToDomain(userId);
-            
-            await unitOfWork.DoseReportRepository.AddAsync(report, ct);
-            await unitOfWork.SaveChangesAsync(ct);
-            
-            return report.ToReadDto();
+                // Automatically zero out stock for reported batches to prevent further use
+                if (batch.TotalQuantity > 0)
+                {
+                    batch.RemoveInventory(batch.TotalQuantity, "REPORTED", "DISCARDED", userId);
+                    
+                    // Explicitly add the new transaction to the context to ensure it is saved
+                    var lastTransaction = batch.Transactions.Last();
+                    await unitOfWork.TransactionRepository.AddAsync(lastTransaction, ct);
+                }
+
+                var report = dto.ToDomain(userId);
+
+                await unitOfWork.DoseReportRepository.AddAsync(report, ct);
+
+                return report.ToReadDto();
+            });
         }
 
         public async Task<bool> DeleteAsync(int id, CancellationToken ct = default)

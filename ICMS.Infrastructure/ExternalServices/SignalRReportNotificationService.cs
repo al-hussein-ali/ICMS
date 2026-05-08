@@ -33,5 +33,10 @@ namespace ICMS.Infrastructure.ExternalServices
                 .Group($"user-{userId}")
                 .SendAsync("ReportFailed", new { jobId, errorMessage }, ct);
         }
+
+        public async Task NotifyGeneralAlertAsync(string type, string title, string message, CancellationToken ct = default)
+        {
+            await _hubContext.Clients.All.SendAsync("NewAlert", new { type, title, message }, ct);
+        }
     }
 }
