@@ -222,14 +222,17 @@ namespace ICMS.Application.Services
         {
             var result = new BulkSyncResultDto();
             var allDoses = await unitOfWork.DoseRepository.GetAllAsync(false, ct);
+            
+            // Step 1: Prepare all entities in memory
+            var staging = new List<(NewFieldVaccinatedIndividualDto Dto, VaccinatedIndividual Entity)>();
 
             foreach (var dto in newFieldVaccinatedIndividuals)
             {
-                var fullName = $"{dto.Person?.FirstName} {dto.Person?.LastName}".Trim();
                 try
                 {
                     var personDto = dto.Person;
                     if (personDto == null) throw new ArgumentNullException(nameof(dto.Person));
+
                     var person = Person.Create(
                         personDto.FirstName ?? "Unknown",
                         personDto.SecondName,
@@ -238,34 +241,71 @@ namespace ICMS.Application.Services
                         Enum.Parse<ICMS.Domain.Enums.Gender>(personDto.Gender ?? "Male", true),
                         personDto.DateOfBirth,
                         personDto.PhoneNumber ?? "");
-                    var individual =
-                        VaccinatedIndividual.Create(dto.DirectorateId, dto.NeighborhoodId, dto.SubNeighborhoodId);
-                    individual.AssignPerson(person);
 
+                    var individual = VaccinatedIndividual.Create(dto.DirectorateId, dto.NeighborhoodId, dto.SubNeighborhoodId);
+                    individual.AssignPerson(person);
                     individual.ScheduleInitialVaccines(allDoses, person.DateOfBirth);
 
-                    var dose = await unitOfWork.DoseRepository.GetByIdAsync(dto.DoseId, cancellationToken: ct);
-                    if (dose != null)
+                    if (dto.DoseId > 0)
                     {
-                        var vaccineDoses = await unitOfWork.DoseRepository.GetAllAsync(dose.VaccineId, ct);
-                        var nextDose = vaccineDoses.OrderBy(d => d.DoseOrder)
-                            .FirstOrDefault(d => d.DoseOrder > dose.DoseOrder);
-
-                        individual.AdministerDose(dose, dto.VaccinationDate, dto.TakenIn, userId, nextDose,
-                            notes: dto.Note);
+                        var dose = allDoses.FirstOrDefault(d => d.Id == dto.DoseId);
+                        if (dose != null)
+                        {
+                            var vaccineDoses = allDoses.Where(d => d.VaccineId == dose.VaccineId).ToList();
+                            var nextDose = vaccineDoses.OrderBy(d => d.DoseOrder).FirstOrDefault(d => d.DoseOrder > dose.DoseOrder);
+                            individual.AdministerDose(dose, dto.VaccinationDate, dto.TakenIn, userId, nextDose, notes: dto.Note);
+                        }
                     }
 
-                    await unitOfWork.VaccinatedIndividualRepository.AddAsync(individual, ct);
-                    await unitOfWork.SaveChangesAsync(ct);
-
-                    result.Successes.Add(new SyncSuccessDetail(dto.CorrelationId, individual.Id));
-                    result.SuccessCount++;
+                    staging.Add((dto, individual));
                 }
                 catch (Exception ex)
                 {
-                    result.Failures.Add(new SyncFailureDetail(dto.CorrelationId,
-                        string.IsNullOrEmpty(fullName) ? "Unknown" : fullName,
-                        ex.InnerException?.Message ?? ex.Message));
+                    result.Failures.Add(new SyncFailureDetail(dto.CorrelationId, 
+                        $"{dto.Person?.FirstName} {dto.Person?.LastName}".Trim(), 
+                        ex.Message));
+                }
+            }
+
+            // Step 2: Attempt Batch Save
+            try
+            {
+                foreach (var item in staging)
+                {
+                    await unitOfWork.VaccinatedIndividualRepository.AddAsync(item.Entity, ct);
+                }
+
+                await unitOfWork.SaveChangesAsync(ct);
+
+                // If we reach here, the whole batch succeeded
+                foreach (var item in staging)
+                {
+                    result.Successes.Add(new SyncSuccessDetail(item.Dto.CorrelationId, item.Entity.Id));
+                    result.SuccessCount++;
+                }
+            }
+            catch (Exception)
+            {
+                // Step 3: Fallback to Individual Retry if Batch fails
+                unitOfWork.RollbackTracker();
+
+                foreach (var item in staging)
+                {
+                    try
+                    {
+                        await unitOfWork.VaccinatedIndividualRepository.AddAsync(item.Entity, ct);
+                        await unitOfWork.SaveChangesAsync(ct);
+                        
+                        result.Successes.Add(new SyncSuccessDetail(item.Dto.CorrelationId, item.Entity.Id));
+                        result.SuccessCount++;
+                    }
+                    catch (Exception ex)
+                    {
+                        unitOfWork.RollbackTracker();
+                        result.Failures.Add(new SyncFailureDetail(item.Dto.CorrelationId, 
+                            $"{item.Dto.Person?.FirstName} {item.Dto.Person?.LastName}".Trim(), 
+                            ex.InnerException?.Message ?? ex.Message));
+                    }
                 }
             }
 
@@ -277,8 +317,12 @@ namespace ICMS.Application.Services
         {
             var result = new BulkSyncResultDto();
             var ids = dtos.Select(d => d.IndividualId).ToList();
-            var individuals =
-                await unitOfWork.VaccinatedIndividualRepository.GetByIdsWithImmunizationRecordsAsync(ids, ct);
+            
+            // Optimization: Fetch all needed data upfront
+            var individuals = await unitOfWork.VaccinatedIndividualRepository.GetByIdsWithImmunizationRecordsAsync(ids, ct);
+            var allDoses = await unitOfWork.DoseRepository.GetAllAsync(false, ct);
+
+            var staging = new List<(UpdateFieldVisitIndividualDto Dto, VaccinatedIndividual Entity)>();
 
             foreach (var dto in dtos)
             {
@@ -287,37 +331,77 @@ namespace ICMS.Application.Services
                     var individual = individuals.FirstOrDefault(vi => vi.Id == dto.IndividualId);
                     if (individual == null)
                     {
-                        result.Failures.Add(new SyncFailureDetail(dto.CorrelationId, "Unknown",
-                            $"Individual ID {dto.IndividualId} not found."));
+                        result.Failures.Add(new SyncFailureDetail(dto.CorrelationId, "Unknown", $"Individual ID {dto.IndividualId} not found."));
                         continue;
                     }
 
-                    var dose = await unitOfWork.DoseRepository.GetByIdAsync(dto.DoseId, cancellationToken: ct);
-                    if (dose != null)
+                    var dose = allDoses.FirstOrDefault(d => d.Id == dto.DoseId);
+                    if (dose == null)
                     {
-                        var allDoses = await unitOfWork.DoseRepository.GetAllAsync(dose.VaccineId, ct);
-                        var nextDose = allDoses.OrderBy(d => d.DoseOrder)
-                            .FirstOrDefault(d => d.DoseOrder > dose.DoseOrder);
-
-                        individual.AdministerDose(dose, dto.VaccinationDate, dto.TakenIn, userId, nextDose,
-                            notes: dto.Note);
-
-                        await unitOfWork.SaveChangesAsync(ct);
-
-                        result.Successes.Add(new SyncSuccessDetail(dto.CorrelationId, individual.Id));
-                        result.SuccessCount++;
-                    }
-                    else
-                    {
-                        result.Failures.Add(new SyncFailureDetail(dto.CorrelationId,
-                            $"{individual.Person?.FirstName} {individual.Person?.LastName}".Trim(),
+                        result.Failures.Add(new SyncFailureDetail(dto.CorrelationId, 
+                            $"{individual.Person?.FirstName} {individual.Person?.LastName}".Trim(), 
                             $"Dose ID {dto.DoseId} not found."));
+                        continue;
                     }
+
+                    var vaccineDoses = allDoses.Where(d => d.VaccineId == dose.VaccineId).ToList();
+                    var nextDose = vaccineDoses.OrderBy(d => d.DoseOrder).FirstOrDefault(d => d.DoseOrder > dose.DoseOrder);
+
+                    individual.AdministerDose(dose, dto.VaccinationDate, dto.TakenIn, userId, nextDose, notes: dto.Note);
+                    staging.Add((dto, individual));
                 }
                 catch (Exception ex)
                 {
-                    result.Failures.Add(new SyncFailureDetail(dto.CorrelationId, "Unknown",
-                        ex.InnerException?.Message ?? ex.Message));
+                    result.Failures.Add(new SyncFailureDetail(dto.CorrelationId, "Unknown", ex.Message));
+                }
+            }
+
+            // Step 2: Attempt Batch Save
+            try
+            {
+                await unitOfWork.SaveChangesAsync(ct);
+
+                // Batch succeeded
+                foreach (var item in staging)
+                {
+                    result.Successes.Add(new SyncSuccessDetail(item.Dto.CorrelationId, item.Entity.Id));
+                    result.SuccessCount++;
+                }
+            }
+            catch (Exception)
+            {
+                // Step 3: Fallback to Individual Retry
+                unitOfWork.RollbackTracker();
+
+                // Re-fetch clean entities for individual retries to avoid tracker conflicts
+                var freshIndividuals = await unitOfWork.VaccinatedIndividualRepository.GetByIdsWithImmunizationRecordsAsync(ids, ct);
+
+                foreach (var dto in dtos)
+                {
+                    // Skip if already failed in logic loop
+                    if (staging.All(s => s.Dto.CorrelationId != dto.CorrelationId)) continue;
+
+                    try
+                    {
+                        var individual = freshIndividuals.FirstOrDefault(vi => vi.Id == dto.IndividualId);
+                        if (individual == null) continue;
+
+                        var dose = allDoses.FirstOrDefault(d => d.Id == dto.DoseId);
+                        var vaccineDoses = allDoses.Where(d => d.VaccineId == dose!.VaccineId).ToList();
+                        var nextDose = vaccineDoses.OrderBy(d => d.DoseOrder).FirstOrDefault(d => d.DoseOrder > dose!.DoseOrder);
+
+                        individual.AdministerDose(dose!, dto.VaccinationDate, dto.TakenIn, userId, nextDose, notes: dto.Note);
+                        
+                        await unitOfWork.SaveChangesAsync(ct);
+                        
+                        result.Successes.Add(new SyncSuccessDetail(dto.CorrelationId, individual.Id));
+                        result.SuccessCount++;
+                    }
+                    catch (Exception ex)
+                    {
+                        unitOfWork.RollbackTracker();
+                        result.Failures.Add(new SyncFailureDetail(dto.CorrelationId, "Unknown", ex.InnerException?.Message ?? ex.Message));
+                    }
                 }
             }
 

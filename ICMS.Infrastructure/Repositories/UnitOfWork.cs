@@ -146,5 +146,10 @@ namespace ICMS.Infrastructure.Repositories
 
             GC.SuppressFinalize(this);
         }
+
+        public void RollbackTracker()
+        {
+            _context.ChangeTracker.Clear();
+        }
     }
 }

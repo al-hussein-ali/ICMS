@@ -30,7 +30,12 @@ namespace ICMS.Application.Services
             _logger.LogInformation("Starting Batch Expiration Tracking at {Time} (UTC)", DateTime.UtcNow);
 
             var today = DateOnly.FromDateTime(DateTime.UtcNow);
-            var thresholdDate = today.AddDays(30); // 30 days before expiry
+            // Increased threshold to 90 days for better visibility during testing
+            var thresholdDate = today.AddDays(90); 
+
+            // Log total active batches for debugging
+            var activeCount = _unitOfWork.BatchRepository.GetQueryable().Count(b => b.IsActive && b.TotalQuantity > 0);
+            _logger.LogInformation("Checking expiration for {Count} active batches with inventory.", activeCount);
 
             var expiringBatches = _unitOfWork.BatchRepository.GetQueryable()
                 .Where(b => b.IsActive && b.TotalQuantity > 0 && b.ExpiryDate <= thresholdDate && b.ExpiryDate >= today)
@@ -38,21 +43,22 @@ namespace ICMS.Application.Services
 
             if (!expiringBatches.Any())
             {
-                _logger.LogInformation("No batches expiring soon found.");
+                _logger.LogInformation("No batches expiring within the next 90 days found.");
                 return;
             }
 
             foreach (var batch in expiringBatches)
             {
-                var title = "Batch Expiring Soon";
-                var message = $"Batch #{batch.CookNumber} ({batch.BatchName}) expires on {batch.ExpiryDate:yyyy-MM-dd}. Remaining: {batch.TotalQuantity}";
+                var title = "تنبيه: اقتراب انتهاء صلاحية دفعة";
+                var message = $"الدفعة #{batch.CookNumber} ({batch.BatchName}) ستنتهي في {batch.ExpiryDate:yyyy-MM-dd}. الكمية المتبقية: {batch.TotalQuantity}";
 
+                // Also send English version for internationalization if needed, but primary is Arabic as per UI
                 await _notificationService.NotifyGeneralAlertAsync("warning", title, message, ct);
                 
-                _logger.LogInformation("Sent expiration alert for Batch {BatchId}", batch.Id);
+                _logger.LogInformation("Sent expiration alert for Batch {BatchId} (Cook: {CookNumber})", batch.Id, batch.CookNumber);
             }
 
-            _logger.LogInformation("Completed Batch Expiration Tracking. Found {Count} batches.", expiringBatches.Count);
+            _logger.LogInformation("Completed Batch Expiration Tracking. Found {Count} expiring batches.", expiringBatches.Count);
         }
     }
 }
