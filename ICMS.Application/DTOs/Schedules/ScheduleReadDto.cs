@@ -6,6 +6,7 @@ namespace ICMS.Application.DTOs.Schedules
     public record ScheduleReadDto(
         int ScheduleId,
         int VaccinatedIndividualId,
+        int DoseId,
         string VaccineName,
         string DoseName,
         DateOnly ScheduledDate,

@@ -107,6 +107,18 @@ namespace ICMS.Domain.Entites.Identity
             if (currentDose == null || currentDose.Id <= 0)
                 throw new DomainException("Invalid Dose!");
 
+            if (Person == null)
+                throw new DomainException("PersonRequired");
+
+            // Calculate age in months at administration date
+            int ageInMonths = (administrationDate.Year - Person.DateOfBirth.Year) * 12 + administrationDate.Month - Person.DateOfBirth.Month;
+            if (administrationDate.Day < Person.DateOfBirth.Day) ageInMonths--;
+
+            if (ageInMonths < currentDose.RecommendedAgeInMonths)
+            {
+                throw new DomainException("TooYoung", ageInMonths, currentDose.RecommendedAgeInMonths, currentDose.DoseName);
+            }
+
             // FIXME: Temporarily disabled due to persistent timezone/server clock discrepancies causing false positives.
             // if (administrationDate > DateOnly.FromDateTime(DateTime.UtcNow.AddDays(2)))
             //     throw new DomainException("Administration date cannot be in the future.");
@@ -123,12 +135,12 @@ namespace ICMS.Domain.Entites.Identity
                 fieldVisitId, notes);
             _immunizationRecords.Add(newRecord);
 
-            // 2. Complete the corresponding schedule
+            // 2. Complete the corresponding schedule (find it whether it's Pending or Missed)
             var scheduleToComplete =
-                _schedules.FirstOrDefault(s => s.DoseId == currentDose.Id && s.Status == ScheduleStatus.Pending);
+                _schedules.FirstOrDefault(s => s.DoseId == currentDose.Id && s.Status != ScheduleStatus.Completed);
             if (scheduleToComplete != null)
             {
-                scheduleToComplete.MarkAsCompleted(administrationDate, newRecord.Id);
+                scheduleToComplete.MarkAsCompleted(administrationDate, newRecord);
             }
 
             // 3. Handle late doses and cascading schedule updates

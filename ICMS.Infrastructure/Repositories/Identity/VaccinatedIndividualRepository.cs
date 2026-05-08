@@ -30,6 +30,9 @@ namespace ICMS.Infrastructure.Repositories.Identity
                     .ThenInclude(d => d.Governorate)
                 .Include(vi => vi.Neighborhood)
                 .Include(vi => vi.ImmunizationRecords)
+                .Include(vi => vi.Schedules)
+                    .ThenInclude(s => s.Dose)
+                        .ThenInclude(d => d.Vaccine)
                 .Where(vi => !vi.Person.IsDeleted)
                 .FirstOrDefaultAsync(vi => vi.Id == id, ct);
         }
@@ -43,6 +46,9 @@ namespace ICMS.Infrastructure.Repositories.Identity
                     .ThenInclude(d => d.Governorate)
                 .Include(vi => vi.Neighborhood)
                 .Include(vi => vi.ImmunizationRecords)
+                .Include(vi => vi.Schedules)
+                    .ThenInclude(s => s.Dose)
+                        .ThenInclude(d => d.Vaccine)
                 .Where(vi => !vi.Person.IsDeleted)
                 .FirstOrDefaultAsync(vi => vi.CardNumber == cardNumber, ct);
         }

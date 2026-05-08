@@ -61,26 +61,26 @@ namespace ICMS.Application.Services
         {
             await immunizationCreateValidator.ValidateAndThrowAsync(entity);
 
-            if (!await unitOfWork.DoseRepository.ExistAsync(entity.DoseId))
+            var individual = await unitOfWork.VaccinatedIndividualRepository.GetIndividualWithSchedulesAsync(entity.IndividualId, ct);
+            if (individual == null)
                 throw new NotFoundException("NotFound");
 
-            if (!await unitOfWork.VaccinatedIndividualRepository.ExistAsync(entity.IndividualId))
+            var dose = await unitOfWork.DoseRepository.GetByIdAsync(entity.DoseId, cancellationToken: ct);
+            if (dose == null)
                 throw new NotFoundException("NotFound");
 
-            var immunizationRecord = ImmunizationRecord.Create(
-                entity.IndividualId,
-                entity.DoseId,
-                entity.VaccinationDate,
-                entity.TakenIn,
-                userId,
-                entity.FieldVisitId,
-                entity.Notes
-            );
+            var allDoses = await unitOfWork.DoseRepository.GetAllAsync(dose.VaccineId, ct);
+            var nextDose = allDoses.OrderBy(d => d.DoseOrder).FirstOrDefault(d => d.DoseOrder > dose.DoseOrder);
 
-            await unitOfWork.ImmunizationRecordRepository.AddAsync(immunizationRecord);
-            await unitOfWork.SaveChangesAsync(ct);
+            return await unitOfWork.ExecuteInTransactionAsync(async () =>
+            {
+                individual.AdministerDose(dose, entity.VaccinationDate, entity.TakenIn, userId, nextDose, entity.FieldVisitId, entity.Notes);
 
-            return immunizationRecord.ToReadDto();
+                await unitOfWork.SaveChangesAsync(ct);
+
+                var newRecord = individual.ImmunizationRecords.FirstOrDefault(ir => ir.DoseId == dose.Id);
+                return newRecord!.ToReadDto();
+            });
         }
         public async Task<bool> UpdateAsync(Guid id, ImmunizationRecordCreateDto updatedEntity, CancellationToken ct = default)
         {

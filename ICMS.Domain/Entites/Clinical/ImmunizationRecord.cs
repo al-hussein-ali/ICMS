@@ -37,7 +37,7 @@ namespace ICMS.Domain.Entites.Clinical
             if (userId <= 0) throw new DomainException("Invalid user id");
             if (string.IsNullOrWhiteSpace(takenIn)) throw new DomainException("TakenIn is required");
 
-            return new ImmunizationRecord { IndividualId = individualId, DoseId = doseId, FieldVisitId = fieldVisitId, VaccinationDate = vaccinationDate, TakenIn = takenIn, UserId = userId, Notes = notes };
+            return new ImmunizationRecord { Id = Guid.NewGuid(), IndividualId = individualId, DoseId = doseId, FieldVisitId = fieldVisitId, VaccinationDate = vaccinationDate, TakenIn = takenIn, UserId = userId, Notes = notes };
         }
 
         public void UpdateRecordInfo(int individualId, int doseId, DateOnly vaccinationDate, string takenIn, int? fieldVisitId = null, string? notes = null)

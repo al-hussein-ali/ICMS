@@ -38,11 +38,12 @@ namespace ICMS.Domain.Entites.Clinical
             };
         }
 
-        public void MarkAsCompleted(DateOnly actualDate, Guid recordId)
+        public void MarkAsCompleted(DateOnly actualDate, ImmunizationRecord record)
         {
             ActualDate = actualDate;
             Status = ScheduleStatus.Completed;
-            ImmunizationRecordId = recordId;
+            ImmunizationRecord = record ?? throw new ArgumentNullException(nameof(record));
+            ImmunizationRecordId = record.Id;
         }
 
         public void Reschedule(DateOnly newScheduledDate)

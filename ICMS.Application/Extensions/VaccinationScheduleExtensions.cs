@@ -11,6 +11,7 @@ namespace ICMS.Application.Extensions
             return new ScheduleReadDto(
                 ScheduleId: schedule.Id,
                 VaccinatedIndividualId: schedule.VaccinatedIndividualId,
+                DoseId: schedule.DoseId,
                 VaccineName: schedule.Dose?.Vaccine?.VaccineName ?? string.Empty,
                 DoseName: schedule.Dose?.DoseName ?? string.Empty,
                 ScheduledDate: schedule.ScheduledDate,
