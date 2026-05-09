@@ -43,7 +43,6 @@ namespace ICMS.Domain.Entites.Clinical
             ActualDate = actualDate;
             Status = ScheduleStatus.Completed;
             ImmunizationRecord = record ?? throw new ArgumentNullException(nameof(record));
-            ImmunizationRecordId = record.Id;
         }
 
         public void Reschedule(DateOnly newScheduledDate)

@@ -18,7 +18,7 @@ namespace ICMS.Infrastructure.Persistence.Config.Audit
         public void Configure(EntityTypeBuilder<Transaction> builder)
         {
             builder.HasKey(t => t.Id);
-            builder.Property(t => t.Id).HasColumnName("TransactionId");
+            builder.Property(t => t.Id).HasColumnName("TransactionId").ValueGeneratedOnAdd();
 
             builder.Property(t => t.TransactionType).HasConversion(
                 v => v == TransactionType.In ? _transactionTypes[0] : _transactionTypes[1],

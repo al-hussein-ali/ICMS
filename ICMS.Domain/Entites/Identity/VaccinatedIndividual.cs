@@ -102,7 +102,7 @@ namespace ICMS.Domain.Entites.Identity
         /// to maintain the recommended minimum interval.
         /// </summary>
         public void AdministerDose(Dose currentDose, DateOnly administrationDate, string takenIn,
-            int userId, Dose? nextSequenceDose = null, int? fieldVisitId = null, string? notes = null)
+            int userId, Dose? nextSequenceDose = null, int? fieldVisitId = null, string? notes = null, int? batchId = null)
         {
             if (currentDose == null || currentDose.Id <= 0)
                 throw new DomainException("Invalid Dose!");
@@ -114,9 +114,27 @@ namespace ICMS.Domain.Entites.Identity
             int ageInMonths = (administrationDate.Year - Person.DateOfBirth.Year) * 12 + administrationDate.Month - Person.DateOfBirth.Month;
             if (administrationDate.Day < Person.DateOfBirth.Day) ageInMonths--;
 
+            // Rule: Age must be within vaccine's allowed range
+            if (currentDose.Vaccine != null)
+            {
+                if (ageInMonths < currentDose.Vaccine.MinEligibleAgeInMonths)
+                    throw new DomainException("TooYoungForVaccine", ageInMonths, currentDose.Vaccine.MinEligibleAgeInMonths, currentDose.Vaccine.VaccineName);
+                
+                if (ageInMonths > currentDose.Vaccine.MaxEligibleAgeInMonths)
+                    throw new DomainException("TooOldForVaccine", ageInMonths, currentDose.Vaccine.MaxEligibleAgeInMonths, currentDose.Vaccine.VaccineName);
+            }
+
+            // Rule: Age must be at least the dose's recommended age
             if (ageInMonths < currentDose.RecommendedAgeInMonths)
             {
                 throw new DomainException("TooYoung", ageInMonths, currentDose.RecommendedAgeInMonths, currentDose.DoseName);
+            }
+
+            // Rule: Actual date cannot be before scheduled date
+            var scheduleToComplete = _schedules.FirstOrDefault(s => s.DoseId == currentDose.Id && s.Status != ScheduleStatus.Completed);
+            if (scheduleToComplete != null && administrationDate < scheduleToComplete.ScheduledDate)
+            {
+                throw new DomainException("TooEarly", administrationDate, scheduleToComplete.ScheduledDate, currentDose.DoseName);
             }
 
             // FIXME: Temporarily disabled due to persistent timezone/server clock discrepancies causing false positives.
@@ -132,12 +150,10 @@ namespace ICMS.Domain.Entites.Identity
 
             // 1. Record the immunization
             var newRecord = ImmunizationRecord.Create(this.Id, currentDose.Id, administrationDate, takenIn, userId,
-                fieldVisitId, notes);
+                fieldVisitId, notes, batchId);
             _immunizationRecords.Add(newRecord);
 
             // 2. Complete the corresponding schedule (find it whether it's Pending or Missed)
-            var scheduleToComplete =
-                _schedules.FirstOrDefault(s => s.DoseId == currentDose.Id && s.Status != ScheduleStatus.Completed);
             if (scheduleToComplete != null)
             {
                 scheduleToComplete.MarkAsCompleted(administrationDate, newRecord);
@@ -155,7 +171,7 @@ namespace ICMS.Domain.Entites.Identity
                 var minNextDate = administrationDate.AddMonths(recommendedIntervalMonths);
 
                 var nextSchedule = _schedules.FirstOrDefault(s =>
-                    s.DoseId == nextSequenceDose.Id && s.Status == ScheduleStatus.Pending);
+                    s.DoseId == nextSequenceDose.Id && s.Status != ScheduleStatus.Completed);
 
                 if (nextSchedule != null)
                 {
@@ -165,9 +181,9 @@ namespace ICMS.Domain.Entites.Identity
                         nextSchedule.Reschedule(minNextDate);
                     }
                 }
-                else
+                else if (!_schedules.Any(s => s.DoseId == nextSequenceDose.Id))
                 {
-                    // Create it if it doesn't exist yet
+                    // Create it if it doesn't exist at all
                     _schedules.Add(VaccinationSchedule.Create(this.Id, nextSequenceDose.Id, minNextDate));
                 }
             }

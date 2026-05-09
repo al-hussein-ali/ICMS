@@ -17,7 +17,7 @@ namespace ICMS.Infrastructure.Persistence.Config.Clinical
             builder.HasKey(ir => ir.Id);
 
 
-            builder.Property(ir => ir.Id).HasColumnName("ImmunizationRecordId"); ;
+            builder.Property(ir => ir.Id).HasColumnName("ImmunizationRecordId").ValueGeneratedOnAdd();
 
 
             builder.Property(ir => ir.VaccinationDate).IsRequired();
@@ -48,6 +48,11 @@ namespace ICMS.Infrastructure.Persistence.Config.Clinical
             builder.HasOne(ir => ir.User)
                 .WithMany()
                 .HasForeignKey(ir => ir.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasOne(ir => ir.Batch)
+                .WithMany()
+                .HasForeignKey(ir => ir.BatchId)
                 .OnDelete(DeleteBehavior.Restrict);
         }
     }

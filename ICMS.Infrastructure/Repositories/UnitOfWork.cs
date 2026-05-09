@@ -98,7 +98,6 @@ namespace ICMS.Infrastructure.Repositories
             if (isInMemory || _context.Database.CurrentTransaction != null)
             {
                 await action();
-                await _context.SaveChangesAsync();
                 return;
             }
 
@@ -106,7 +105,6 @@ namespace ICMS.Infrastructure.Repositories
             try
             {
                 await action();
-                await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
             }
             catch
@@ -122,7 +120,6 @@ namespace ICMS.Infrastructure.Repositories
             if (isInMemory || _context.Database.CurrentTransaction != null)
             {
                 var result = await action();
-                await _context.SaveChangesAsync();
                 return result;
             }
 
@@ -130,7 +127,6 @@ namespace ICMS.Infrastructure.Repositories
             try
             {
                 var result = await action();
-                await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
                 return result;
             }

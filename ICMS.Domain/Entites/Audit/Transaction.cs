@@ -41,7 +41,6 @@ namespace ICMS.Domain.Entites.Audit
 
             return new Transaction 
             { 
-                Id = Guid.NewGuid(), // Ensure unique ID for GUID primary key
                 BatchId = batchId, 
                 TransactionType = transactionType, 
                 TransactionDate = transactionDate, 

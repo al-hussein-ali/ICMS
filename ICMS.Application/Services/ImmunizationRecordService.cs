@@ -65,7 +65,7 @@ namespace ICMS.Application.Services
             if (individual == null)
                 throw new NotFoundException("NotFound");
 
-            var dose = await unitOfWork.DoseRepository.GetByIdAsync(entity.DoseId, cancellationToken: ct);
+            var dose = await unitOfWork.DoseRepository.GetByIdAsync(entity.DoseId, ct, d => d.Vaccine);
             if (dose == null)
                 throw new NotFoundException("NotFound");
 
@@ -74,7 +74,28 @@ namespace ICMS.Application.Services
 
             return await unitOfWork.ExecuteInTransactionAsync(async () =>
             {
-                individual.AdministerDose(dose, entity.VaccinationDate, entity.TakenIn, userId, nextDose, entity.FieldVisitId, entity.Notes);
+                individual.AdministerDose(dose, entity.VaccinationDate, entity.TakenIn, userId, nextDose, entity.FieldVisitId, entity.Notes, entity.BatchId);
+
+                // If a batch is selected, subtract 1 from inventory
+                if (entity.BatchId.HasValue)
+                {
+                    var batch = await unitOfWork.BatchRepository.GetByIdAsync(entity.BatchId.Value, ct);
+                    if (batch == null) throw new NotFoundException("BatchNotFound");
+
+                    // Create subtraction transaction
+                    batch.RemoveInventory(
+                        1, 
+                        $"IMM-REC-{entity.IndividualId}-{dose.Id}", 
+                        "Beneficiary Administration", 
+                        userId, 
+                        DateTime.UtcNow, 
+                        $"Automatic subtraction for vaccination of individual ID {entity.IndividualId}"
+                    );
+
+                    // Add the transaction to repository
+                    var transaction = batch.Transactions.Last();
+                    await unitOfWork.TransactionRepository.AddAsync(transaction, ct);
+                }
 
                 await unitOfWork.SaveChangesAsync(ct);
 
@@ -121,6 +142,26 @@ namespace ICMS.Application.Services
             ct.ThrowIfCancellationRequested();
 
             await unitOfWork.ImmunizationRecordRepository.DeleteAsync(existingRecord);
+
+            // Revert inventory subtraction if linked to a batch
+            if (existingRecord.BatchId.HasValue)
+            {
+                var batch = await unitOfWork.BatchRepository.GetByIdAsync(existingRecord.BatchId.Value, ct);
+                if (batch != null)
+                {
+                    batch.AddInventory(
+                        1, 
+                        $"IMM-DEL-{existingRecord.IndividualId}-{existingRecord.DoseId}", 
+                        "Record Deletion Revert", 
+                        existingRecord.UserId, 
+                        DateTime.UtcNow, 
+                        $"Automatic revert for deletion of record ID {existingRecord.Id}"
+                    );
+
+                    var transaction = batch.Transactions.Last();
+                    await unitOfWork.TransactionRepository.AddAsync(transaction, ct);
+                }
+            }
 
             return await unitOfWork.SaveChangesAsync(ct) > 0;
 

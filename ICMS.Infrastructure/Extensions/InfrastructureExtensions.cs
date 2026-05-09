@@ -24,7 +24,9 @@ namespace ICMS.Infrastructure.Extensions
             {
                 services.AddDbContextPool<AppDbContext>(options =>
                 {
-                    options.UseNpgsql(connectionString).UseExceptionProcessor();
+                    options.UseNpgsql(connectionString, o => 
+                        o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery))
+                        .UseExceptionProcessor();
                 });
             }
             services.AddLocalization(options => options.ResourcesPath = "Resources");

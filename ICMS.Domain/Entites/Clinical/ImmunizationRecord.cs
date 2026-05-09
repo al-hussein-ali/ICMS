@@ -20,6 +20,9 @@ namespace ICMS.Domain.Entites.Clinical
         public VaccinatedIndividual? VaccinatedIndividual { get; private set; }
         public Dose Dose { get; private set; }
 
+        public int? BatchId { get; private set; }
+        public Batch? Batch { get; private set; }
+
         public FieldVisit? FieldVisit { get; private set; }
 
 
@@ -30,17 +33,17 @@ namespace ICMS.Domain.Entites.Clinical
         {
         }
 
-        public static ImmunizationRecord Create(int individualId, int doseId, DateOnly vaccinationDate, string takenIn, int userId, int? fieldVisitId = null, string? notes = null)
+        public static ImmunizationRecord Create(int individualId, int doseId, DateOnly vaccinationDate, string takenIn, int userId, int? fieldVisitId = null, string? notes = null, int? batchId = null)
         {
             // Allowed to be 0 for new individuals being created in the same transaction
             if (doseId <= 0) throw new DomainException("Invalid dose id");
             if (userId <= 0) throw new DomainException("Invalid user id");
             if (string.IsNullOrWhiteSpace(takenIn)) throw new DomainException("TakenIn is required");
 
-            return new ImmunizationRecord { Id = Guid.NewGuid(), IndividualId = individualId, DoseId = doseId, FieldVisitId = fieldVisitId, VaccinationDate = vaccinationDate, TakenIn = takenIn, UserId = userId, Notes = notes };
+            return new ImmunizationRecord { IndividualId = individualId, DoseId = doseId, FieldVisitId = fieldVisitId, VaccinationDate = vaccinationDate, TakenIn = takenIn, UserId = userId, Notes = notes, BatchId = batchId };
         }
 
-        public void UpdateRecordInfo(int individualId, int doseId, DateOnly vaccinationDate, string takenIn, int? fieldVisitId = null, string? notes = null)
+        public void UpdateRecordInfo(int individualId, int doseId, DateOnly vaccinationDate, string takenIn, int? fieldVisitId = null, string? notes = null, int? batchId = null)
         {
             this.IndividualId = individualId;
             this.VaccinationDate = vaccinationDate;
@@ -48,6 +51,7 @@ namespace ICMS.Domain.Entites.Clinical
             this.TakenIn = takenIn;
             this.FieldVisitId = fieldVisitId;
             this.Notes = notes;
+            this.BatchId = batchId;
         }
 
         //public void AssignDose(Dose dose)
