@@ -120,8 +120,10 @@ namespace ICMS.Domain.Entites.Identity
                 if (ageInMonths < currentDose.Vaccine.MinEligibleAgeInMonths)
                     throw new DomainException("TooYoungForVaccine", ageInMonths, currentDose.Vaccine.MinEligibleAgeInMonths, currentDose.Vaccine.VaccineName);
                 
-                if (ageInMonths > currentDose.Vaccine.MaxEligibleAgeInMonths)
-                    throw new DomainException("TooOldForVaccine", ageInMonths, currentDose.Vaccine.MaxEligibleAgeInMonths, currentDose.Vaccine.VaccineName);
+                // Business Logic Change: Removed hard limit for MaxEligibleAgeInMonths to allow catch-up vaccinations 
+                // for individuals who missed their routine schedule but still need the dose.
+                // if (ageInMonths > currentDose.Vaccine.MaxEligibleAgeInMonths)
+                //     throw new DomainException("TooOldForVaccine", ageInMonths, currentDose.Vaccine.MaxEligibleAgeInMonths, currentDose.Vaccine.VaccineName);
             }
 
             // Rule: Age must be at least the dose's recommended age
