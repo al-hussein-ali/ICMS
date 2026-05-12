@@ -81,12 +81,22 @@ namespace ICMS.Domain.Entites.Identity
             SubNeighborhoodId = subNeighborhoodId;
         }
 
-        public void ScheduleInitialVaccines(IEnumerable<Dose> requiredDoses, DateOnly dateOfBirth)
+        public void ScheduleInitialVaccines(IEnumerable<Dose> requiredDoses, DateOnly dateOfBirth, bool isPregnant = false)
         {
             if (dateOfBirth > DateOnly.FromDateTime(DateTime.UtcNow.AddDays(2)))
                 throw new DomainException("Date of birth cannot be in the future.");
 
-            foreach (var dose in requiredDoses.OrderBy(d => d.RecommendedAgeInMonths).ThenBy(d => d.DoseOrder))
+            var eligibleDoses = requiredDoses.Where(d =>
+                d.Vaccine == null || d.Vaccine.Audience != Enums.TargetAudience.Pregnancy || isPregnant
+            ).ToList();
+
+            var eligibleDoseIds = eligibleDoses.Select(d => d.Id).ToHashSet();
+
+            // Clean up any existing schedules that the individual is no longer eligible for
+            // (e.g. Pregnancy vaccines that were incorrectly scheduled for non-pregnant individuals)
+            _schedules.RemoveAll(s => !eligibleDoseIds.Contains(s.DoseId) && s.Status != ScheduleStatus.Completed);
+
+            foreach (var dose in eligibleDoses.OrderBy(d => d.RecommendedAgeInMonths).ThenBy(d => d.DoseOrder))
             {
                 if (_schedules.Any(s => s.DoseId == dose.Id)) continue;
 
