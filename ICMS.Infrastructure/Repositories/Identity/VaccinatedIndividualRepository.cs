@@ -80,6 +80,8 @@ namespace ICMS.Infrastructure.Repositories.Identity
                 .Include(vi => vi.Person)
                 .Include(vi => vi.ImmunizationRecords)
                 .Include(vi => vi.Schedules)
+                    .ThenInclude(s => s.Dose)
+                        .ThenInclude(d => d.Vaccine)
                 .Where(vi => ids.Contains(vi.Id))
                 .ToListAsync(ct);
         }

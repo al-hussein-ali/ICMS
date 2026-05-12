@@ -4,6 +4,8 @@ namespace ICMS.Application.DTOs.FieldVisit
         int Id,
         string CampaignName,
         DateOnly VisitDate,
+        DateOnly FromDate,
+        DateOnly ToDate,
         int DirectorateId,
         int NeighborhoodId,
         int? SubNeighborhoodId,

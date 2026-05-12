@@ -15,9 +15,9 @@ namespace ICMS.Api.Controllers
     {
         [HttpGet]
         public async Task<ActionResult<PagedResult<FieldVisitReadDto>>> GetAllAsync(
-            [FromQuery] PaginationParams paginationParams, CancellationToken ct)
+            [FromQuery] PaginationParams paginationParams, [FromQuery] bool? onlyUncompleted, CancellationToken ct)
         {
-            var fieldVisits = await fieldVisitService.GetAllAsync(paginationParams, ct);
+            var fieldVisits = await fieldVisitService.GetAllAsync(paginationParams, onlyUncompleted: onlyUncompleted, ct: ct);
             return Ok(fieldVisits);
         }
 

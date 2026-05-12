@@ -2,6 +2,7 @@ using ICMS.Domain.Entites.Geography;
 using ICMS.Domain.Entites.Clinical;
 using ICMS.Domain.Entites.Common;
 using ICMS.Domain.Exceptions;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ICMS.Domain.Entites.Visits
 {
@@ -18,6 +19,8 @@ namespace ICMS.Domain.Entites.Visits
         public DateOnly FromDate { get; private set; }
         public DateOnly ToDate { get; private set; }
         public bool IsCompleted { get; private set; }
+        [NotMapped]
+        public int TargetedCount { get; set; } // Added to carry the count from repository
 
 
         private FieldVisit()

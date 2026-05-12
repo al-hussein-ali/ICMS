@@ -19,11 +19,11 @@ namespace ICMS.Application.Services
         }
 
         public async Task<PagedResult<FieldVisitReadDto>> GetAllAsync(PaginationParams paginationParams,
-            CancellationToken ct = default)
+            bool? onlyUncompleted = null, CancellationToken ct = default)
         {
             var pagedResult =
                 await _unitOfWork.FieldVisitRepository.GetPagedWithDetailsAsync(paginationParams.PageNumber,
-                    paginationParams.PageSize, ct);
+                    paginationParams.PageSize, onlyUncompleted, ct);
 
             var items = pagedResult.Items.Select(fv => fv.ToReadDto()).ToList();
 

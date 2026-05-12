@@ -161,33 +161,43 @@ namespace ICMS.Domain.Entites.Identity
                 scheduleToComplete.MarkAsCompleted(administrationDate, newRecord);
             }
 
-            // 3. Handle late doses and cascading schedule updates
-            if (nextSequenceDose != null)
+            // 3. Handle late doses and cascading schedule updates (Task 1: Reschedule ALL subsequent doses)
+            var currentDoseOrder = currentDose.DoseOrder;
+            var vaccineId = currentDose.VaccineId;
+
+            // Find all subsequent schedules for the same vaccine that are not completed
+            var subsequentSchedules = _schedules
+                .Where(s => s.Dose.VaccineId == vaccineId && s.Dose.DoseOrder > currentDoseOrder && s.Status != ScheduleStatus.Completed)
+                .OrderBy(s => s.Dose.DoseOrder)
+                .ToList();
+
+            var prevDose = currentDose;
+            var prevReferenceDate = administrationDate;
+
+            foreach (var schedule in subsequentSchedules)
             {
-                // Calculate minimum interval based on recommended ages
-                int recommendedIntervalMonths =
-                    nextSequenceDose.RecommendedAgeInMonths - currentDose.RecommendedAgeInMonths;
+                int recommendedIntervalMonths = schedule.Dose.RecommendedAgeInMonths - prevDose.RecommendedAgeInMonths;
                 if (recommendedIntervalMonths < 0) recommendedIntervalMonths = 0;
 
-                // Rule: Next dose should be at least [recommendedInterval] months after THIS administration
+                var newScheduledDate = prevReferenceDate.AddMonths(recommendedIntervalMonths);
+
+                // If the previous dose was taken late, or if we need to shift subsequent ones to maintain intervals
+                if (newScheduledDate > schedule.ScheduledDate)
+                {
+                    schedule.Reschedule(newScheduledDate);
+                }
+
+                prevDose = schedule.Dose;
+                prevReferenceDate = schedule.ScheduledDate; // Use the (potentially updated) scheduled date for the next interval calculation
+            }
+
+            // Fallback: If the next dose doesn't have a schedule yet, create it (legacy support)
+            if (nextSequenceDose != null && !_schedules.Any(s => s.DoseId == nextSequenceDose.Id))
+            {
+                int recommendedIntervalMonths = nextSequenceDose.RecommendedAgeInMonths - currentDose.RecommendedAgeInMonths;
+                if (recommendedIntervalMonths < 0) recommendedIntervalMonths = 0;
                 var minNextDate = administrationDate.AddMonths(recommendedIntervalMonths);
-
-                var nextSchedule = _schedules.FirstOrDefault(s =>
-                    s.DoseId == nextSequenceDose.Id && s.Status != ScheduleStatus.Completed);
-
-                if (nextSchedule != null)
-                {
-                    // Only push forward if the new date is later than the existing scheduled date (Late dose handling)
-                    if (minNextDate > nextSchedule.ScheduledDate)
-                    {
-                        nextSchedule.Reschedule(minNextDate);
-                    }
-                }
-                else if (!_schedules.Any(s => s.DoseId == nextSequenceDose.Id))
-                {
-                    // Create it if it doesn't exist at all
-                    _schedules.Add(VaccinationSchedule.Create(this.Id, nextSequenceDose.Id, minNextDate));
-                }
+                _schedules.Add(VaccinationSchedule.Create(this.Id, nextSequenceDose.Id, minNextDate));
             }
         }
 

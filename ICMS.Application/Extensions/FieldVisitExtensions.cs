@@ -22,12 +22,14 @@ namespace ICMS.Application.Extensions
                 fv.Id,
                 fv.CampaignName,
                 fv.VisitDate,
+                fv.FromDate,
+                fv.ToDate,
                 fv.SubNeighborhood?.Neighborhood?.DirectorateId ?? 0,
                 fv.SubNeighborhood?.NeighborhoodId ?? 0,
                 fv.SubNeighborhoodId,
                 fv.SubNeighborhood?.Name,
                 location,
-                0, 
+                fv.TargetedCount, 
                 fv.IsCompleted
             );
         }

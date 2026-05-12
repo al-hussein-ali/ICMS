@@ -22,20 +22,45 @@ namespace ICMS.Infrastructure.Repositories.Visits
                 .FirstOrDefaultAsync(fv => fv.Id == id, ct);
         }
 
-        public async Task<ICMS.Domain.ValueObjects.PagedResult<FieldVisit>> GetPagedWithDetailsAsync(int pageNumber, int pageSize, CancellationToken ct = default)
+        public async Task<ICMS.Domain.ValueObjects.PagedResult<FieldVisit>> GetPagedWithDetailsAsync(int pageNumber, int pageSize, bool? onlyUncompleted = null, CancellationToken ct = default)
         {
-            var query = _dbSet
+            var query = _dbSet.AsQueryable();
+
+            if (onlyUncompleted == true)
+            {
+                query = query.Where(fv => !fv.IsCompleted);
+            }
+
+            query = query
                 .Include(fv => fv.SubNeighborhood)
                     .ThenInclude(sn => sn.Neighborhood)
                         .ThenInclude(n => n.Directorate)
                             .ThenInclude(d => d.Governorate);
 
             var totalCount = await query.CountAsync(ct);
-            var items = await query
+            var itemsWithCounts = await query
                 .OrderByDescending(fv => fv.VisitDate)
                 .Skip((pageNumber - 1) * pageSize)
                 .Take(pageSize)
+                .Select(fv => new
+                {
+                    FieldVisit = fv,
+                    TargetedCount = _context.VaccinationSchedules
+                        .Where(s => s.Status == ICMS.Domain.Enums.ScheduleStatus.Missed &&
+                                   s.VaccinatedIndividual.SubNeighborhoodId == fv.SubNeighborhoodId &&
+                                   s.ScheduledDate >= fv.FromDate &&
+                                   s.ScheduledDate <= fv.ToDate)
+                        .Select(s => s.VaccinatedIndividualId)
+                        .Distinct()
+                        .Count()
+                })
                 .ToListAsync(ct);
+
+            var items = itemsWithCounts.Select(x =>
+            {
+                x.FieldVisit.TargetedCount = x.TargetedCount;
+                return x.FieldVisit;
+            }).ToList();
 
             return new ICMS.Domain.ValueObjects.PagedResult<FieldVisit>(items, totalCount, pageNumber, pageSize);
         }
