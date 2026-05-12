@@ -61,6 +61,16 @@ namespace ICMS.API.Controllers
             return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
         }
 
+        [HttpPut("{id}")]
+        public async Task<ActionResult<HealthAdvisoryDetailsDto>> Update(
+            int id,
+            [FromBody] HealthAdvisoryCreateDto dto,
+            CancellationToken ct = default)
+        {
+            var result = await healthAdvisoryService.UpdateAsync(id, dto, ct);
+            return Ok(result);
+        }
+
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id, CancellationToken ct = default)
         {

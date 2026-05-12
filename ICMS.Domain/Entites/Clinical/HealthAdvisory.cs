@@ -48,5 +48,16 @@ namespace ICMS.Domain.Entites.Clinical
             if (IsSent) return;
             IsSent = true;
         }
+
+        public void Update(string title, string content, AdviceTarget target, DateOnly scheduledDate)
+        {
+            if (string.IsNullOrWhiteSpace(title)) throw new DomainException("Title is required");
+            if (string.IsNullOrWhiteSpace(content)) throw new DomainException("Content is required");
+            
+            Title = title;
+            Content = content;
+            Target = target;
+            ScheduledDate = scheduledDate;
+        }
     }
 }

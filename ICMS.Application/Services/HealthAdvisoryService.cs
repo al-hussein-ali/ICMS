@@ -106,6 +106,23 @@ namespace ICMS.Application.Services
             return new PagedResult<HealthAdvisoryReadDto>(items, totalCount, pageNumber, pageSize);
         }
 
+        public async Task<HealthAdvisoryDetailsDto> UpdateAsync(int id, HealthAdvisoryCreateDto dto, CancellationToken ct = default)
+        {
+            var advisory = await _unitOfWork.HealthAdvisoryRepository.GetByIdAsync(id, ct);
+            if (advisory == null)
+            {
+                throw new DomainException("HealthAdvisoryNotFound");
+            }
+
+            var finalDate = dto.ScheduledDate ?? DateOnly.FromDateTime(DateTime.UtcNow.AddHours(3));
+            advisory.Update(dto.Title, dto.Content, dto.Target, finalDate);
+
+            await _unitOfWork.HealthAdvisoryRepository.UpdateAsync(advisory, ct);
+            await _unitOfWork.SaveChangesAsync(ct);
+
+            return advisory.ToDetailsDto();
+        }
+
         private List<string> GetDeviceTokensForTarget(AdviceTarget target)
         {
             var userDeviceRepo = _unitOfWork.UserDeviceRepository.GetQueryable();

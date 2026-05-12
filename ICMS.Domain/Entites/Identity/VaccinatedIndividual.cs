@@ -102,7 +102,7 @@ namespace ICMS.Domain.Entites.Identity
         /// to maintain the recommended minimum interval.
         /// </summary>
         public void AdministerDose(Dose currentDose, DateOnly administrationDate, string takenIn,
-            int userId, Dose? nextSequenceDose = null, int? fieldVisitId = null, string? notes = null, int? batchId = null, bool isAdvancedDose = false)
+            int userId, Dose? nextSequenceDose = null, int? fieldVisitId = null, string? notes = null, int? batchId = null, bool isAdvancedDose = false, IEnumerable<Dose>? allDoses = null)
         {
             if (currentDose == null || currentDose.Id <= 0)
                 throw new DomainException("Invalid Dose!");
@@ -167,8 +167,14 @@ namespace ICMS.Domain.Entites.Identity
 
             // Find all subsequent schedules for the same vaccine that are not completed
             var subsequentSchedules = _schedules
-                .Where(s => s.Dose.VaccineId == vaccineId && s.Dose.DoseOrder > currentDoseOrder && s.Status != ScheduleStatus.Completed)
-                .OrderBy(s => s.Dose.DoseOrder)
+                .Where(s => {
+                    var doseInfo = s.Dose ?? allDoses?.FirstOrDefault(d => d.Id == s.DoseId);
+                    return doseInfo != null && doseInfo.VaccineId == vaccineId && doseInfo.DoseOrder > currentDoseOrder && s.Status != ScheduleStatus.Completed;
+                })
+                .OrderBy(s => {
+                    var doseInfo = s.Dose ?? allDoses?.FirstOrDefault(d => d.Id == s.DoseId);
+                    return doseInfo?.DoseOrder ?? 0;
+                })
                 .ToList();
 
             var prevDose = currentDose;
@@ -176,7 +182,10 @@ namespace ICMS.Domain.Entites.Identity
 
             foreach (var schedule in subsequentSchedules)
             {
-                int recommendedIntervalMonths = schedule.Dose.RecommendedAgeInMonths - prevDose.RecommendedAgeInMonths;
+                var schedDose = schedule.Dose ?? allDoses?.FirstOrDefault(d => d.Id == schedule.DoseId);
+                if (schedDose == null) continue;
+
+                int recommendedIntervalMonths = schedDose.RecommendedAgeInMonths - prevDose.RecommendedAgeInMonths;
                 if (recommendedIntervalMonths < 0) recommendedIntervalMonths = 0;
 
                 var newScheduledDate = prevReferenceDate.AddMonths(recommendedIntervalMonths);
@@ -187,7 +196,7 @@ namespace ICMS.Domain.Entites.Identity
                     schedule.Reschedule(newScheduledDate);
                 }
 
-                prevDose = schedule.Dose;
+                prevDose = schedDose;
                 prevReferenceDate = schedule.ScheduledDate; // Use the (potentially updated) scheduled date for the next interval calculation
             }
 

@@ -220,7 +220,7 @@ namespace ICMS.Application.Services
             var nextDose = allDoses.OrderBy(d => d.DoseOrder).FirstOrDefault(d => d.DoseOrder > dose.DoseOrder);
 
             individual.AdministerDose(dose, dto.VaccinationDate, dto.TakenIn, userId, nextDose,
-                fieldVisitId: dto.FieldVisitId, notes: dto.Notes);
+                fieldVisitId: dto.FieldVisitId, notes: dto.Notes, allDoses: allDoses);
 
             await unitOfWork.SaveChangesAsync(ct);
             return true;
@@ -288,7 +288,7 @@ namespace ICMS.Application.Services
                                 .FirstOrDefault(d => d.DoseOrder > dose.DoseOrder);
 
                             individual.AdministerDose(dose, dto.VaccinationDate, dto.TakenIn, userId, nextDose,
-                                fieldVisitId: dto.FieldVisitId, notes: dto.Note);
+                                fieldVisitId: dto.FieldVisitId, notes: dto.Note, allDoses: allDoses);
                         }
                     }
 
@@ -364,7 +364,7 @@ namespace ICMS.Application.Services
                                 var nextDose = vaccineDoses.OrderBy(d => d.DoseOrder)
                                     .FirstOrDefault(d => d.DoseOrder > dose.DoseOrder);
                                 individual.AdministerDose(dose, item.Dto.VaccinationDate, item.Dto.TakenIn, userId,
-                                    nextDose, fieldVisitId: item.Dto.FieldVisitId, notes: item.Dto.Note);
+                                    nextDose, fieldVisitId: item.Dto.FieldVisitId, notes: item.Dto.Note, allDoses: allDoses);
                             }
                         }
 
@@ -426,7 +426,7 @@ namespace ICMS.Application.Services
                         .FirstOrDefault(d => d.DoseOrder > dose.DoseOrder);
 
                     individual.AdministerDose(dose, dto.VaccinationDate, dto.TakenIn, userId, nextDose,
-                        fieldVisitId: dto.FieldVisitId, notes: dto.Note);
+                        fieldVisitId: dto.FieldVisitId, notes: dto.Note, allDoses: allDoses);
                     staging.Add((dto, individual));
                 }
                 catch (Exception ex)
@@ -472,7 +472,7 @@ namespace ICMS.Application.Services
                             .FirstOrDefault(d => d.DoseOrder > dose!.DoseOrder);
 
                         individual.AdministerDose(dose!, dto.VaccinationDate, dto.TakenIn, userId, nextDose,
-                            fieldVisitId: dto.FieldVisitId, notes: dto.Note);
+                            fieldVisitId: dto.FieldVisitId, notes: dto.Note, allDoses: allDoses);
 
                         await unitOfWork.SaveChangesAsync(ct);
 
