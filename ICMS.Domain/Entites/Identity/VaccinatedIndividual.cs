@@ -102,7 +102,7 @@ namespace ICMS.Domain.Entites.Identity
         /// to maintain the recommended minimum interval.
         /// </summary>
         public void AdministerDose(Dose currentDose, DateOnly administrationDate, string takenIn,
-            int userId, Dose? nextSequenceDose = null, int? fieldVisitId = null, string? notes = null, int? batchId = null)
+            int userId, Dose? nextSequenceDose = null, int? fieldVisitId = null, string? notes = null, int? batchId = null, bool isAdvancedDose = false)
         {
             if (currentDose == null || currentDose.Id <= 0)
                 throw new DomainException("Invalid Dose!");
@@ -127,14 +127,14 @@ namespace ICMS.Domain.Entites.Identity
             }
 
             // Rule: Age must be at least the dose's recommended age
-            if (ageInMonths < currentDose.RecommendedAgeInMonths)
+            if (!isAdvancedDose && ageInMonths < currentDose.RecommendedAgeInMonths)
             {
                 throw new DomainException("TooYoung", ageInMonths, currentDose.RecommendedAgeInMonths, currentDose.DoseName);
             }
 
             // Rule: Actual date cannot be before scheduled date
             var scheduleToComplete = _schedules.FirstOrDefault(s => s.DoseId == currentDose.Id && s.Status != ScheduleStatus.Completed);
-            if (scheduleToComplete != null && administrationDate < scheduleToComplete.ScheduledDate)
+            if (!isAdvancedDose && scheduleToComplete != null && administrationDate < scheduleToComplete.ScheduledDate)
             {
                 throw new DomainException("TooEarly", administrationDate, scheduleToComplete.ScheduledDate, currentDose.DoseName);
             }

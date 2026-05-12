@@ -74,7 +74,7 @@ namespace ICMS.Application.Services
 
             return await unitOfWork.ExecuteInTransactionAsync(async () =>
             {
-                individual.AdministerDose(dose, entity.VaccinationDate, entity.TakenIn, userId, nextDose, entity.FieldVisitId, entity.Notes, entity.BatchId);
+                individual.AdministerDose(dose, entity.VaccinationDate, entity.TakenIn, userId, nextDose, entity.FieldVisitId, entity.Notes, entity.BatchId, entity.IsAdvancedDose);
 
                 // If a batch is selected, subtract 1 from inventory
                 if (entity.BatchId.HasValue)
