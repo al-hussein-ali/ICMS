@@ -120,6 +120,19 @@ namespace ICMS.Application.Services
             await _unitOfWork.PregnantWomanRepository.AddAsync(pregnantWoman, ct);
             await _unitOfWork.SaveChangesAsync(ct);
 
+            // Check if there is an existing VaccinatedIndividual for this person to update schedules
+            var vaccinatedIndividual = await _unitOfWork.VaccinatedIndividualRepository.GetQueryable(true, ct)
+                .Include(vi => vi.Person)
+                .Include(vi => vi.Schedules)
+                .FirstOrDefaultAsync(vi => vi.PersonId == selectedPersonId, ct);
+            
+            if (vaccinatedIndividual != null)
+            {
+                var allDoses = await _unitOfWork.DoseRepository.GetAllAsync(false, ct, d => d.Vaccine);
+                vaccinatedIndividual.ScheduleInitialVaccines(allDoses, vaccinatedIndividual.Person.DateOfBirth, true);
+                await _unitOfWork.SaveChangesAsync(ct);
+            }
+
             return await GetPregnantWomanByIdAsync(pregnantWoman.Id, ct);
         }
 
@@ -190,6 +203,19 @@ namespace ICMS.Application.Services
 
                 await _unitOfWork.PregnantWomanRepository.AddAsync(pregnantWoman, ct);
                 await _unitOfWork.SaveChangesAsync(ct);
+
+                // Check if there is an existing VaccinatedIndividual for this person to update schedules
+                var vaccinatedIndividual = await _unitOfWork.VaccinatedIndividualRepository.GetQueryable(true, ct)
+                    .Include(vi => vi.Person)
+                    .Include(vi => vi.Schedules)
+                    .FirstOrDefaultAsync(vi => vi.PersonId == request.PersonId, ct);
+                
+                if (vaccinatedIndividual != null)
+                {
+                    var allDoses = await _unitOfWork.DoseRepository.GetAllAsync(false, ct, d => d.Vaccine);
+                    vaccinatedIndividual.ScheduleInitialVaccines(allDoses, vaccinatedIndividual.Person.DateOfBirth, true);
+                    await _unitOfWork.SaveChangesAsync(ct);
+                }
             }
 
             PreviousPregnancyComplications? pregComps = null;

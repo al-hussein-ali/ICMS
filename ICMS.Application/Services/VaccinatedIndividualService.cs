@@ -44,6 +44,12 @@ namespace ICMS.Application.Services
                 throw new NotFoundException("NotFound");
             }
 
+            // Auto-correct schedules on profile load (backfill missing or clean up ineligible)
+            var allDoses = await unitOfWork.DoseRepository.GetAllAsync(false, ct, d => d.Vaccine);
+            var isPregnant = await unitOfWork.PregnantWomanRepository.ExistAsync(pw => pw.PersonId == individual.PersonId, ct);
+            individual.ScheduleInitialVaccines(allDoses, individual.Person.DateOfBirth, isPregnant);
+            await unitOfWork.SaveChangesAsync(ct);
+
             return individual.ToDetailsDto();
         }
 
@@ -55,6 +61,12 @@ namespace ICMS.Application.Services
             {
                 throw new NotFoundException("NotFound");
             }
+
+            // Auto-correct schedules on profile load (backfill missing or clean up ineligible)
+            var allDoses = await unitOfWork.DoseRepository.GetAllAsync(false, ct, d => d.Vaccine);
+            var isPregnant = await unitOfWork.PregnantWomanRepository.ExistAsync(pw => pw.PersonId == individual.PersonId, ct);
+            individual.ScheduleInitialVaccines(allDoses, individual.Person.DateOfBirth, isPregnant);
+            await unitOfWork.SaveChangesAsync(ct);
 
             return individual.ToDetailsDto();
         }
@@ -231,7 +243,7 @@ namespace ICMS.Application.Services
             CancellationToken ct = default)
         {
             var result = new BulkSyncResultDto();
-            var allDoses = await unitOfWork.DoseRepository.GetAllAsync(false, ct);
+            var allDoses = await unitOfWork.DoseRepository.GetAllAsync(false, ct, d => d.Vaccine);
 
             // Step 1: Prepare all entities in memory
             var staging = new List<(NewFieldVaccinatedIndividualDto Dto, VaccinatedIndividual Entity)>();
@@ -276,7 +288,8 @@ namespace ICMS.Application.Services
                     individual.AssignPerson(person);
 
                     // Optimized scheduling using prefetched doses
-                    individual.ScheduleInitialVaccines(allDoses, person.DateOfBirth);
+                    var isPregnant = person.Id > 0 && await unitOfWork.PregnantWomanRepository.ExistAsync(pw => pw.PersonId == person.Id, ct);
+                    individual.ScheduleInitialVaccines(allDoses, person.DateOfBirth, isPregnant);
 
                     if (dto.DoseId > 0)
                     {
@@ -353,7 +366,8 @@ namespace ICMS.Application.Services
                         var individual = VaccinatedIndividual.Create(item.Dto.DirectorateId, item.Dto.NeighborhoodId,
                             item.Dto.SubNeighborhoodId);
                         individual.AssignPerson(person);
-                        individual.ScheduleInitialVaccines(allDoses, person.DateOfBirth);
+                        var isPregnant = person.Id > 0 && await unitOfWork.PregnantWomanRepository.ExistAsync(pw => pw.PersonId == person.Id, ct);
+                        individual.ScheduleInitialVaccines(allDoses, person.DateOfBirth, isPregnant);
 
                         if (item.Dto.DoseId > 0)
                         {
@@ -396,7 +410,7 @@ namespace ICMS.Application.Services
             // Optimization: Fetch all needed data upfront
             var individuals =
                 await unitOfWork.VaccinatedIndividualRepository.GetByIdsWithImmunizationRecordsAsync(ids, ct);
-            var allDoses = await unitOfWork.DoseRepository.GetAllAsync(false, ct);
+            var allDoses = await unitOfWork.DoseRepository.GetAllAsync(false, ct, d => d.Vaccine);
 
             var staging = new List<(UpdateFieldVisitIndividualDto Dto, VaccinatedIndividual Entity)>();
 
@@ -545,11 +559,12 @@ namespace ICMS.Application.Services
 
         private async Task ScheduleAllInitialVaccinesAsync(List<VaccinatedIndividual> individuals, CancellationToken ct)
         {
-            var allDoses = await unitOfWork.DoseRepository.GetAllAsync(false, ct);
+            var allDoses = await unitOfWork.DoseRepository.GetAllAsync(false, ct, d => d.Vaccine);
             foreach (var individual in individuals)
             {
                 var dob = individual.Person.DateOfBirth;
-                individual.ScheduleInitialVaccines(allDoses, dob);
+                var isPregnant = individual.PersonId > 0 && await unitOfWork.PregnantWomanRepository.ExistAsync(pw => pw.PersonId == individual.PersonId, ct);
+                individual.ScheduleInitialVaccines(allDoses, dob, isPregnant);
             }
         }
     }
