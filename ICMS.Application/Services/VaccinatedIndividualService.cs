@@ -75,7 +75,7 @@ namespace ICMS.Application.Services
                 if (vaccinatedIndividualCreateDto.PersonCreateDto == null)
                     throw new DomainException("MissingPersonData");
 
-                // 1. Check if person already exists by details to avoid UniqueConstraintException
+                // 1. Check if person already exists by details
                 person = await unitOfWork.PersonRepository.GetByAsync(
                     vaccinatedIndividualCreateDto.PersonCreateDto.FirstName,
                     vaccinatedIndividualCreateDto.PersonCreateDto.LastName,
@@ -83,7 +83,16 @@ namespace ICMS.Application.Services
                     vaccinatedIndividualCreateDto.PersonCreateDto.DateOfBirth,
                     ct);
 
-                if (person == null)
+                if (person != null)
+                {
+                    // Check if this person is already registered as a VaccinatedIndividual
+                    var existingVi = await unitOfWork.VaccinatedIndividualRepository.FirstOrDefaultAsync(vi => vi.PersonId == person.Id, ct);
+                    if (existingVi != null)
+                    {
+                        throw new DomainException("IndividualAlreadyRegistered");
+                    }
+                }
+                else
                 {
                     person = Person.Create(
                         vaccinatedIndividualCreateDto.PersonCreateDto.FirstName,
@@ -234,14 +243,33 @@ namespace ICMS.Application.Services
                     var personDto = dto.Person;
                     if (personDto == null) throw new ArgumentNullException(nameof(dto.Person));
 
-                    var person = Person.Create(
+                    // Check if person already exists
+                    var person = await unitOfWork.PersonRepository.GetByAsync(
                         personDto.FirstName ?? "Unknown",
-                        personDto.SecondName,
-                        personDto.ThirdName,
                         personDto.LastName ?? "Unknown",
-                        Enum.Parse<ICMS.Domain.Enums.Gender>(personDto.Gender ?? "Male", true),
+                        personDto.PhoneNumber ?? "",
                         personDto.DateOfBirth,
-                        personDto.PhoneNumber ?? "");
+                        ct);
+
+                    if (person != null)
+                    {
+                        var existingVi = await unitOfWork.VaccinatedIndividualRepository.FirstOrDefaultAsync(vi => vi.PersonId == person.Id, ct);
+                        if (existingVi != null)
+                        {
+                            throw new DomainException("IndividualAlreadyRegistered");
+                        }
+                    }
+                    else
+                    {
+                        person = Person.Create(
+                            personDto.FirstName ?? "Unknown",
+                            personDto.SecondName,
+                            personDto.ThirdName,
+                            personDto.LastName ?? "Unknown",
+                            Enum.Parse<ICMS.Domain.Enums.Gender>(personDto.Gender ?? "Male", true),
+                            personDto.DateOfBirth,
+                            personDto.PhoneNumber ?? "");
+                    }
 
                     var individual =
                         VaccinatedIndividual.Create(dto.DirectorateId, dto.NeighborhoodId, dto.SubNeighborhoodId);
@@ -298,14 +326,29 @@ namespace ICMS.Application.Services
                     {
                         // We re-create the entities for the individual retry to ensure a fresh state
                         var personDto = item.Dto.Person;
-                        var person = Person.Create(
+                        var person = await unitOfWork.PersonRepository.GetByAsync(
                             personDto.FirstName ?? "Unknown",
-                            personDto.SecondName,
-                            personDto.ThirdName,
                             personDto.LastName ?? "Unknown",
-                            Enum.Parse<ICMS.Domain.Enums.Gender>(personDto.Gender ?? "Male", true),
+                            personDto.PhoneNumber ?? "",
                             personDto.DateOfBirth,
-                            personDto.PhoneNumber ?? "");
+                            ct);
+
+                        if (person != null)
+                        {
+                            var existingVi = await unitOfWork.VaccinatedIndividualRepository.FirstOrDefaultAsync(vi => vi.PersonId == person.Id, ct);
+                            if (existingVi != null) throw new DomainException("IndividualAlreadyRegistered");
+                        }
+                        else
+                        {
+                            person = Person.Create(
+                                personDto.FirstName ?? "Unknown",
+                                personDto.SecondName,
+                                personDto.ThirdName,
+                                personDto.LastName ?? "Unknown",
+                                Enum.Parse<ICMS.Domain.Enums.Gender>(personDto.Gender ?? "Male", true),
+                                personDto.DateOfBirth,
+                                personDto.PhoneNumber ?? "");
+                        }
 
                         var individual = VaccinatedIndividual.Create(item.Dto.DirectorateId, item.Dto.NeighborhoodId,
                             item.Dto.SubNeighborhoodId);

@@ -33,9 +33,9 @@ namespace ICMS.Infrastructure.Persistence.Config.Identity
             builder.Property(p => p.LastName).HasMaxLength(20).IsUnicode(true).IsRequired();
 
 
-            builder.HasIndex(p => new {p.PhoneNumber,p.FirstName,p.LastName,p.DateOfBirth}).IsUnique().HasFilter("\"IsDeleted\" = false");
-
-    ;
+            builder.HasIndex(p => new { p.PhoneNumber, p.FirstName, p.LastName, p.DateOfBirth }, "IX_People_UniqueDetails")
+                .IsUnique()
+                .HasFilter("\"IsDeleted\" = false");
 
             builder.Property(p => p.DateOfBirth).IsRequired();
 
