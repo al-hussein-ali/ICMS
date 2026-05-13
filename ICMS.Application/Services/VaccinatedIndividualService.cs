@@ -193,27 +193,33 @@ namespace ICMS.Application.Services
             return true;
         }
 
-        public async Task<bool> DeleteAsync(int id, bool deletePersonalInfo = false, CancellationToken ct = default)
+        public async Task<bool> DeleteAsync(int id, bool deletePersonalInfo = false, bool isSoftDelete = true, CancellationToken ct = default)
         {
             var individual = await unitOfWork.VaccinatedIndividualRepository.GetByIdAsync(id, ct);
             if (individual == null)
                 throw new NotFoundException("NotFound");
 
-            int personId = individual.PersonId;
-
-            await unitOfWork.VaccinatedIndividualRepository.DeleteAsync(individual, ct);
-
-            if (deletePersonalInfo)
+            if (isSoftDelete)
             {
-                var person = await unitOfWork.PersonRepository.GetByIdAsync(personId, ct);
-                if (person != null)
+                individual.MarkAsDeleted();
+                await unitOfWork.VaccinatedIndividualRepository.UpdateAsync(individual, ct);
+            }
+            else
+            {
+                int personId = individual.PersonId;
+                await unitOfWork.VaccinatedIndividualRepository.DeleteAsync(individual, ct);
+
+                if (deletePersonalInfo)
                 {
-                    await unitOfWork.PersonRepository.DeleteAsync(person, ct);
+                    var person = await unitOfWork.PersonRepository.GetByIdAsync(personId, ct);
+                    if (person != null)
+                    {
+                        await unitOfWork.PersonRepository.DeleteAsync(person, ct);
+                    }
                 }
             }
 
             await unitOfWork.SaveChangesAsync(ct);
-
             return true;
         }
 

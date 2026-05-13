@@ -54,17 +54,28 @@ namespace ICMS.API.Controllers
         }
 
         /// <summary>
-        /// Download the generated PDF report.
+        /// Download the generated report (PDF or CSV).
         /// </summary>
         [HttpGet("download/{jobId}")]
         public IActionResult Download(string jobId)
         {
-            var filePath = Path.Combine("wwwroot", "reports", $"{jobId}.pdf");
-            if (!System.IO.File.Exists(filePath))
-                return NotFound("Report not found. It may still be generating.");
+            var reportsDir = Path.Combine("wwwroot", "reports");
+            var pdfPath = Path.Combine(reportsDir, $"{jobId}.pdf");
+            var csvPath = Path.Combine(reportsDir, $"{jobId}.csv");
 
-            var fileBytes = System.IO.File.ReadAllBytes(filePath);
-            return File(fileBytes, "application/pdf", $"icms-report-{jobId}.pdf");
+            if (System.IO.File.Exists(pdfPath))
+            {
+                var fileBytes = System.IO.File.ReadAllBytes(pdfPath);
+                return File(fileBytes, "application/pdf", $"icms-report-{jobId}.pdf");
+            }
+            
+            if (System.IO.File.Exists(csvPath))
+            {
+                var fileBytes = System.IO.File.ReadAllBytes(csvPath);
+                return File(fileBytes, "text/csv", $"icms-report-{jobId}.csv");
+            }
+
+            return NotFound("Report not found. It may still be generating.");
         }
     }
 }

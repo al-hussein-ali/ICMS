@@ -22,7 +22,7 @@ namespace ICMS.Application.Interfaces.Services
 
         Task<bool> UpdateAsync(int id,VaccinatedIndividualCreateDto updatedEntity, CancellationToken ct = default);
 
-        Task<bool> DeleteAsync(int id, bool deletePersonalInfo = false, CancellationToken ct = default);
+        Task<bool> DeleteAsync(int id, bool deletePersonalInfo = false, bool isSoftDelete = true, CancellationToken ct = default);
 
         Task<bool> GiveDose(ImmunizationRecordCreateDto dto, int userId, CancellationToken ct = default);
         Task<BulkSyncResultDto> BulkInsertIndividualAsync(List<NewFieldVaccinatedIndividualDto> newFieldVaccinatedIndividuals, int userId, CancellationToken ct = default);

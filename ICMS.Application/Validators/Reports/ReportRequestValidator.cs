@@ -18,6 +18,9 @@ namespace ICMS.Application.Validators.Reports
                 .NotEmpty().WithMessage(localizer["EndDateRequired"])
                 .GreaterThanOrEqualTo(x => x.StartDate)
                 .WithMessage(localizer["EndDateMustBeAfterStart"]);
+
+            RuleFor(x => x.Format)
+                .IsInEnum().WithMessage(localizer["InvalidFormat"]);
         }
     }
 }

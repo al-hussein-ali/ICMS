@@ -71,10 +71,14 @@ namespace ICMS.Infrastructure.Extensions
             services.AddScoped<IReportDataFetcher, VaccinatedIndividualsReportFetcher>();
             services.AddScoped<IReportDataFetcher, PregnantWomenReportFetcher>();
             services.AddScoped<IReportDataFetcher, InventoryReportFetcher>();
+            services.AddScoped<IReportDataFetcher, DailyVaccinationReportFetcher>();
+
 
             services.AddScoped<IReportTemplateRenderer, VaccinatedIndividualsReportTemplate>();
             services.AddScoped<IReportTemplateRenderer, PregnantWomenReportTemplate>();
             services.AddScoped<IReportTemplateRenderer, InventoryReportTemplate>();
+            services.AddScoped<IReportTemplateRenderer, DailyVaccinationReportTemplate>();
+
 
             services.AddScoped<IReportGeneratorJob, ReportGeneratorJob>();
             // Note: IReportNotificationService is registered in API layer (Program.cs)

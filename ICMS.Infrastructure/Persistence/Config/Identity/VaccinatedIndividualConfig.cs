@@ -54,6 +54,10 @@ namespace ICMS.Infrastructure.Persistence.Config.Identity
                 .HasForeignKey(vi => vi.SubNeighborhoodId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            builder.Property(vi => vi.IsDeleted).HasDefaultValue(false);
+
+            builder.HasQueryFilter(vi => !vi.IsDeleted);
+
             builder.Navigation(nameof(VaccinatedIndividual.ImmunizationRecords))?
                 .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasField("_immunizationRecords");

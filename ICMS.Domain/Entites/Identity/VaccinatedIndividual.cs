@@ -23,6 +23,7 @@ namespace ICMS.Domain.Entites.Identity
         public int PersonId { get; private set; }
         public User? User { get; private set; }
         public Person Person { get; private set; } = null!;
+        public bool IsDeleted { get; private set; }
         public Directorate Directorate { get; private set; } = null!;
         public Neighborhood Neighborhood { get; private set; } = null!;
         public SubNeighborhood? SubNeighborhood { get; private set; }
@@ -46,8 +47,15 @@ namespace ICMS.Domain.Entites.Identity
                 DirectorateId = directorateId,
                 NeighborhoodId = neighborhoodId,
                 SubNeighborhoodId = subNeighborhoodId,
-                UserId = userId
+                UserId = userId,
+                IsDeleted = false
             };
+        }
+
+        public void MarkAsDeleted()
+        {
+            if (IsDeleted) return;
+            IsDeleted = true;
         }
 
         public void AssignPerson(Person person)
@@ -86,21 +94,42 @@ namespace ICMS.Domain.Entites.Identity
             if (dateOfBirth > DateOnly.FromDateTime(DateTime.UtcNow.AddDays(2)))
                 throw new DomainException("Date of birth cannot be in the future.");
 
+            // Calculate age in years for TT eligibility
+            int ageInYears = DateTime.Today.Year - dateOfBirth.Year;
+            if (dateOfBirth > DateOnly.FromDateTime(DateTime.Today.AddYears(-ageInYears))) ageInYears--;
+
             var eligibleDoses = requiredDoses.Where(d =>
-                d.Vaccine == null || d.Vaccine.Audience != Enums.TargetAudience.Pregnancy || isPregnant
-            ).ToList();
+            {
+                if (d.Vaccine == null) return true;
+
+                // Tetanus Toxoid (TT) Business Rule: 
+                // Available for all females of reproductive age (15-49), regardless of pregnancy status.
+                if (d.Vaccine.VaccineCode == "TT")
+                {
+                    return Person.Gender == Gender.Female && ageInYears >= 15 && ageInYears <= 49;
+                }
+
+                // Standard Pregnancy vaccines
+                if (d.Vaccine.Audience == Enums.TargetAudience.Pregnancy) return isPregnant;
+
+                // Routine infant/childhood vaccines or General adult vaccines
+                return true;
+            }).ToList();
 
             var eligibleDoseIds = eligibleDoses.Select(d => d.Id).ToHashSet();
 
             // Clean up any existing schedules that the individual is no longer eligible for
-            // (e.g. Pregnancy vaccines that were incorrectly scheduled for non-pregnant individuals)
             _schedules.RemoveAll(s => !eligibleDoseIds.Contains(s.DoseId) && s.Status != ScheduleStatus.Completed);
 
             foreach (var dose in eligibleDoses.OrderBy(d => d.RecommendedAgeInMonths).ThenBy(d => d.DoseOrder))
             {
                 if (_schedules.Any(s => s.DoseId == dose.Id)) continue;
 
+                // For TT, if they are already of age, schedule starting from now or according to their age milestones
                 var scheduledDate = dateOfBirth.AddMonths(dose.RecommendedAgeInMonths);
+                
+                // If the scheduled date is far in the past (e.g. for TT doses they should have had years ago),
+                // we still schedule them as "Pending" or "Missed" so the system can track them.
                 var schedule = VaccinationSchedule.Create(Id, dose.Id, scheduledDate);
                 _schedules.Add(schedule);
             }
@@ -120,7 +149,13 @@ namespace ICMS.Domain.Entites.Identity
             if (Person == null)
                 throw new DomainException("PersonRequired");
 
-            // Calculate age in months at administration date
+            // 1. Gender check for specific vaccines
+            if (currentDose.Vaccine?.VaccineCode == "TT" && Person.Gender != Gender.Female)
+            {
+                throw new DomainException("TetanusOnlyForFemales");
+            }
+
+            // 2. Calculate age in months at administration date
             int ageInMonths = (administrationDate.Year - Person.DateOfBirth.Year) * 12 + administrationDate.Month - Person.DateOfBirth.Month;
             if (administrationDate.Day < Person.DateOfBirth.Day) ageInMonths--;
 

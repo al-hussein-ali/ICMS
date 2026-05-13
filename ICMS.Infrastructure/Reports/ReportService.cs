@@ -37,8 +37,14 @@ namespace ICMS.Infrastructure.Reports
 
         public Task<ReportStatusDto?> GetStatusAsync(string jobId, CancellationToken ct = default)
         {
-            var filePath = Path.Combine("wwwroot", "reports", $"{jobId}.pdf");
-            if (File.Exists(filePath))
+            var reportsDir = Path.Combine("wwwroot", "reports");
+            
+            // Check for PDF or CSV
+            string? fileName = null;
+            if (File.Exists(Path.Combine(reportsDir, $"{jobId}.pdf"))) fileName = $"{jobId}.pdf";
+            else if (File.Exists(Path.Combine(reportsDir, $"{jobId}.csv"))) fileName = $"{jobId}.csv";
+
+            if (fileName != null)
             {
                 return Task.FromResult<ReportStatusDto?>(new ReportStatusDto(
                     jobId, "Completed", $"/api/Reports/download/{jobId}", null));

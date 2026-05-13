@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -17,8 +18,8 @@ namespace ICMS.Infrastructure.Reports
     /// Hangfire background job that:
     /// 1. Resolves the correct data fetcher and template renderer by ReportType
     /// 2. Fetches report data from repositories
-    /// 3. Renders HTML and converts to PDF via Playwright headless Chromium
-    /// 4. Saves PDF to wwwroot/reports/{jobId}.pdf
+    /// 3. Renders HTML and converts to PDF OR converts data directly to CSV
+    /// 4. Saves file to wwwroot/reports/{jobId}.{ext}
     /// 5. Notifies the requesting user via SignalR
     /// </summary>
     public class ReportGeneratorJob : IReportGeneratorJob
@@ -53,27 +54,39 @@ namespace ICMS.Infrastructure.Reports
                 var fetcher = _fetchers.FirstOrDefault(f => f.ReportType == request.ReportType)
                     ?? throw new InvalidOperationException($"No data fetcher registered for report type: {request.ReportType}");
 
-                var renderer = _renderers.FirstOrDefault(r => r.ReportType == request.ReportType)
-                    ?? throw new InvalidOperationException($"No template renderer registered for report type: {request.ReportType}");
-
                 // 2. Fetch data
-                var reportData = await fetcher.FetchAsync(request.StartDate, request.EndDate, ct);
+                var reportData = await fetcher.FetchAsync(request.StartDate, request.EndDate, request.Lang, ct);
 
-                // 3. Render HTML
-                var html = renderer.Render(reportData);
+                // 3. Render based on format
+                byte[] fileBytes;
+                string extension;
 
-                // 4. Convert HTML → PDF via Playwright
-                var pdfBytes = await ConvertHtmlToPdfAsync(html);
+                if (request.Format == ReportFormat.Csv)
+                {
+                    fileBytes = ConvertDataToCsv(reportData);
+                    extension = "csv";
+                }
+                else
+                {
+                    // 3b. Render HTML then PDF
+                    var renderer = _renderers.FirstOrDefault(r => r.ReportType == request.ReportType)
+                        ?? throw new InvalidOperationException($"No template renderer registered for report type: {request.ReportType}");
+                    
+                    var html = renderer.Render(reportData);
+                    fileBytes = await ConvertHtmlToPdfAsync(html);
+                    extension = "pdf";
+                }
 
-                // 5. Save to disk
+                // 4. Save to disk
                 var reportsDir = Path.Combine("wwwroot", "reports");
                 Directory.CreateDirectory(reportsDir);
-                var filePath = Path.Combine(reportsDir, $"{jobId}.pdf");
-                await File.WriteAllBytesAsync(filePath, pdfBytes, ct);
+                var filePath = Path.Combine(reportsDir, $"{jobId}.{extension}");
+                await File.WriteAllBytesAsync(filePath, fileBytes, ct);
 
-                _logger.LogInformation("Report generated successfully. JobId={JobId}, File={File}", jobId, filePath);
+                _logger.LogInformation("Report generated successfully. JobId={JobId}, Format={Format}, File={File}", 
+                    jobId, request.Format, filePath);
 
-                // 6. Notify user via SignalR
+                // 5. Notify user via SignalR
                 var downloadUrl = $"/api/Reports/download/{jobId}";
                 await _notificationService.NotifyReportReadyAsync(userIdStr, jobId, downloadUrl, ct);
             }
@@ -130,6 +143,34 @@ namespace ICMS.Infrastructure.Reports
                 _logger.LogInformation("Closing browser...");
                 await browser.CloseAsync();
             }
+        }
+
+        private byte[] ConvertDataToCsv(ReportData data)
+        {
+            _logger.LogInformation("Starting CSV conversion...");
+            var sb = new StringBuilder();
+
+            // 1. Headers
+            sb.AppendLine(string.Join(",", data.ColumnHeaders.Select(EscapeCsv)));
+
+            // 2. Rows
+            foreach (var row in data.Rows)
+            {
+                var values = data.ColumnHeaders.Select(h => EscapeCsv(row.Columns.GetValueOrDefault(h) ?? ""));
+                sb.AppendLine(string.Join(",", values));
+            }
+
+            return Encoding.UTF8.GetBytes(sb.ToString());
+        }
+
+        private string EscapeCsv(string? value)
+        {
+            if (string.IsNullOrEmpty(value)) return "";
+            if (value.Contains(',') || value.Contains('"') || value.Contains('\n') || value.Contains('\r'))
+            {
+                return "\"" + value.Replace("\"", "\"\"") + "\"";
+            }
+            return value;
         }
 
     }

@@ -60,9 +60,9 @@ namespace ICMS.API.Controllers
         }
 
         [HttpDelete("delete/{id}")]
-        public async Task<IActionResult> DeleteAsync([FromRoute] int id, [FromQuery] bool deletePersonalInfo = false)
+        public async Task<IActionResult> DeleteAsync([FromRoute] int id, [FromQuery] bool deletePersonalInfo = false, [FromQuery] bool isSoftDelete = true)
         {
-            await vaccinatedIndividualService.DeleteAsync(id, deletePersonalInfo);
+            await vaccinatedIndividualService.DeleteAsync(id, deletePersonalInfo, isSoftDelete);
 
             return NoContent();
         }

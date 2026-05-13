@@ -193,7 +193,7 @@ namespace ICMS.Infrastructure.Persistence.Data
                 new { Id = 6, VaccineName = "Measles & Rubella (MR)", VaccineCode = "MR", TotalDosages = (byte)2, MinEligibleAgeInMonths = 9, MaxEligibleAgeInMonths = 60, IsActive = true, Audience = TargetAudience.InfantRoutine },
                 new { Id = 7, VaccineName = "Inactivated Polio (IPV)", VaccineCode = "IPV", TotalDosages = (byte)1, MinEligibleAgeInMonths = 3, MaxEligibleAgeInMonths = 12, IsActive = true, Audience = TargetAudience.InfantRoutine },
                 new { Id = 8, VaccineName = "Vitamin A", VaccineCode = "VITA", TotalDosages = (byte)2, MinEligibleAgeInMonths = 6, MaxEligibleAgeInMonths = 60, IsActive = true, Audience = TargetAudience.InfantRoutine },
-                new { Id = 9, VaccineName = "Tetanus Toxoid", VaccineCode = "TT", TotalDosages = (byte)5, MinEligibleAgeInMonths = 180, MaxEligibleAgeInMonths = 600, IsActive = true, Audience = TargetAudience.Pregnancy }
+                new { Id = 9, VaccineName = "Tetanus Toxoid", VaccineCode = "TT", TotalDosages = (byte)5, MinEligibleAgeInMonths = 180, MaxEligibleAgeInMonths = 600, IsActive = true, Audience = TargetAudience.GeneralAdult }
             );
 
             // Seed Doses
@@ -224,12 +224,12 @@ namespace ICMS.Infrastructure.Persistence.Data
                 // VITA
                 new { Id = 17, VaccineId = 8, DoseName = "Vit A 1", DoseOrder = (byte)1, RecommendedAgeInMonths = 6, RecommendedAgeGroup = "6months" },
                 new { Id = 18, VaccineId = 8, DoseName = "Vit A 2", DoseOrder = (byte)2, RecommendedAgeInMonths = 12, RecommendedAgeGroup = "12months" },
-                // TT (Pregnancy)
-                new { Id = 19, VaccineId = 9, DoseName = "TT 1", DoseOrder = (byte)1, RecommendedAgeInMonths = 0, RecommendedAgeGroup = "pregnancy" },
-                new { Id = 20, VaccineId = 9, DoseName = "TT 2", DoseOrder = (byte)2, RecommendedAgeInMonths = 1, RecommendedAgeGroup = "pregnancy" },
-                new { Id = 21, VaccineId = 9, DoseName = "TT 3", DoseOrder = (byte)3, RecommendedAgeInMonths = 6, RecommendedAgeGroup = "pregnancy" },
-                new { Id = 22, VaccineId = 9, DoseName = "TT 4", DoseOrder = (byte)4, RecommendedAgeInMonths = 12, RecommendedAgeGroup = "pregnancy" },
-                new { Id = 23, VaccineId = 9, DoseName = "TT 5", DoseOrder = (byte)5, RecommendedAgeInMonths = 24, RecommendedAgeGroup = "pregnancy" }
+                // TT (Reproductive Age: Females 15-49)
+                new { Id = 19, VaccineId = 9, DoseName = "TT 1", DoseOrder = (byte)1, RecommendedAgeInMonths = 180, RecommendedAgeGroup = "female15_49" },
+                new { Id = 20, VaccineId = 9, DoseName = "TT 2", DoseOrder = (byte)2, RecommendedAgeInMonths = 181, RecommendedAgeGroup = "female15_49" },
+                new { Id = 21, VaccineId = 9, DoseName = "TT 3", DoseOrder = (byte)3, RecommendedAgeInMonths = 187, RecommendedAgeGroup = "female15_49" },
+                new { Id = 22, VaccineId = 9, DoseName = "TT 4", DoseOrder = (byte)4, RecommendedAgeInMonths = 199, RecommendedAgeGroup = "female15_49" },
+                new { Id = 23, VaccineId = 9, DoseName = "TT 5", DoseOrder = (byte)5, RecommendedAgeInMonths = 211, RecommendedAgeGroup = "female15_49" }
             );
         }
     }

@@ -4,6 +4,7 @@ namespace ICMS.Application.Enums
     {
         VaccinatedIndividuals = 1,
         PregnantWomen = 2,
-        Inventory = 3
+        Inventory = 3,
+        DailyVaccination = 4
     }
 }

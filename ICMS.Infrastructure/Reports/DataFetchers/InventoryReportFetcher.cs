@@ -4,16 +4,21 @@ using ICMS.Application.Interfaces;
 using ICMS.Application.Interfaces.Reports;
 using Microsoft.EntityFrameworkCore;
 using ICMS.Domain.Enums;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace ICMS.Infrastructure.Reports.DataFetchers
 {
     public class InventoryReportFetcher(IUnitOfWork unitOfWork) : IReportDataFetcher
     {
-
         public ReportType ReportType => ReportType.Inventory;
 
-        public async Task<ReportData> FetchAsync(DateOnly startDate, DateOnly endDate, CancellationToken ct = default)
+        public async Task<ReportData> FetchAsync(DateOnly startDate, DateOnly endDate, string lang = "en", CancellationToken ct = default)
         {
+            var isAr = lang.StartsWith("ar", StringComparison.OrdinalIgnoreCase);
             var startDateTime = startDate.ToDateTime(TimeOnly.MinValue);
             var endDateTime   = endDate.ToDateTime(TimeOnly.MaxValue);
 
@@ -27,6 +32,19 @@ namespace ICMS.Infrastructure.Reports.DataFetchers
                 .Where(b => b.Transactions.Any(t =>
                     t.TransactionDate >= startDateTime && t.TransactionDate <= endDateTime))
                 .ToListAsync(ct);
+
+            // ── Labels ───────────────────────────────────────────────────
+            var colCook      = isAr ? "رقم الطبخة"           : "Cook Number";
+            var colDose      = isAr ? "الجرعة"               : "Dose";
+            var colOrigin    = isAr ? "بلد المنشأ"           : "Country of Origin";
+            var colExpiry    = isAr ? "تاريخ الانتهاء"       : "Expiry Date";
+            var colStock     = isAr ? "المخزون الحالي"       : "Current Stock";
+            var colTotalIn   = isAr ? "إجمالي الوارد (الفترة)" : "Total In (Period)";
+            var colTotalOut  = isAr ? "إجمالي الصادر (الفترة)" : "Total Out (Period)";
+
+            var lblStockIn   = isAr ? "إجمالي الوارد"        : "Total Stock In";
+            var lblStockOut  = isAr ? "إجمالي الصادر"        : "Total Stock Out";
+            var lblNetMove   = isAr ? "صافي الحركة"          : "Net Movement";
 
             int totalIn  = batches.SelectMany(b => b.Transactions)
                 .Where(t => t.TransactionDate >= startDateTime && t.TransactionDate <= endDateTime
@@ -42,16 +60,16 @@ namespace ICMS.Infrastructure.Reports.DataFetchers
             {
                 Columns = new Dictionary<string, string?>
                 {
-                    ["Cook Number"]       = b.CookNumber,
-                    ["Dose"]              = b.Dose?.DoseName ?? "-",
-                    ["Country of Origin"] = b.CountryOfOrigin,
-                    ["Expiry Date"]       = b.ExpiryDate.ToString("yyyy-MM-dd"),
-                    ["Current Stock"]     = b.TotalQuantity.ToString(),
-                    ["Total In (Period)"] = b.Transactions
+                    [colCook]      = b.CookNumber,
+                    [colDose]      = b.Dose?.DoseName ?? "-",
+                    [colOrigin]    = b.CountryOfOrigin,
+                    [colExpiry]    = b.ExpiryDate.ToString("yyyy-MM-dd"),
+                    [colStock]     = b.TotalQuantity.ToString(),
+                    [colTotalIn]   = b.Transactions
                         .Where(t => t.TransactionDate >= startDateTime && t.TransactionDate <= endDateTime
                                  && t.TransactionType == TransactionType.In)
                         .Sum(t => t.Quantity).ToString(),
-                    ["Total Out (Period)"] = b.Transactions
+                    [colTotalOut]  = b.Transactions
                         .Where(t => t.TransactionDate >= startDateTime && t.TransactionDate <= endDateTime
                                  && t.TransactionType == TransactionType.Out)
                         .Sum(t => t.Quantity).ToString(),
@@ -63,15 +81,16 @@ namespace ICMS.Infrastructure.Reports.DataFetchers
                 ReportType    = ReportType,
                 StartDate     = startDate,
                 EndDate       = endDate,
+                Lang          = lang,
                 GeneratedAt   = DateTime.UtcNow.AddHours(3).ToString("yyyy-MM-dd HH:mm"),
                 TotalRecords  = rows.Count,
                 SummaryStats  = new Dictionary<string, string>
                 {
-                    ["Total Stock In"]  = totalIn.ToString(),
-                    ["Total Stock Out"] = totalOut.ToString(),
-                    ["Net Movement"]    = (totalIn - totalOut).ToString()
+                    [lblStockIn]  = totalIn.ToString(),
+                    [lblStockOut] = totalOut.ToString(),
+                    [lblNetMove]  = (totalIn - totalOut).ToString()
                 },
-                ColumnHeaders = ["Cook Number", "Dose", "Country of Origin", "Expiry Date", "Current Stock", "Total In (Period)", "Total Out (Period)"],
+                ColumnHeaders = [colCook, colDose, colOrigin, colExpiry, colStock, colTotalIn, colTotalOut],
                 Rows          = rows
             };
         }

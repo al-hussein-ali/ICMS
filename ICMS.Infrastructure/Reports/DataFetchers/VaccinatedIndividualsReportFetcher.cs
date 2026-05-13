@@ -8,6 +8,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using ICMS.Domain.Enums;
 
 namespace ICMS.Infrastructure.Reports.DataFetchers
 {
@@ -19,28 +20,45 @@ namespace ICMS.Infrastructure.Reports.DataFetchers
 
         public ReportType ReportType => ReportType.VaccinatedIndividuals;
 
-        public async Task<ReportData> FetchAsync(DateOnly startDate, DateOnly endDate, CancellationToken ct = default)
+        public async Task<ReportData> FetchAsync(DateOnly startDate, DateOnly endDate, string lang = "en", CancellationToken ct = default)
         {
+            var isAr = lang.StartsWith("ar", StringComparison.OrdinalIgnoreCase);
+
             var individuals = await _unitOfWork.VaccinatedIndividualRepository
                 .GetQueryable(false, ct, vi => vi.Person)
                 .Where(vi => DateOnly.FromDateTime(vi.Person.CreatedAt) >= startDate
                           && DateOnly.FromDateTime(vi.Person.CreatedAt) <= endDate)
                 .ToListAsync(ct);
 
-            var genderGroups = individuals
-                .GroupBy(vi => vi.Person.Gender.ToString())
-                .ToDictionary(g => g.Key, g => g.Count().ToString());
+            // ── Labels ───────────────────────────────────────────────────
+            var colCard      = isAr ? "رقم البطاقة"         : "Card Number";
+            var colName      = isAr ? "الاسم الكامل"         : "Full Name";
+            var colGender    = isAr ? "الجنس"               : "Gender";
+            var colDob       = isAr ? "تاريخ الميلاد"        : "Date of Birth";
+            var colPhone     = isAr ? "الهاتف"              : "Phone";
+            var colReg       = isAr ? "تاريخ التسجيل"        : "Registered On";
+
+            var lblMale      = isAr ? "ذكور"                : "Males";
+            var lblFemale    = isAr ? "إناث"                : "Females";
+            var lblTotal     = isAr ? "إجمالي الأفراد"       : "Total Individuals";
+
+            var stats = new Dictionary<string, string>
+            {
+                [lblMale]   = individuals.Count(vi => vi.Person.Gender == Gender.Male).ToString(),
+                [lblFemale] = individuals.Count(vi => vi.Person.Gender == Gender.Female).ToString(),
+                [lblTotal]  = individuals.Count.ToString()
+            };
 
             var rows = individuals.Select(vi => new ReportRow
             {
                 Columns = new Dictionary<string, string?>
                 {
-                    ["Card Number"]    = vi.CardNumber,
-                    ["Full Name"]      = vi.Person.FullName,
-                    ["Gender"]         = vi.Person.Gender.ToString(),
-                    ["Date of Birth"]  = vi.Person.DateOfBirth.ToString("yyyy-MM-dd"),
-                    ["Phone"]          = vi.Person.PhoneNumber,
-                    ["Registered On"]  = vi.Person.CreatedAt.ToString("yyyy-MM-dd"),
+                    [colCard]    = vi.CardNumber,
+                    [colName]    = vi.Person.FullName,
+                    [colGender]  = isAr ? (vi.Person.Gender == Gender.Male ? "ذكر" : "أنثى") : vi.Person.Gender.ToString(),
+                    [colDob]     = vi.Person.DateOfBirth.ToString("yyyy-MM-dd"),
+                    [colPhone]   = vi.Person.PhoneNumber,
+                    [colReg]     = vi.Person.CreatedAt.ToString("yyyy-MM-dd"),
                 }
             }).ToList();
 
@@ -49,10 +67,11 @@ namespace ICMS.Infrastructure.Reports.DataFetchers
                 ReportType    = ReportType,
                 StartDate     = startDate,
                 EndDate       = endDate,
+                Lang          = lang,
                 GeneratedAt   = DateTime.UtcNow.AddHours(3).ToString("yyyy-MM-dd HH:mm"),
                 TotalRecords  = rows.Count,
-                SummaryStats  = genderGroups,
-                ColumnHeaders = ["Card Number", "Full Name", "Gender", "Date of Birth", "Phone", "Registered On"],
+                SummaryStats  = stats,
+                ColumnHeaders = [colCard, colName, colGender, colDob, colPhone, colReg],
                 Rows          = rows
             };
         }
