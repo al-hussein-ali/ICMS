@@ -18,7 +18,7 @@ namespace ICMS.Application.Validators
         {
             RuleFor(x => x.PageNumber).NotEqual(0).WithMessage(x => localizer["RequiredField", "This field"]);
 
-            RuleFor(x => x.PageSize).LessThanOrEqualTo(50).WithMessage(x => localizer["ValidationError", "The Page size cannot be greater than 50"]);
+            RuleFor(x => x.PageSize).LessThanOrEqualTo(200).WithMessage(x => localizer["ValidationError", "The Page size cannot be greater than 200"]);
 
             RuleFor(x => x.PageSize).GreaterThanOrEqualTo(1).WithMessage(x => localizer["ValidationError", "The Page size cannot be less than 1"]);
            

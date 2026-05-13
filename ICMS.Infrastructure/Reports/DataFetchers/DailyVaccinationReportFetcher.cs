@@ -48,6 +48,7 @@ namespace ICMS.Infrastructure.Reports.DataFetchers
             var colAgeY      = isAr ? "العمر (بالسنوات)"  : "Age (Years)";
             var colVaccine   = isAr ? "اللقاح"            : "Vaccine";
             var colDose      = isAr ? "الجرعة"            : "Dose";
+            var colDoseNum   = isAr ? "رقم الجرعة"        : "Dose Number";
             var colLocation  = isAr ? "الموقع"            : "Location";
 
             // ── Age-group summary ─────────────────────────────────────────
@@ -86,6 +87,9 @@ namespace ICMS.Infrastructure.Reports.DataFetchers
                 if (adminDate.Day < dob.Day) ageMonths--;
                 int ageYears    = ageMonths / 12;
 
+                var totalDoses = ir.Dose.Vaccine?.TotalDosages ?? 0;
+                var doseNumberStr = totalDoses > 0 ? $"{ir.Dose.DoseOrder}/{totalDoses}" : ir.Dose.DoseOrder.ToString();
+
                 return new ReportRow
                 {
                     Columns = new Dictionary<string, string?>
@@ -97,6 +101,7 @@ namespace ICMS.Infrastructure.Reports.DataFetchers
                         [colAgeY]     = ageYears.ToString(),
                         [colVaccine]  = ir.Dose.Vaccine?.VaccineName ?? "N/A",
                         [colDose]     = ir.Dose.DoseName,
+                        [colDoseNum]  = doseNumberStr,
                         [colLocation] = NormalizeLocation(ir.TakenIn, isAr)
                     }
                 };
@@ -111,7 +116,7 @@ namespace ICMS.Infrastructure.Reports.DataFetchers
                 GeneratedAt   = DateTime.UtcNow.AddHours(3).ToString("yyyy-MM-dd HH:mm"),
                 TotalRecords  = records.Count,
                 SummaryStats  = stats.ToDictionary(k => k.Key, v => v.Value.ToString()),
-                ColumnHeaders = [colDate, colCard, colName, colAgeM, colAgeY, colVaccine, colDose, colLocation],
+                ColumnHeaders = [colDate, colCard, colName, colAgeM, colAgeY, colVaccine, colDose, colDoseNum, colLocation],
                 Rows          = rows
             };
         }

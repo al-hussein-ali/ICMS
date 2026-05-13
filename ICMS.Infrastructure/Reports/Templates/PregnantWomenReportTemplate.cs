@@ -18,9 +18,9 @@ namespace ICMS.Infrastructure.Reports.Templates
             var table = ReportHtmlBase.BuildDataTable(data.ColumnHeaders, data.Rows, tableTitle);
             
             return ReportHtmlBase.Wrap(
-                accentColor: "#ec4899",
+                accentColor: "#1e3a8a",
                 reportTitle: reportTitle,
-                iconEmoji: "🤰",
+                iconEmoji: "🤱",
                 data: data,
                 bodyContent: table);
         }

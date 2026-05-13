@@ -45,6 +45,8 @@ namespace ICMS.Infrastructure.Persistence.Config.Identity
 
             builder.Property(p => p.IsDeleted).HasDefaultValue(false);
 
+            builder.HasQueryFilter(p => !p.IsDeleted);
+
 
 
 
