@@ -12,5 +12,6 @@ namespace ICMS.Application.DTOs.VaccinatedIndividual
         string TakenIn,
         string? CorrelationId = null,
         int? FieldVisitId = null,
-        string? Note = null);
+        string? Note = null,
+        DateOnly? RegistrationDate = null);
 }

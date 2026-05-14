@@ -125,7 +125,8 @@ namespace ICMS.Application.Services
                 vaccinatedIndividualCreateDto.DirectorateId,
                 vaccinatedIndividualCreateDto.NeighborhoodId,
                 vaccinatedIndividualCreateDto.SubNeighborhoodId,
-                vaccinatedIndividualCreateDto.UserId);
+                vaccinatedIndividualCreateDto.UserId,
+                vaccinatedIndividualCreateDto.RegistrationDate);
 
             // 2. Assign the person object (sets both Id and Navigation property)
             // This prevents NullReferenceException in ScheduleAllInitialVaccinesAsync
@@ -290,7 +291,7 @@ namespace ICMS.Application.Services
                     }
 
                     var individual =
-                        VaccinatedIndividual.Create(dto.DirectorateId, dto.NeighborhoodId, dto.SubNeighborhoodId);
+                        VaccinatedIndividual.Create(dto.DirectorateId, dto.NeighborhoodId, dto.SubNeighborhoodId, registrationDate: dto.RegistrationDate);
                     individual.AssignPerson(person);
 
                     // Optimized scheduling using prefetched doses
@@ -370,7 +371,7 @@ namespace ICMS.Application.Services
                         }
 
                         var individual = VaccinatedIndividual.Create(item.Dto.DirectorateId, item.Dto.NeighborhoodId,
-                            item.Dto.SubNeighborhoodId);
+                            item.Dto.SubNeighborhoodId, registrationDate: item.Dto.RegistrationDate);
                         individual.AssignPerson(person);
                         var isPregnant = person.Id > 0 && await unitOfWork.PregnantWomanRepository.ExistAsync(pw => pw.PersonId == person.Id, ct);
                         individual.ScheduleInitialVaccines(allDoses, person.DateOfBirth, isPregnant);

@@ -21,6 +21,7 @@ namespace ICMS.Domain.Entites.Identity
         public int? SubNeighborhoodId { get; private set; }
         public int? UserId { get; private set; }
         public int PersonId { get; private set; }
+        public DateOnly RegistrationDate { get; private set; }
         public User? User { get; private set; }
         public Person Person { get; private set; } = null!;
         public bool IsDeleted { get; private set; }
@@ -35,7 +36,7 @@ namespace ICMS.Domain.Entites.Identity
 
 
         public static VaccinatedIndividual Create(int directorateId, int neighborhoodId, int? subNeighborhoodId = null,
-            int? userId = null)
+            int? userId = null, DateOnly? registrationDate = null)
         {
             if (directorateId <= 0 || neighborhoodId <= 0)
             {
@@ -48,6 +49,7 @@ namespace ICMS.Domain.Entites.Identity
                 NeighborhoodId = neighborhoodId,
                 SubNeighborhoodId = subNeighborhoodId,
                 UserId = userId,
+                RegistrationDate = registrationDate ?? DateOnly.FromDateTime(DateTime.UtcNow),
                 IsDeleted = false
             };
         }
@@ -94,7 +96,7 @@ namespace ICMS.Domain.Entites.Identity
             if (dateOfBirth > DateOnly.FromDateTime(DateTime.UtcNow.AddDays(2)))
                 throw new DomainException("Date of birth cannot be in the future.");
 
-            // Calculate age in years for TT eligibility
+            // Calculate current age in years for TT eligibility
             int ageInYears = DateTime.Today.Year - dateOfBirth.Year;
             if (dateOfBirth > DateOnly.FromDateTime(DateTime.Today.AddYears(-ageInYears))) ageInYears--;
 
@@ -125,11 +127,9 @@ namespace ICMS.Domain.Entites.Identity
             {
                 if (_schedules.Any(s => s.DoseId == dose.Id)) continue;
 
-                // For TT, if they are already of age, schedule starting from now or according to their age milestones
-                var scheduledDate = dateOfBirth.AddDays(dose.RecommendedAgeInWeeks * 7);
+                // Business Change: Scheduling now starts from RegistrationDate instead of DateOfBirth
+                var scheduledDate = RegistrationDate.AddDays(dose.RecommendedAgeInWeeks * 7);
                 
-                // If the scheduled date is far in the past (e.g. for TT doses they should have had years ago),
-                // we still schedule them as "Pending" or "Missed" so the system can track them.
                 var schedule = VaccinationSchedule.Create(Id, dose.Id, scheduledDate);
                 _schedules.Add(schedule);
             }
@@ -155,24 +155,22 @@ namespace ICMS.Domain.Entites.Identity
                 throw new DomainException("TetanusOnlyForFemales");
             }
 
-            // 2. Calculate age in weeks at administration date
-            int ageInWeeks = (int)((administrationDate.ToDateTime(TimeOnly.MinValue) - Person.DateOfBirth.ToDateTime(TimeOnly.MinValue)).TotalDays / 7);
+            // 2. Calculate biological age and weeks since registration
+            int biologicalAgeInWeeks = (int)((administrationDate.ToDateTime(TimeOnly.MinValue) - Person.DateOfBirth.ToDateTime(TimeOnly.MinValue)).TotalDays / 7);
+            int weeksSinceRegistration = (int)((administrationDate.ToDateTime(TimeOnly.MinValue) - RegistrationDate.ToDateTime(TimeOnly.MinValue)).TotalDays / 7);
 
-            // Rule: Age must be within vaccine's allowed range
+            // Rule: Biological age must be within vaccine's allowed range (Safety Rule)
             if (currentDose.Vaccine != null)
             {
-                // Note: MinEligibleAgeInMonths is still in months in Vaccine entity, we might need to convert or update it later.
-                // For now, let's assume it's still months and convert to weeks for comparison if needed, 
-                // but usually Vaccine entity also needs to be updated.
                 int minAgeInWeeks = currentDose.Vaccine.MinEligibleAgeInMonths * 4; 
-                if (ageInWeeks < minAgeInWeeks)
-                    throw new DomainException("TooYoungForVaccine", ageInWeeks, minAgeInWeeks, currentDose.Vaccine.VaccineName);
+                if (biologicalAgeInWeeks < minAgeInWeeks)
+                    throw new DomainException("TooYoungForVaccine", biologicalAgeInWeeks, minAgeInWeeks, currentDose.Vaccine.VaccineName);
             }
 
-            // Rule: Age must be at least the dose's recommended age
-            if (!isAdvancedDose && ageInWeeks < currentDose.RecommendedAgeInWeeks)
+            // Rule: Progress check relative to registration timeline (Scheduling Rule)
+            if (!isAdvancedDose && weeksSinceRegistration < currentDose.RecommendedAgeInWeeks)
             {
-                throw new DomainException("TooYoung", ageInWeeks, currentDose.RecommendedAgeInWeeks, currentDose.DoseName);
+                throw new DomainException("TooYoung", weeksSinceRegistration, currentDose.RecommendedAgeInWeeks, currentDose.DoseName);
             }
 
             // Rule: Actual date cannot be before scheduled date

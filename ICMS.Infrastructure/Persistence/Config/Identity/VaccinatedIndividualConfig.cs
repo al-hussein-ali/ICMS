@@ -26,6 +26,7 @@ namespace ICMS.Infrastructure.Persistence.Config.Identity
             builder.Property(vi => vi.DirectorateId).IsRequired();
             builder.Property(vi => vi.NeighborhoodId).IsRequired();
             builder.Property(vi => vi.SubNeighborhoodId).IsRequired(false);
+            builder.Property(vi => vi.RegistrationDate).IsRequired();
 
             builder.HasIndex(vi => vi.CardNumber).IsUnique();
             builder.HasIndex(vi => vi.PersonId).IsUnique();
