@@ -85,4 +85,7 @@
   <data name="InsufficientStock" xml:space="preserve">
     <value>Insufficient stock quantity.</value>
   </data>
+  <data name="UnauthorizedAccess" xml:space="preserve">
+    <value>You do not have the required permissions to access this application.</value>
+  </data>
 </root>

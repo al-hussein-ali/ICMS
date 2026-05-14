@@ -33,7 +33,7 @@ namespace ICMS.Domain.Entites.Clinical
             {
                 VaccinatedIndividualId = individualId,
                 DoseId = doseId,
-                ScheduledDate = scheduledDate,
+                ScheduledDate = AdjustForVacations(scheduledDate),
                 Status = ScheduleStatus.Pending
             };
         }
@@ -47,8 +47,18 @@ namespace ICMS.Domain.Entites.Clinical
 
         public void Reschedule(DateOnly newScheduledDate)
         {
-            ScheduledDate = newScheduledDate;
+            ScheduledDate = AdjustForVacations(newScheduledDate);
             Status = ScheduleStatus.Pending;
+        }
+
+        private static DateOnly AdjustForVacations(DateOnly date)
+        {
+            // Business Rule: Friday is a vacation day. Move to Saturday.
+            if (date.DayOfWeek == DayOfWeek.Friday)
+            {
+                return date.AddDays(1);
+            }
+            return date;
         }
 
         public void MarkAsMissed()

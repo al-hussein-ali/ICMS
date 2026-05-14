@@ -28,6 +28,9 @@ namespace ICMS.API.Handlers
 
                 DomainException domEx =>
                     (StatusCodes.Status400BadRequest, "DomainError", localizer[domEx.MessageKey, domEx.Args]),
+                
+                UnauthorizedException unauthEx =>
+                    (StatusCodes.Status401Unauthorized, "Unauthorized", localizer[unauthEx.MessageKey, unauthEx.Args]),
 
                 _ =>
                     (StatusCodes.Status500InternalServerError, "ServerError", localizer["ServerError"])
@@ -39,6 +42,12 @@ namespace ICMS.API.Handlers
                 statusCode = StatusCodes.Status404NotFound;
                 titleKey = "NotFound";
                 detail = localizer[notFoundEx.MessageKey, notFoundEx.Args];
+            }
+            else if (exception is UnauthorizedException authEx)
+            {
+                statusCode = StatusCodes.Status401Unauthorized;
+                titleKey = "Unauthorized";
+                detail = localizer[authEx.MessageKey, authEx.Args];
             }
 
             var problemDetails = new ProblemDetails

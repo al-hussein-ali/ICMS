@@ -18,6 +18,21 @@ namespace ICMS.Application.Services
     {
         public async Task<AuthResponseDto> LoginAsync(LoginDto loginDto, CancellationToken ct = default)
         {
+            return await InternalLoginAsync(loginDto, null, ct);
+        }
+
+        public async Task<AuthResponseDto> BeneficiaryLoginAsync(LoginDto loginDto, CancellationToken ct = default)
+        {
+            return await InternalLoginAsync(loginDto, [ICMS.Domain.Constants.Roles.VaccinatedIndividual, ICMS.Domain.Constants.Roles.PregnantWoman], ct);
+        }
+
+        public async Task<AuthResponseDto> FieldVisitWorkerLoginAsync(LoginDto loginDto, CancellationToken ct = default)
+        {
+            return await InternalLoginAsync(loginDto, [ICMS.Domain.Constants.Roles.FieldVisitWorker], ct);
+        }
+
+        private async Task<AuthResponseDto> InternalLoginAsync(LoginDto loginDto, string[]? requiredRoles, CancellationToken ct = default)
+        {
             var user = await unitOfWork.UserRepository.FirstOrDefaultAsync(u => u.UserName == loginDto.UserName, ct, u => u.Person);
             if (user == null || !user.IsActive)
             {
@@ -30,10 +45,15 @@ namespace ICMS.Application.Services
             }
 
             var roles = (await identityService.GetUserRolesAsync(user.Id, ct)).ToList();
-            
+
+            if (requiredRoles != null && !roles.Any(r => requiredRoles.Contains(r)))
+            {
+                throw new UnauthorizedException("UnauthorizedAccess");
+            }
+
             var accessToken = tokenService.GenerateAccessToken(user, roles);
             var refreshToken = await tokenService.GenerateRefreshToken(user.Id, ct);
-            await unitOfWork.SaveChangesAsync(ct); 
+            await unitOfWork.SaveChangesAsync(ct);
 
             return new AuthResponseDto(accessToken, refreshToken, user.ToReadDto(roles));
         }

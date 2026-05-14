@@ -85,4 +85,7 @@
   <data name="InsufficientStock" xml:space="preserve">
     <value>الكمية المتوفرة في المخزون غير كافية.</value>
   </data>
+  <data name="UnauthorizedAccess" xml:space="preserve">
+    <value>ليس لديك الصلاحيات الكافية للوصول إلى هذا التطبيق.</value>
+  </data>
 </root>
