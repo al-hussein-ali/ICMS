@@ -26,7 +26,10 @@ namespace ICMS.Infrastructure.Repositories.Clinical
         public async Task<List<VaccinationSchedule>> GetOverduePendingSchedulesAsync(DateOnly cutoffDate, CancellationToken ct = default)
         {
             return await _dbSet
-                .Where(s => s.Status == ICMS.Domain.Enums.ScheduleStatus.Pending && s.ScheduledDate < cutoffDate)
+                .Include(s => s.Dose)
+                .Where(s => s.Status == ICMS.Domain.Enums.ScheduleStatus.Pending && 
+                            s.ScheduledDate < cutoffDate &&
+                            s.Dose.IsPrimary)
                 .ToListAsync(ct);
         }
 

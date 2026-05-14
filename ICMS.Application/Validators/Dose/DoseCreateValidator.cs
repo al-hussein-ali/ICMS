@@ -26,11 +26,11 @@ namespace ICMS.Application.Validators.Dose
                 .WithMessage(x => localizer["InvalidField", "This field"])
                 ;
 
-            RuleFor(x => x.RecommendedAgeInMonths)
+            RuleFor(x => x.RecommendedAgeInWeeks)
                 .NotNull()
                 .WithMessage(x => localizer["RequiredField", "This field"])
                 .GreaterThanOrEqualTo(0)
-                .WithMessage(x => localizer["ValidationError", "The Recommended Age In Months is not valid."])
+                .WithMessage(x => localizer["ValidationError", "The Recommended Age In Weeks is not valid."])
                 ;
 
             RuleFor(x => x.RecommendedAgeGroup)

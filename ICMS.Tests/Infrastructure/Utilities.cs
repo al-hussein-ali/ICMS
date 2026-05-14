@@ -41,7 +41,7 @@ namespace ICMS.Tests.Infrastructure
             db.Vaccines.Add(vaccine);
             db.SaveChanges();
 
-            var dose = Dose.Create(vaccine.Id, "BCG Dose 1", 1, 0, "At Birth", "First dose");
+            var dose = Dose.Create(vaccine.Id, "BCG Dose 1", 1, 0, "At Birth", true, "First dose");
             db.Doses.Add(dose);
             db.SaveChanges();
 

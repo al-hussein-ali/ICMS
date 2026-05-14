@@ -121,12 +121,12 @@ namespace ICMS.Domain.Entites.Identity
             // Clean up any existing schedules that the individual is no longer eligible for
             _schedules.RemoveAll(s => !eligibleDoseIds.Contains(s.DoseId) && s.Status != ScheduleStatus.Completed);
 
-            foreach (var dose in eligibleDoses.OrderBy(d => d.RecommendedAgeInMonths).ThenBy(d => d.DoseOrder))
+            foreach (var dose in eligibleDoses.OrderBy(d => d.RecommendedAgeInWeeks).ThenBy(d => d.DoseOrder))
             {
                 if (_schedules.Any(s => s.DoseId == dose.Id)) continue;
 
                 // For TT, if they are already of age, schedule starting from now or according to their age milestones
-                var scheduledDate = dateOfBirth.AddMonths(dose.RecommendedAgeInMonths);
+                var scheduledDate = dateOfBirth.AddDays(dose.RecommendedAgeInWeeks * 7);
                 
                 // If the scheduled date is far in the past (e.g. for TT doses they should have had years ago),
                 // we still schedule them as "Pending" or "Missed" so the system can track them.
@@ -155,26 +155,24 @@ namespace ICMS.Domain.Entites.Identity
                 throw new DomainException("TetanusOnlyForFemales");
             }
 
-            // 2. Calculate age in months at administration date
-            int ageInMonths = (administrationDate.Year - Person.DateOfBirth.Year) * 12 + administrationDate.Month - Person.DateOfBirth.Month;
-            if (administrationDate.Day < Person.DateOfBirth.Day) ageInMonths--;
+            // 2. Calculate age in weeks at administration date
+            int ageInWeeks = (int)((administrationDate.ToDateTime(TimeOnly.MinValue) - Person.DateOfBirth.ToDateTime(TimeOnly.MinValue)).TotalDays / 7);
 
             // Rule: Age must be within vaccine's allowed range
             if (currentDose.Vaccine != null)
             {
-                if (ageInMonths < currentDose.Vaccine.MinEligibleAgeInMonths)
-                    throw new DomainException("TooYoungForVaccine", ageInMonths, currentDose.Vaccine.MinEligibleAgeInMonths, currentDose.Vaccine.VaccineName);
-                
-                // Business Logic Change: Removed hard limit for MaxEligibleAgeInMonths to allow catch-up vaccinations 
-                // for individuals who missed their routine schedule but still need the dose.
-                // if (ageInMonths > currentDose.Vaccine.MaxEligibleAgeInMonths)
-                //     throw new DomainException("TooOldForVaccine", ageInMonths, currentDose.Vaccine.MaxEligibleAgeInMonths, currentDose.Vaccine.VaccineName);
+                // Note: MinEligibleAgeInMonths is still in months in Vaccine entity, we might need to convert or update it later.
+                // For now, let's assume it's still months and convert to weeks for comparison if needed, 
+                // but usually Vaccine entity also needs to be updated.
+                int minAgeInWeeks = currentDose.Vaccine.MinEligibleAgeInMonths * 4; 
+                if (ageInWeeks < minAgeInWeeks)
+                    throw new DomainException("TooYoungForVaccine", ageInWeeks, minAgeInWeeks, currentDose.Vaccine.VaccineName);
             }
 
             // Rule: Age must be at least the dose's recommended age
-            if (!isAdvancedDose && ageInMonths < currentDose.RecommendedAgeInMonths)
+            if (!isAdvancedDose && ageInWeeks < currentDose.RecommendedAgeInWeeks)
             {
-                throw new DomainException("TooYoung", ageInMonths, currentDose.RecommendedAgeInMonths, currentDose.DoseName);
+                throw new DomainException("TooYoung", ageInWeeks, currentDose.RecommendedAgeInWeeks, currentDose.DoseName);
             }
 
             // Rule: Actual date cannot be before scheduled date
@@ -206,51 +204,35 @@ namespace ICMS.Domain.Entites.Identity
                 scheduleToComplete.MarkAsCompleted(administrationDate, newRecord);
             }
 
-            // 3. Handle late doses and cascading schedule updates (Task 1: Reschedule ALL subsequent doses)
-            var currentDoseOrder = currentDose.DoseOrder;
-            var vaccineId = currentDose.VaccineId;
-
-            // Find all subsequent schedules for the same vaccine that are not completed
-            var subsequentSchedules = _schedules
-                .Where(s => {
-                    var doseInfo = s.Dose ?? allDoses?.FirstOrDefault(d => d.Id == s.DoseId);
-                    return doseInfo != null && doseInfo.VaccineId == vaccineId && doseInfo.DoseOrder > currentDoseOrder && s.Status != ScheduleStatus.Completed;
-                })
-                .OrderBy(s => {
-                    var doseInfo = s.Dose ?? allDoses?.FirstOrDefault(d => d.Id == s.DoseId);
-                    return doseInfo?.DoseOrder ?? 0;
-                })
-                .ToList();
-
-            var prevDose = currentDose;
-            var prevReferenceDate = administrationDate;
-
-            foreach (var schedule in subsequentSchedules)
+            // 3. Handle late doses and cascading schedule updates
+            // Business Rule: If a Primary dose is taken late, shift ALL subsequent Primary doses across ALL vaccines.
+            if (currentDose.IsPrimary && scheduleToComplete != null && administrationDate > scheduleToComplete.ScheduledDate)
             {
-                var schedDose = schedule.Dose ?? allDoses?.FirstOrDefault(d => d.Id == schedule.DoseId);
-                if (schedDose == null) continue;
-
-                int recommendedIntervalMonths = schedDose.RecommendedAgeInMonths - prevDose.RecommendedAgeInMonths;
-                if (recommendedIntervalMonths < 0) recommendedIntervalMonths = 0;
-
-                var newScheduledDate = prevReferenceDate.AddMonths(recommendedIntervalMonths);
-
-                // If the previous dose was taken late, or if we need to shift subsequent ones to maintain intervals
-                if (newScheduledDate > schedule.ScheduledDate)
+                var delayDays = (administrationDate.ToDateTime(TimeOnly.MinValue) - scheduleToComplete.ScheduledDate.ToDateTime(TimeOnly.MinValue)).Days;
+                if (delayDays > 0)
                 {
-                    schedule.Reschedule(newScheduledDate);
-                }
+                    // Find all subsequent schedules that are not completed and were scheduled after this one
+                    var subsequentSchedules = _schedules
+                        .Where(s => s.Status != ScheduleStatus.Completed && s.ScheduledDate > scheduleToComplete.ScheduledDate)
+                        .ToList();
 
-                prevDose = schedDose;
-                prevReferenceDate = schedule.ScheduledDate; // Use the (potentially updated) scheduled date for the next interval calculation
+                    foreach (var schedule in subsequentSchedules)
+                    {
+                        var doseInfo = schedule.Dose ?? allDoses?.FirstOrDefault(d => d.Id == schedule.DoseId);
+                        if (doseInfo != null && doseInfo.IsPrimary)
+                        {
+                            schedule.Reschedule(schedule.ScheduledDate.AddDays(delayDays));
+                        }
+                    }
+                }
             }
 
             // Fallback: If the next dose doesn't have a schedule yet, create it (legacy support)
             if (nextSequenceDose != null && !_schedules.Any(s => s.DoseId == nextSequenceDose.Id))
             {
-                int recommendedIntervalMonths = nextSequenceDose.RecommendedAgeInMonths - currentDose.RecommendedAgeInMonths;
-                if (recommendedIntervalMonths < 0) recommendedIntervalMonths = 0;
-                var minNextDate = administrationDate.AddMonths(recommendedIntervalMonths);
+                int recommendedIntervalWeeks = nextSequenceDose.RecommendedAgeInWeeks - currentDose.RecommendedAgeInWeeks;
+                if (recommendedIntervalWeeks < 0) recommendedIntervalWeeks = 0;
+                var minNextDate = administrationDate.AddDays(recommendedIntervalWeeks * 7);
                 _schedules.Add(VaccinationSchedule.Create(this.Id, nextSequenceDose.Id, minNextDate));
             }
         }

@@ -22,7 +22,7 @@ namespace ICMS.Infrastructure.Persistence.Config.Clinical
             builder.Property(d => d.DoseName).HasMaxLength(150).IsUnicode(true).IsRequired();
             builder.Property(d => d.DoseOrder).IsRequired();
             builder.Property(d => d.RecommendedAgeGroup).HasMaxLength(100).IsUnicode(true).IsRequired();
-            builder.Property(d => d.RecommendedAgeInMonths).IsRequired();
+            builder.Property(d => d.RecommendedAgeInWeeks).IsRequired();
             builder.Property(d => d.Notes).HasMaxLength(500).IsUnicode(true).IsRequired(false);
 
             builder.HasIndex(d => d.DoseName).IsUnique();

@@ -12,12 +12,12 @@ namespace ICMS.Application.Extensions
     public static class DoseExtensions
     {
         public static DoseReadDto ToReadDto(this Dose d)
-            => new(d.Id, d.VaccineId, d.Vaccine?.VaccineName ?? "N/A", d.DoseName, d.DoseOrder, d.RecommendedAgeInMonths, d.RecommendedAgeGroup, d.Notes);
+            => new(d.Id, d.VaccineId, d.Vaccine?.VaccineName ?? "N/A", d.DoseName, d.DoseOrder, d.RecommendedAgeInWeeks, d.RecommendedAgeGroup, d.IsPrimary, d.Notes);
 
         public static DoseDetailsDto ToDetailsDto(this Dose d)
-            => new(d.Id, d.VaccineId, d.DoseName, d.DoseOrder, d.RecommendedAgeInMonths, d.RecommendedAgeGroup, d.Notes);
+            => new(d.Id, d.VaccineId, d.DoseName, d.DoseOrder, d.RecommendedAgeInWeeks, d.RecommendedAgeGroup, d.IsPrimary, d.Notes);
 
         public static Dose ToDomain(this DoseCreateDto dto)
-            => Dose.Create(dto.VaccineId, dto.DoseName, dto.DoseOrder, dto.RecommendedAgeInMonths, dto.RecommendedAgeGroup, dto.Notes);
+            => Dose.Create(dto.VaccineId, dto.DoseName, dto.DoseOrder, dto.RecommendedAgeInWeeks, dto.RecommendedAgeGroup, dto.IsPrimary, dto.Notes);
     }
 }

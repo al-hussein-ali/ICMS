@@ -29,8 +29,8 @@ namespace ICMS.API.Handlers
                 DomainException domEx =>
                     (StatusCodes.Status400BadRequest, "DomainError", localizer[domEx.MessageKey, domEx.Args]),
                 
-                UnauthorizedException unauthEx =>
-                    (StatusCodes.Status401Unauthorized, "Unauthorized", localizer[unauthEx.MessageKey, unauthEx.Args]),
+                //UnauthorizedException unauthEx =>
+                //    (StatusCodes.Status401Unauthorized, "Unauthorized", localizer[unauthEx.MessageKey, unauthEx.Args]),
 
                 _ =>
                     (StatusCodes.Status500InternalServerError, "ServerError", localizer["ServerError"])

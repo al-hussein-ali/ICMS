@@ -94,8 +94,9 @@ namespace ICMS.Application.Services
             existingDose.UpdateDoseInfo(updatedEntity.VaccineId,
                 updatedEntity.DoseName,
                 updatedEntity.DoseOrder,
-                updatedEntity.RecommendedAgeInMonths,
+                updatedEntity.RecommendedAgeInWeeks,
                 updatedEntity.RecommendedAgeGroup,
+                updatedEntity.IsPrimary,
                 updatedEntity.Notes);
 
             var result = await _unitOfWork.SaveChangesAsync(ct) > 0;

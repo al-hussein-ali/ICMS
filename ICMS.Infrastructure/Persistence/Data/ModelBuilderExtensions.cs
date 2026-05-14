@@ -199,37 +199,37 @@ namespace ICMS.Infrastructure.Persistence.Data
             // Seed Doses
             modelBuilder.Entity<Dose>().HasData(
                 // BCG
-                new { Id = 1, VaccineId = 1, DoseName = "BCG", DoseOrder = (byte)1, RecommendedAgeInMonths = 0, RecommendedAgeGroup = "atBirth" },
+                new { Id = 1, VaccineId = 1, DoseName = "BCG", DoseOrder = (byte)1, RecommendedAgeInWeeks = 0, RecommendedAgeGroup = "atBirth", IsPrimary = true },
                 // OPV
-                new { Id = 2, VaccineId = 2, DoseName = "OPV 0", DoseOrder = (byte)1, RecommendedAgeInMonths = 0, RecommendedAgeGroup = "atBirth" },
-                new { Id = 3, VaccineId = 2, DoseName = "OPV 1", DoseOrder = (byte)2, RecommendedAgeInMonths = 2, RecommendedAgeGroup = "2months" },
-                new { Id = 4, VaccineId = 2, DoseName = "OPV 2", DoseOrder = (byte)3, RecommendedAgeInMonths = 4, RecommendedAgeGroup = "4months" },
-                new { Id = 5, VaccineId = 2, DoseName = "OPV 3", DoseOrder = (byte)4, RecommendedAgeInMonths = 6, RecommendedAgeGroup = "6months" },
+                new { Id = 2, VaccineId = 2, DoseName = "OPV 0", DoseOrder = (byte)1, RecommendedAgeInWeeks = 0, RecommendedAgeGroup = "atBirth", IsPrimary = true },
+                new { Id = 3, VaccineId = 2, DoseName = "OPV 1", DoseOrder = (byte)2, RecommendedAgeInWeeks = 8, RecommendedAgeGroup = "2months", IsPrimary = true },
+                new { Id = 4, VaccineId = 2, DoseName = "OPV 2", DoseOrder = (byte)3, RecommendedAgeInWeeks = 16, RecommendedAgeGroup = "4months", IsPrimary = true },
+                new { Id = 5, VaccineId = 2, DoseName = "OPV 3", DoseOrder = (byte)4, RecommendedAgeInWeeks = 24, RecommendedAgeGroup = "6months", IsPrimary = true },
                 // PENTA
-                new { Id = 6, VaccineId = 3, DoseName = "Penta 1", DoseOrder = (byte)1, RecommendedAgeInMonths = 2, RecommendedAgeGroup = "2months" },
-                new { Id = 7, VaccineId = 3, DoseName = "Penta 2", DoseOrder = (byte)2, RecommendedAgeInMonths = 4, RecommendedAgeGroup = "4months" },
-                new { Id = 8, VaccineId = 3, DoseName = "Penta 3", DoseOrder = (byte)3, RecommendedAgeInMonths = 6, RecommendedAgeGroup = "6months" },
+                new { Id = 6, VaccineId = 3, DoseName = "Penta 1", DoseOrder = (byte)1, RecommendedAgeInWeeks = 8, RecommendedAgeGroup = "2months", IsPrimary = true },
+                new { Id = 7, VaccineId = 3, DoseName = "Penta 2", DoseOrder = (byte)2, RecommendedAgeInWeeks = 16, RecommendedAgeGroup = "4months", IsPrimary = true },
+                new { Id = 8, VaccineId = 3, DoseName = "Penta 3", DoseOrder = (byte)3, RecommendedAgeInWeeks = 24, RecommendedAgeGroup = "6months", IsPrimary = true },
                 // ROTA
-                new { Id = 9, VaccineId = 4, DoseName = "Rota 1", DoseOrder = (byte)1, RecommendedAgeInMonths = 2, RecommendedAgeGroup = "2months" },
-                new { Id = 10, VaccineId = 4, DoseName = "Rota 2", DoseOrder = (byte)2, RecommendedAgeInMonths = 4, RecommendedAgeGroup = "4months" },
+                new { Id = 9, VaccineId = 4, DoseName = "Rota 1", DoseOrder = (byte)1, RecommendedAgeInWeeks = 8, RecommendedAgeGroup = "2months", IsPrimary = true },
+                new { Id = 10, VaccineId = 4, DoseName = "Rota 2", DoseOrder = (byte)2, RecommendedAgeInWeeks = 16, RecommendedAgeGroup = "4months", IsPrimary = true },
                 // PCV
-                new { Id = 11, VaccineId = 5, DoseName = "PCV 1", DoseOrder = (byte)1, RecommendedAgeInMonths = 2, RecommendedAgeGroup = "2months" },
-                new { Id = 12, VaccineId = 5, DoseName = "PCV 2", DoseOrder = (byte)2, RecommendedAgeInMonths = 4, RecommendedAgeGroup = "4months" },
-                new { Id = 13, VaccineId = 5, DoseName = "PCV 3", DoseOrder = (byte)3, RecommendedAgeInMonths = 6, RecommendedAgeGroup = "6months" },
+                new { Id = 11, VaccineId = 5, DoseName = "PCV 1", DoseOrder = (byte)1, RecommendedAgeInWeeks = 8, RecommendedAgeGroup = "2months", IsPrimary = true },
+                new { Id = 12, VaccineId = 5, DoseName = "PCV 2", DoseOrder = (byte)2, RecommendedAgeInWeeks = 16, RecommendedAgeGroup = "4months", IsPrimary = true },
+                new { Id = 13, VaccineId = 5, DoseName = "PCV 3", DoseOrder = (byte)3, RecommendedAgeInWeeks = 24, RecommendedAgeGroup = "6months", IsPrimary = true },
                 // MR
-                new { Id = 14, VaccineId = 6, DoseName = "MR 1", DoseOrder = (byte)1, RecommendedAgeInMonths = 9, RecommendedAgeGroup = "9months" },
-                new { Id = 15, VaccineId = 6, DoseName = "MR 2", DoseOrder = (byte)2, RecommendedAgeInMonths = 18, RecommendedAgeGroup = "18months" },
+                new { Id = 14, VaccineId = 6, DoseName = "MR 1", DoseOrder = (byte)1, RecommendedAgeInWeeks = 36, RecommendedAgeGroup = "9months", IsPrimary = true },
+                new { Id = 15, VaccineId = 6, DoseName = "MR 2", DoseOrder = (byte)2, RecommendedAgeInWeeks = 72, RecommendedAgeGroup = "18months", IsPrimary = true },
                 // IPV
-                new { Id = 16, VaccineId = 7, DoseName = "IPV", DoseOrder = (byte)1, RecommendedAgeInMonths = 4, RecommendedAgeGroup = "4months" },
+                new { Id = 16, VaccineId = 7, DoseName = "IPV", DoseOrder = (byte)1, RecommendedAgeInWeeks = 16, RecommendedAgeGroup = "4months", IsPrimary = true },
                 // VITA
-                new { Id = 17, VaccineId = 8, DoseName = "Vit A 1", DoseOrder = (byte)1, RecommendedAgeInMonths = 6, RecommendedAgeGroup = "6months" },
-                new { Id = 18, VaccineId = 8, DoseName = "Vit A 2", DoseOrder = (byte)2, RecommendedAgeInMonths = 12, RecommendedAgeGroup = "12months" },
+                new { Id = 17, VaccineId = 8, DoseName = "Vit A 1", DoseOrder = (byte)1, RecommendedAgeInWeeks = 24, RecommendedAgeGroup = "6months", IsPrimary = true },
+                new { Id = 18, VaccineId = 8, DoseName = "Vit A 2", DoseOrder = (byte)2, RecommendedAgeInWeeks = 48, RecommendedAgeGroup = "12months", IsPrimary = true },
                 // TT (Reproductive Age: Females 15-49)
-                new { Id = 19, VaccineId = 9, DoseName = "TT 1", DoseOrder = (byte)1, RecommendedAgeInMonths = 180, RecommendedAgeGroup = "female15_49" },
-                new { Id = 20, VaccineId = 9, DoseName = "TT 2", DoseOrder = (byte)2, RecommendedAgeInMonths = 181, RecommendedAgeGroup = "female15_49" },
-                new { Id = 21, VaccineId = 9, DoseName = "TT 3", DoseOrder = (byte)3, RecommendedAgeInMonths = 187, RecommendedAgeGroup = "female15_49" },
-                new { Id = 22, VaccineId = 9, DoseName = "TT 4", DoseOrder = (byte)4, RecommendedAgeInMonths = 199, RecommendedAgeGroup = "female15_49" },
-                new { Id = 23, VaccineId = 9, DoseName = "TT 5", DoseOrder = (byte)5, RecommendedAgeInMonths = 211, RecommendedAgeGroup = "female15_49" }
+                new { Id = 19, VaccineId = 9, DoseName = "TT 1", DoseOrder = (byte)1, RecommendedAgeInWeeks = 720, RecommendedAgeGroup = "female15_49", IsPrimary = true },
+                new { Id = 20, VaccineId = 9, DoseName = "TT 2", DoseOrder = (byte)2, RecommendedAgeInWeeks = 724, RecommendedAgeGroup = "female15_49", IsPrimary = true },
+                new { Id = 21, VaccineId = 9, DoseName = "TT 3", DoseOrder = (byte)3, RecommendedAgeInWeeks = 748, RecommendedAgeGroup = "female15_49", IsPrimary = true },
+                new { Id = 22, VaccineId = 9, DoseName = "TT 4", DoseOrder = (byte)4, RecommendedAgeInWeeks = 796, RecommendedAgeGroup = "female15_49", IsPrimary = true },
+                new { Id = 23, VaccineId = 9, DoseName = "TT 5", DoseOrder = (byte)5, RecommendedAgeInWeeks = 844, RecommendedAgeGroup = "female15_49", IsPrimary = true }
             );
         }
     }

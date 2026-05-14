@@ -61,7 +61,7 @@ namespace ICMS.Tests.Controllers
             var vaccines = await vaccinesResponse.Content.ReadFromJsonAsync<IEnumerable<VaccineReadDto>>();
             var testVaccine = vaccines.First();
 
-            var dto = new DoseCreateDto(testVaccine.Id, "New Test Dose", 2, 2, "2 Months", "Maintenance");
+            var dto = new DoseCreateDto(testVaccine.Id, "New Test Dose", 2, 8, "2 Months", true, "Maintenance");
             var response = await _client.PostAsJsonAsync("/api/Doses", dto);
             response.StatusCode.Should().Be(HttpStatusCode.Created);
         }
