@@ -7,6 +7,7 @@ namespace ICMS.Application.DTOs.Schedules
         string FirstName,
         string LastName,
         string PhoneNumber,
+        string CardNumber,
         int DoseId,
         string DoseName
     );

@@ -20,14 +20,39 @@ namespace ICMS.Infrastructure.Reports.DataFetchers
 
         public ReportType ReportType => ReportType.VaccinatedIndividuals;
 
-        public async Task<ReportData> FetchAsync(DateOnly startDate, DateOnly endDate, string lang = "en", CancellationToken ct = default)
+        public async Task<ReportData> FetchAsync(DateOnly startDate, DateOnly endDate, string lang = "en", Dictionary<string, string>? parameters = null, CancellationToken ct = default)
         {
             var isAr = lang.StartsWith("ar", StringComparison.OrdinalIgnoreCase);
 
-            var individuals = await _unitOfWork.VaccinatedIndividualRepository
+            var query = _unitOfWork.VaccinatedIndividualRepository
                 .GetQueryable(false, ct, vi => vi.Person)
                 .Where(vi => DateOnly.FromDateTime(vi.Person.CreatedAt) >= startDate
-                          && DateOnly.FromDateTime(vi.Person.CreatedAt) <= endDate)
+                          && DateOnly.FromDateTime(vi.Person.CreatedAt) <= endDate);
+
+            if (parameters != null)
+            {
+                if (parameters.TryGetValue("gender", out var genderStr) && Enum.TryParse<Gender>(genderStr, true, out var gender))
+                    query = query.Where(vi => vi.Person.Gender == gender);
+
+                if (parameters.TryGetValue("status", out var statusStr) && Enum.TryParse<ScheduleStatus>(statusStr, true, out var status))
+                    query = query.Where(vi => vi.Schedules.Any(s => s.Status == status));
+
+                if (parameters.TryGetValue("vaccineId", out var vIdStr) && int.TryParse(vIdStr, out var vId))
+                    query = query.Where(vi => vi.Schedules.Any(s => s.Dose.VaccineId == vId));
+
+                if (parameters.TryGetValue("doseId", out var dIdStr) && int.TryParse(dIdStr, out var dId))
+                    query = query.Where(vi => vi.Schedules.Any(s => s.DoseId == dId));
+
+                if (parameters.TryGetValue("neighborhoodId", out var nIdStr) && int.TryParse(nIdStr, out var nId))
+                    query = query.Where(vi => vi.NeighborhoodId == nId);
+
+                if (parameters.TryGetValue("subNeighborhoodId", out var snIdStr) && int.TryParse(snIdStr, out var snId))
+                    query = query.Where(vi => vi.SubNeighborhoodId == snId);
+            }
+
+            var individuals = await query
+                .Include(vi => vi.Schedules)
+                    .ThenInclude(s => s.Dose)
                 .ToListAsync(ct);
 
             // ── Labels ───────────────────────────────────────────────────

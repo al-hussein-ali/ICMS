@@ -16,7 +16,7 @@ namespace ICMS.Infrastructure.Reports.DataFetchers
     {
         public ReportType ReportType => ReportType.Inventory;
 
-        public async Task<ReportData> FetchAsync(DateOnly startDate, DateOnly endDate, string lang = "en", CancellationToken ct = default)
+        public async Task<ReportData> FetchAsync(DateOnly startDate, DateOnly endDate, string lang = "en", Dictionary<string, string>? parameters = null, CancellationToken ct = default)
         {
             var isAr = lang.StartsWith("ar", StringComparison.OrdinalIgnoreCase);
             var startDateTime = DateTime.SpecifyKind(startDate.ToDateTime(TimeOnly.MinValue), DateTimeKind.Utc);
@@ -28,9 +28,22 @@ namespace ICMS.Infrastructure.Reports.DataFetchers
             if (queryable == null)
                 throw new InvalidOperationException("Failed to get queryable from repository.");
 
+            var transactionType = (TransactionType?)null;
+            if (parameters != null && parameters.TryGetValue("transactionType", out var typeStr) && !string.IsNullOrEmpty(typeStr))
+            {
+                if (Enum.TryParse<TransactionType>(typeStr, true, out var tType))
+                    transactionType = tType;
+            }
+
+            var vaccineId = (int?)null;
+            if (parameters != null && parameters.TryGetValue("vaccineId", out var vIdStr) && int.TryParse(vIdStr, out var vId))
+                vaccineId = vId;
+
             var batches = await queryable
                 .Where(b => b.Transactions.Any(t =>
-                    t.TransactionDate >= startDateTime && t.TransactionDate <= endDateTime))
+                    t.TransactionDate >= startDateTime && t.TransactionDate <= endDateTime &&
+                    (!transactionType.HasValue || t.TransactionType == transactionType.Value))
+                    && (!vaccineId.HasValue || b.Dose.VaccineId == vaccineId.Value))
                 .ToListAsync(ct);
 
             // ── Labels ───────────────────────────────────────────────────

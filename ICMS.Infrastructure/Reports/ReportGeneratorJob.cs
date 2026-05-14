@@ -55,7 +55,7 @@ namespace ICMS.Infrastructure.Reports
                     ?? throw new InvalidOperationException($"No data fetcher registered for report type: {request.ReportType}");
 
                 // 2. Fetch data
-                var reportData = await fetcher.FetchAsync(request.StartDate, request.EndDate, request.Lang, ct);
+                var reportData = await fetcher.FetchAsync(request.StartDate, request.EndDate, request.Lang, request.AdditionalParameters, ct);
 
                 // 3. Render based on format
                 byte[] fileBytes;

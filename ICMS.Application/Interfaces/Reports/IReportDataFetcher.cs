@@ -13,6 +13,6 @@ namespace ICMS.Application.Interfaces.Reports
     public interface IReportDataFetcher
     {
         ReportType ReportType { get; }
-        Task<ReportData> FetchAsync(DateOnly startDate, DateOnly endDate, string lang = "en", CancellationToken ct = default);
+        Task<ReportData> FetchAsync(DateOnly startDate, DateOnly endDate, string lang = "en", Dictionary<string, string>? parameters = null, CancellationToken ct = default);
     }
 }

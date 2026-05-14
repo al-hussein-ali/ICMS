@@ -16,7 +16,7 @@ namespace ICMS.Infrastructure.Reports.DataFetchers
     {
         public ReportType ReportType => ReportType.PregnantWomen;
 
-        public async Task<ReportData> FetchAsync(DateOnly startDate, DateOnly endDate, string lang = "en", CancellationToken ct = default)
+        public async Task<ReportData> FetchAsync(DateOnly startDate, DateOnly endDate, string lang = "en", Dictionary<string, string>? parameters = null, CancellationToken ct = default)
         {
             var isAr = lang.StartsWith("ar", StringComparison.OrdinalIgnoreCase);
             int currentYear = DateTime.UtcNow.AddHours(3).Year;
@@ -27,13 +27,44 @@ namespace ICMS.Infrastructure.Reports.DataFetchers
             if (queryable == null)
                 throw new InvalidOperationException("Failed to get queryable.");
 
-            var women = await queryable
+            var query = queryable
                 .Include(pw => pw.PregnancyDetails)
                     .ThenInclude(pd => pd.Newborns)
                 .Where(pw => pw.Person != null
                           && DateOnly.FromDateTime(pw.Person.CreatedAt) >= startDate
-                          && DateOnly.FromDateTime(pw.Person.CreatedAt) <= endDate)
-                .ToListAsync(ct);
+                          && DateOnly.FromDateTime(pw.Person.CreatedAt) <= endDate);
+
+            if (parameters != null)
+            {
+                if (parameters.TryGetValue("bloodGroup", out var bgStr) && Enum.TryParse<BloodGroup>(bgStr, true, out var bg))
+                    query = query.Where(pw => pw.BloodGroup == bg);
+
+                if (parameters.TryGetValue("rhFactor", out var rhStr) && Enum.TryParse<RhFactor>(rhStr, true, out var rh))
+                    query = query.Where(pw => pw.RhFactor == rh);
+
+                if (parameters.TryGetValue("isPregnancyDone", out var doneStr) && bool.TryParse(doneStr, out var isDone))
+                    query = query.Where(pw => pw.PregnancyDetails.Any(pd => pd.IsPregnancyDone == isDone));
+
+                if (parameters.TryGetValue("pregnancyType", out var ptStr) && Enum.TryParse<PregnancyType>(ptStr, true, out var pt))
+                    query = query.Where(pw => pw.PregnancyDetails.Any(pd => pd.PregnancyType == pt));
+
+                if (parameters.TryGetValue("birthNature", out var bnStr) && Enum.TryParse<BirthNature>(bnStr, true, out var bn))
+                    query = query.Where(pw => pw.PregnancyDetails.Any(pd => pd.BirthNature == bn));
+
+                if (parameters.TryGetValue("riskLevel", out var riskStr))
+                {
+                    // Logic for HighRisk: typically having any complications or specific conditions
+                    if (riskStr == "HighRisk")
+                    {
+                        query = query.Where(pw => pw.PregnancyCount >= 5 || 
+                            pw.PregnancyDetails.Any(pd => 
+                                pd.PreviousPregnancyComplicationsId != null || 
+                                pd.PregnancyType == PregnancyType.Multiple));
+                    }
+                }
+            }
+
+            var women = await query.ToListAsync(ct);
 
             // ── Labels ───────────────────────────────────────────────────
             var colName      = isAr ? "الاسم الكامل"         : "Full Name";

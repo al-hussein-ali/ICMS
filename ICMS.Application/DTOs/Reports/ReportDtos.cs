@@ -11,6 +11,7 @@ namespace ICMS.Application.DTOs.Reports
         public DateOnly StartDate { get; set; }
         public DateOnly EndDate { get; set; }
         public string Lang { get; set; } = "en";
+        public Dictionary<string, string>? AdditionalParameters { get; set; } = new();
     }
 
     public record ReportJobResponseDto(string JobId, string Message);

@@ -21,18 +21,31 @@ namespace ICMS.Infrastructure.Reports.DataFetchers
 
         public ReportType ReportType => ReportType.DailyVaccination;
 
-        public async Task<ReportData> FetchAsync(DateOnly startDate, DateOnly endDate, string lang = "en", CancellationToken ct = default)
+        public async Task<ReportData> FetchAsync(DateOnly startDate, DateOnly endDate, string lang = "en", Dictionary<string, string>? parameters = null, CancellationToken ct = default)
         {
             var isAr = lang.StartsWith("ar", StringComparison.OrdinalIgnoreCase);
 
-            var records = await _unitOfWork.ImmunizationRecordRepository
+            var query = _unitOfWork.ImmunizationRecordRepository
                 .GetQueryable(false, ct)
                 .Include(ir => ir.Dose)
                 .ThenInclude(d => d.Vaccine)
                 .Include(ir => ir.VaccinatedIndividual)
                 .ThenInclude(vi => vi.Person)
-                .Where(ir => ir.VaccinationDate >= startDate && ir.VaccinationDate <= endDate)
-                .ToListAsync(ct);
+                .Where(ir => ir.VaccinationDate >= startDate && ir.VaccinationDate <= endDate);
+
+            if (parameters != null)
+            {
+                if (parameters.TryGetValue("gender", out var genderStr) && Enum.TryParse<Gender>(genderStr, true, out var gender))
+                    query = query.Where(ir => ir.VaccinatedIndividual.Person.Gender == gender);
+
+                if (parameters.TryGetValue("vaccineId", out var vIdStr) && int.TryParse(vIdStr, out var vId))
+                    query = query.Where(ir => ir.Dose.VaccineId == vId);
+
+                if (parameters.TryGetValue("doseId", out var dIdStr) && int.TryParse(dIdStr, out var dId))
+                    query = query.Where(ir => ir.DoseId == dId);
+            }
+
+            var records = await query.ToListAsync(ct);
 
             // ── Labels (EN / AR) ─────────────────────────────────────────
             var labelUnder1  = isAr ? "أقل من سنة"        : "Children Under 1 yr";
