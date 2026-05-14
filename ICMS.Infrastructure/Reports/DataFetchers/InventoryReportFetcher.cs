@@ -19,8 +19,8 @@ namespace ICMS.Infrastructure.Reports.DataFetchers
         public async Task<ReportData> FetchAsync(DateOnly startDate, DateOnly endDate, string lang = "en", CancellationToken ct = default)
         {
             var isAr = lang.StartsWith("ar", StringComparison.OrdinalIgnoreCase);
-            var startDateTime = startDate.ToDateTime(TimeOnly.MinValue);
-            var endDateTime   = endDate.ToDateTime(TimeOnly.MaxValue);
+            var startDateTime = DateTime.SpecifyKind(startDate.ToDateTime(TimeOnly.MinValue), DateTimeKind.Utc);
+            var endDateTime   = DateTime.SpecifyKind(endDate.ToDateTime(TimeOnly.MaxValue), DateTimeKind.Utc);
 
             var queryable = unitOfWork.BatchRepository
                 .GetQueryable(false, ct, b => b.Dose, b => b.Transactions);

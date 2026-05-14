@@ -10,5 +10,6 @@ namespace ICMS.Application.Interfaces.Repositories
         Task<List<Notification>> GetUserNotificationsAsync(int userId, int limit = 50, CancellationToken ct = default);
         Task MarkAsReadAsync(Guid notificationId, CancellationToken ct = default);
         Task MarkAllAsReadAsync(int userId, CancellationToken ct = default);
+        Task DeleteAsync(Guid notificationId, CancellationToken ct = default);
     }
 }

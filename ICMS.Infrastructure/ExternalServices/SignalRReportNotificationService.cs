@@ -38,5 +38,12 @@ namespace ICMS.Infrastructure.ExternalServices
         {
             await _hubContext.Clients.All.SendAsync("NewAlert", new { type, title, message }, ct);
         }
+
+        public async Task NotifyUserAlertAsync(string userId, string type, string title, string message, CancellationToken ct = default)
+        {
+            await _hubContext.Clients
+                .Group($"user-{userId}")
+                .SendAsync("NewAlert", new { type, title, message }, ct);
+        }
     }
 }

@@ -12,5 +12,10 @@ namespace ICMS.Application.Interfaces.Services
         Task<List<Notification>> GetNotificationsAsync(int userId, int limit = 50, CancellationToken ct = default);
         Task MarkAsReadAsync(Guid notificationId, CancellationToken ct = default);
         Task MarkAllAsReadAsync(int userId, CancellationToken ct = default);
+        Task DeleteNotificationAsync(Guid notificationId, CancellationToken ct = default);
+        
+        // SignalR proxy methods
+        Task NotifyReportReadyAsync(string userId, string jobId, string downloadUrl, CancellationToken ct = default);
+        Task NotifyReportFailedAsync(string userId, string jobId, string errorMessage, CancellationToken ct = default);
     }
 }

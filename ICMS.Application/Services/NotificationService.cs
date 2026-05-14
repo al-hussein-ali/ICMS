@@ -35,8 +35,8 @@ namespace ICMS.Application.Services
             await _unitOfWork.NotificationRepository.AddAsync(notification, ct);
             await _unitOfWork.SaveChangesAsync(ct);
 
-            // Also push via SignalR
-            await _signalRService.NotifyGeneralAlertAsync("Info", title, message, ct);
+            // Also push via SignalR to the specific user
+            await _signalRService.NotifyUserAlertAsync(userId.ToString(), "Info", title, message, ct);
         }
 
         public async Task<List<Notification>> GetNotificationsAsync(int userId, int limit = 50, CancellationToken ct = default)
@@ -54,6 +54,22 @@ namespace ICMS.Application.Services
         {
             await _unitOfWork.NotificationRepository.MarkAllAsReadAsync(userId, ct);
             await _unitOfWork.SaveChangesAsync(ct);
+        }
+
+        public async Task DeleteNotificationAsync(Guid notificationId, CancellationToken ct = default)
+        {
+            await _unitOfWork.NotificationRepository.DeleteAsync(notificationId, ct);
+            await _unitOfWork.SaveChangesAsync(ct);
+        }
+
+        public async Task NotifyReportReadyAsync(string userId, string jobId, string downloadUrl, CancellationToken ct = default)
+        {
+            await _signalRService.NotifyReportReadyAsync(userId, jobId, downloadUrl, ct);
+        }
+
+        public async Task NotifyReportFailedAsync(string userId, string jobId, string errorMessage, CancellationToken ct = default)
+        {
+            await _signalRService.NotifyReportFailedAsync(userId, jobId, errorMessage, ct);
         }
     }
 }

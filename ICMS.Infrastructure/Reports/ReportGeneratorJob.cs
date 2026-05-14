@@ -88,12 +88,13 @@ namespace ICMS.Infrastructure.Reports
 
                 // 5. Create Persistent Notification
                 var downloadUrl = $"/api/Reports/download/{jobId}";
-                var title = request.Lang.StartsWith("ar") ? "التقرير جاهز" : "Report Ready";
-                var message = request.Lang.StartsWith("ar") 
-                    ? $"تم إنشاء تقرير {request.ReportType} بنجاح." 
-                    : $"Your {request.ReportType} report has been generated successfully.";
+                var title = "common.notifications.report_ready_title";
+                var message = $"{{\"key\":\"common.notifications.report_ready_msg\",\"params\":{{\"reportType\":\"{request.ReportType}\",\"month\":\"{DateTime.UtcNow.Month}\",\"year\":\"{DateTime.UtcNow.Year}\"}}}}";
 
                 await _notificationService.CreateNotificationAsync(userId, title, message, downloadUrl, jobId, ct);
+                
+                // Also trigger specific SignalR event for immediate toast and UI state updates
+                await _notificationService.NotifyReportReadyAsync(userId.ToString(), jobId, downloadUrl, ct);
             }
             catch (OperationCanceledException)
             {
@@ -104,12 +105,14 @@ namespace ICMS.Infrastructure.Reports
             {
                 _logger.LogError(ex, "Report generation failed. JobId={JobId}", jobId);
                 
-                var title = request.Lang.StartsWith("ar") ? "فشل إنشاء التقرير" : "Report Generation Failed";
-                var message = request.Lang.StartsWith("ar")
-                    ? $"حدث خطأ أثناء إنشاء التقرير: {ex.Message}"
-                    : $"An error occurred while generating the report: {ex.Message}";
+                var title = "common.notifications.report_failed_title";
+                var message = $"{{\"key\":\"common.notifications.report_failed_msg\",\"params\":{{\"reportType\":\"{request.ReportType}\"}}}}";
 
-                await _notificationService.CreateNotificationAsync(userId, title, message, null, jobId, ct);
+                await _notificationService.CreateNotificationAsync(userId, title, message, null, null, ct);
+                
+                // Also trigger specific SignalR failure event
+                await _notificationService.NotifyReportFailedAsync(userId.ToString(), jobId, ex.Message, ct);
+                
                 throw; // Re-throw so Hangfire marks job as failed
             }
         }

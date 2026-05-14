@@ -12,12 +12,12 @@ namespace ICMS.Application.Services
     public class BatchExpirationTrackerService : IBatchExpirationTrackerService
     {
         private readonly IUnitOfWork _unitOfWork;
-        private readonly IReportNotificationService _notificationService;
+        private readonly INotificationService _notificationService;
         private readonly ILogger<BatchExpirationTrackerService> _logger;
 
         public BatchExpirationTrackerService(
             IUnitOfWork unitOfWork,
-            IReportNotificationService notificationService,
+            INotificationService notificationService,
             ILogger<BatchExpirationTrackerService> logger)
         {
             _unitOfWork = unitOfWork;
@@ -47,15 +47,24 @@ namespace ICMS.Application.Services
                 return;
             }
 
+            // Fetch all users who should receive inventory alerts (Admins and Inventory Managers)
+            var targetRoles = new[] { "Admin", "InventoryManager" };
+            var recipientIds = _unitOfWork.UserRepository.GetQueryable(track: false)
+                .Where(u => u.UserRoles.Any(ur => targetRoles.Contains(ur.Role.RoleName)))
+                .Select(u => u.Id)
+                .ToList();
+
             foreach (var batch in expiringBatches)
             {
-                var title = "تنبيه: اقتراب انتهاء صلاحية دفعة";
-                var message = $"الدفعة #{batch.CookNumber} ({batch.BatchName}) ستنتهي في {batch.ExpiryDate:yyyy-MM-dd}. الكمية المتبقية: {batch.TotalQuantity}";
-
-                // Also send English version for internationalization if needed, but primary is Arabic as per UI
-                await _notificationService.NotifyGeneralAlertAsync("warning", title, message, ct);
+                var title = "common.notifications.batch_expiry_title";
+                var message = $"{{\"key\":\"common.notifications.batch_expiry_msg\",\"params\":{{\"batchName\":\"{batch.BatchName}\",\"vaccineName\":\"{batch.CookNumber}\",\"expiryDate\":\"{batch.ExpiryDate:yyyy-MM-dd}\"}}}}";
                 
-                _logger.LogInformation("Sent expiration alert for Batch {BatchId} (Cook: {CookNumber})", batch.Id, batch.CookNumber);
+                foreach (var userId in recipientIds)
+                {
+                    await _notificationService.CreateNotificationAsync(userId, title, message, "/inventory", null, ct);
+                }
+                
+                _logger.LogInformation("Sent expiration alert for Batch {BatchId} (Cook: {CookNumber}) to {UserCount} recipients", batch.Id, batch.CookNumber, recipientIds.Count);
             }
 
             _logger.LogInformation("Completed Batch Expiration Tracking. Found {Count} expiring batches.", expiringBatches.Count);

@@ -43,6 +43,13 @@ namespace ICMS.API.Controllers
             return NoContent();
         }
 
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteNotification(Guid id, CancellationToken ct = default)
+        {
+            await _notificationService.DeleteNotificationAsync(id, ct);
+            return NoContent();
+        }
+
         private int GetUserId()
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;

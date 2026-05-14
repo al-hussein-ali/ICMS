@@ -37,9 +37,17 @@ namespace ICMS.Infrastructure.Repositories.Common
 
         public async Task MarkAllAsReadAsync(int userId, CancellationToken ct = default)
         {
-            await _context.Notifications
-                .Where(n => n.UserId == userId && !n.IsRead)
-                .ExecuteUpdateAsync(s => s.SetProperty(n => n.IsRead, true), ct);
+            var notifications = await _dbSet.Where(n => n.UserId == userId && !n.IsRead).ToListAsync(ct);
+            foreach (var n in notifications) n.IsRead = true;
+        }
+
+        public async Task DeleteAsync(Guid notificationId, CancellationToken ct = default)
+        {
+            var notification = await _dbSet.FindAsync(new object[] { notificationId }, ct);
+            if (notification != null)
+            {
+                _dbSet.Remove(notification);
+            }
         }
     }
 }
