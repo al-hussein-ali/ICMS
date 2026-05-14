@@ -14,5 +14,8 @@ namespace ICMS.Application.Interfaces.Services
 
         /// <summary>Returns status and download URL if available.</summary>
         Task<ReportStatusDto?> GetStatusAsync(string jobId, CancellationToken ct = default);
+
+        /// <summary>Cancels a pending or running report job.</summary>
+        Task<bool> CancelJobAsync(string jobId, CancellationToken ct = default);
     }
 }

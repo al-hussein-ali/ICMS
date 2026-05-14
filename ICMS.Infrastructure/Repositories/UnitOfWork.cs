@@ -7,6 +7,7 @@ using ICMS.Infrastructure.Repositories.Identity;
 using ICMS.Infrastructure.Repositories.Maternal;
 using ICMS.Infrastructure.Repositories.Visits;
 using ICMS.Infrastructure.Repositories.Audit; // Assuming TransactionRepository might be here
+using ICMS.Infrastructure.Repositories.Common;
 
 namespace ICMS.Infrastructure.Repositories
 {
@@ -46,6 +47,7 @@ namespace ICMS.Infrastructure.Repositories
         public IVisitDetailsRepository VisitDetailsRepository { get; }
         public IVaccinationScheduleRepository VaccinationScheduleRepository { get; }
         public IRefreshTokenRepository RefreshTokenRepository { get; }
+        public INotificationRepository NotificationRepository { get; }
 
         public UnitOfWork(AppDbContext context)
         {
@@ -79,6 +81,7 @@ namespace ICMS.Infrastructure.Repositories
             VisitDetailsRepository = new VisitDetailsRepository(_context);
             VaccinationScheduleRepository = new VaccinationScheduleRepository(_context);
             RefreshTokenRepository = new RefreshTokenRepository(_context);
+            NotificationRepository = new NotificationRepository(_context);
         }
 
         public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)

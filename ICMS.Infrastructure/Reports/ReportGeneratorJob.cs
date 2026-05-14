@@ -26,13 +26,13 @@ namespace ICMS.Infrastructure.Reports
     {
         private readonly IEnumerable<IReportDataFetcher> _fetchers;
         private readonly IEnumerable<IReportTemplateRenderer> _renderers;
-        private readonly IReportNotificationService _notificationService;
+        private readonly INotificationService _notificationService;
         private readonly ILogger<ReportGeneratorJob> _logger;
 
         public ReportGeneratorJob(
             IEnumerable<IReportDataFetcher> fetchers,
             IEnumerable<IReportTemplateRenderer> renderers,
-            IReportNotificationService notificationService,
+            INotificationService notificationService,
             ILogger<ReportGeneratorJob> logger)
         {
             _fetchers = fetchers;
@@ -86,14 +86,30 @@ namespace ICMS.Infrastructure.Reports
                 _logger.LogInformation("Report generated successfully. JobId={JobId}, Format={Format}, File={File}", 
                     jobId, request.Format, filePath);
 
-                // 5. Notify user via SignalR
+                // 5. Create Persistent Notification
                 var downloadUrl = $"/api/Reports/download/{jobId}";
-                await _notificationService.NotifyReportReadyAsync(userIdStr, jobId, downloadUrl, ct);
+                var title = request.Lang.StartsWith("ar") ? "التقرير جاهز" : "Report Ready";
+                var message = request.Lang.StartsWith("ar") 
+                    ? $"تم إنشاء تقرير {request.ReportType} بنجاح." 
+                    : $"Your {request.ReportType} report has been generated successfully.";
+
+                await _notificationService.CreateNotificationAsync(userId, title, message, downloadUrl, jobId, ct);
+            }
+            catch (OperationCanceledException)
+            {
+                _logger.LogWarning("Report generation cancelled by user. JobId={JobId}", jobId);
+                throw;
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Report generation failed. JobId={JobId}", jobId);
-                await _notificationService.NotifyReportFailedAsync(userIdStr, jobId, ex.Message, ct);
+                
+                var title = request.Lang.StartsWith("ar") ? "فشل إنشاء التقرير" : "Report Generation Failed";
+                var message = request.Lang.StartsWith("ar")
+                    ? $"حدث خطأ أثناء إنشاء التقرير: {ex.Message}"
+                    : $"An error occurred while generating the report: {ex.Message}";
+
+                await _notificationService.CreateNotificationAsync(userId, title, message, null, jobId, ct);
                 throw; // Re-throw so Hangfire marks job as failed
             }
         }

@@ -77,5 +77,16 @@ namespace ICMS.API.Controllers
 
             return NotFound("Report not found. It may still be generating.");
         }
+
+        /// <summary>
+        /// Cancel a pending or running report job.
+        /// </summary>
+        [HttpDelete("{jobId}")]
+        public async Task<IActionResult> Cancel(string jobId, CancellationToken ct = default)
+        {
+            var cancelled = await reportService.CancelJobAsync(jobId, ct);
+            if (!cancelled) return NotFound("Job not found or already completed.");
+            return NoContent();
+        }
     }
 }

@@ -15,10 +15,11 @@ namespace ICMS.Infrastructure.Reports.Templates
             var tableTitle = isAr ? "بيانات الحوامل" : "Pregnant Women Data";
             var reportTitle = isAr ? "تقرير الحوامل" : "Pregnant Women Report";
 
-            var table = ReportHtmlBase.BuildDataTable(data.ColumnHeaders, data.Rows, tableTitle);
+            var accentColor = "#1e3a8a";
+            var table = ReportHtmlBase.BuildDataTable(data.ColumnHeaders, data.Rows, tableTitle, accentColor, data.SummaryStats, isAr);
             
             return ReportHtmlBase.Wrap(
-                accentColor: "#1e3a8a",
+                accentColor: accentColor,
                 reportTitle: reportTitle,
                 iconEmoji: "🤱",
                 data: data,

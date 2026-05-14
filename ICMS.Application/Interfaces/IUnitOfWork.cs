@@ -32,6 +32,7 @@ namespace ICMS.Application.Interfaces
         IVisitDetailsRepository VisitDetailsRepository { get; }
         IVaccinationScheduleRepository VaccinationScheduleRepository { get; }
         IRefreshTokenRepository RefreshTokenRepository { get; }
+        INotificationRepository NotificationRepository { get; }
 
 
         Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);

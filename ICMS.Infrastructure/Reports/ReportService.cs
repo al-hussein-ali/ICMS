@@ -53,5 +53,12 @@ namespace ICMS.Infrastructure.Reports
             return Task.FromResult<ReportStatusDto?>(new ReportStatusDto(
                 jobId, "Pending", null, null));
         }
+
+        public Task<bool> CancelJobAsync(string jobId, CancellationToken ct = default)
+        {
+            // Hangfire's Delete returns true if successfully cancelled/deleted
+            var deleted = _backgroundJobClient.Delete(jobId);
+            return Task.FromResult(deleted);
+        }
     }
 }

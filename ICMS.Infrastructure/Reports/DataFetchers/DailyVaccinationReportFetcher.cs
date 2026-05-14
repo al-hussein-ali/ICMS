@@ -44,7 +44,7 @@ namespace ICMS.Infrastructure.Reports.DataFetchers
             var colDate      = isAr ? "التاريخ"           : "Date";
             var colCard      = isAr ? "رقم البطاقة"       : "Card No.";
             var colName      = isAr ? "المستفيد"          : "Beneficiary";
-            var colAgeM      = isAr ? "العمر (بالأشهر)"   : "Age (Months)";
+            var colAgeW      = isAr ? "العمر (بالأسابيع)" : "Age (Weeks)";
             var colAgeY      = isAr ? "العمر (بالسنوات)"  : "Age (Years)";
             var colVaccine   = isAr ? "اللقاح"            : "Vaccine";
             var colDose      = isAr ? "الجرعة"            : "Dose";
@@ -83,6 +83,10 @@ namespace ICMS.Infrastructure.Reports.DataFetchers
             {
                 var dob         = ir.VaccinatedIndividual.Person.DateOfBirth;
                 var adminDate   = ir.VaccinationDate;
+                
+                int dayDiff     = adminDate.DayNumber - dob.DayNumber;
+                int ageWeeks    = dayDiff / 7;
+                
                 int ageMonths   = (adminDate.Year - dob.Year) * 12 + adminDate.Month - dob.Month;
                 if (adminDate.Day < dob.Day) ageMonths--;
                 int ageYears    = ageMonths / 12;
@@ -97,7 +101,7 @@ namespace ICMS.Infrastructure.Reports.DataFetchers
                         [colDate]     = adminDate.ToString("yyyy-MM-dd"),
                         [colCard]     = ir.VaccinatedIndividual.CardNumber,
                         [colName]     = ir.VaccinatedIndividual.Person.FullName,
-                        [colAgeM]     = ageMonths.ToString(),
+                        [colAgeW]     = ageWeeks.ToString(),
                         [colAgeY]     = ageYears.ToString(),
                         [colVaccine]  = ir.Dose.Vaccine?.VaccineName ?? "N/A",
                         [colDose]     = ir.Dose.DoseName,
@@ -116,7 +120,7 @@ namespace ICMS.Infrastructure.Reports.DataFetchers
                 GeneratedAt   = DateTime.UtcNow.AddHours(3).ToString("yyyy-MM-dd HH:mm"),
                 TotalRecords  = records.Count,
                 SummaryStats  = stats.ToDictionary(k => k.Key, v => v.Value.ToString()),
-                ColumnHeaders = [colDate, colCard, colName, colAgeM, colAgeY, colVaccine, colDose, colDoseNum, colLocation],
+                ColumnHeaders = [colDate, colCard, colName, colAgeW, colAgeY, colVaccine, colDose, colDoseNum, colLocation],
                 Rows          = rows
             };
         }

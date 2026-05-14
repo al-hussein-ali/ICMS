@@ -49,6 +49,7 @@ namespace ICMS.Infrastructure.Persistence.Data
         public DbSet<Vaccine> Vaccines { get; set; }
         public DbSet<VisitDetails> VisitDetails { get; set; }
         public DbSet<RefreshToken> RefreshTokens { get; set; }
+        public DbSet<Notification> Notifications { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

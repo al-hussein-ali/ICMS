@@ -16,10 +16,11 @@ namespace ICMS.Infrastructure.Reports.Templates
             var tableTitle = isAr ? "بيانات التقرير" : "Report Data";
             var reportTitle = isAr ? "إحصائيات التطعيم اليومية" : "Daily Vaccination Statistics";
 
-            body.Append(ReportHtmlBase.BuildDataTable(data.ColumnHeaders, data.Rows, tableTitle));
+            var accentColor = "#1e3a8a";
+            body.Append(ReportHtmlBase.BuildDataTable(data.ColumnHeaders, data.Rows, tableTitle, accentColor, data.SummaryStats, isAr));
 
             return ReportHtmlBase.Wrap(
-                accentColor: "#1e3a8a",
+                accentColor: accentColor,
                 reportTitle: reportTitle,
                 iconEmoji: "📋",
                 data: data,
