@@ -26,29 +26,18 @@ namespace ICMS.API.Handlers
                 ReferenceConstraintException =>
                     (StatusCodes.Status400BadRequest, "RelatedData", localizer["RelatedData"]),
 
+                NotFoundException notFoundEx =>
+                    (StatusCodes.Status404NotFound, "NotFound", localizer[notFoundEx.MessageKey, notFoundEx.Args]),
+
+                UnauthorizedException authEx =>
+                    (StatusCodes.Status401Unauthorized, "Unauthorized", localizer[authEx.MessageKey, authEx.Args]),
+
                 DomainException domEx =>
                     (StatusCodes.Status400BadRequest, "DomainError", localizer[domEx.MessageKey, domEx.Args]),
-                
-                //UnauthorizedException unauthEx =>
-                //    (StatusCodes.Status401Unauthorized, "Unauthorized", localizer[unauthEx.MessageKey, unauthEx.Args]),
 
                 _ =>
                     (StatusCodes.Status500InternalServerError, "ServerError", localizer["ServerError"])
             };
-
-            // Override specific domain exceptions with appropriate status codes if needed
-            if (exception is NotFoundException notFoundEx)
-            {
-                statusCode = StatusCodes.Status404NotFound;
-                titleKey = "NotFound";
-                detail = localizer[notFoundEx.MessageKey, notFoundEx.Args];
-            }
-            else if (exception is UnauthorizedException authEx)
-            {
-                statusCode = StatusCodes.Status401Unauthorized;
-                titleKey = "Unauthorized";
-                detail = localizer[authEx.MessageKey, authEx.Args];
-            }
 
             var problemDetails = new ProblemDetails
             {

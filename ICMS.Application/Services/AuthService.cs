@@ -46,7 +46,7 @@ namespace ICMS.Application.Services
 
             var roles = (await identityService.GetUserRolesAsync(user.Id, ct)).ToList();
 
-            if (requiredRoles != null && !roles.Any(r => requiredRoles.Contains(r)))
+            if (requiredRoles != null && !roles.Any(r => requiredRoles.Any(rr => string.Equals(rr, r, System.StringComparison.OrdinalIgnoreCase))))
             {
                 throw new UnauthorizedException("UnauthorizedAccess");
             }
