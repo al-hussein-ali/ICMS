@@ -37,7 +37,6 @@ namespace ICMS.Application.Extensions
                 vd.PregnancyDurationInWeeks,
                 vd.WeightInKilo,
                 vd.BloodPressure,
-                null, // TetanusDoseId - not stored directly in visit
                 vd.NextVisitDate,
                 vd.APPInUrineTest,
                 vd.OGTTInUrineTest,

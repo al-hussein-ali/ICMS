@@ -67,7 +67,6 @@ namespace ICMS.Application.Extensions
                     v.PregnancyDurationInWeeks,
                     v.WeightInKilo,
                     v.BloodPressure,
-                    null,
                     v.NextVisitDate,
                     v.APPInUrineTest,
                     v.OGTTInUrineTest,

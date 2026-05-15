@@ -278,43 +278,7 @@ namespace ICMS.Application.Services
                 vaginalBleeding: request.VaginalBleeding
             );
 
-            if (request.TetanusDoseId.HasValue)
-            {
-                var vaccinatedIndividual =
-                    await _unitOfWork.VaccinatedIndividualRepository.GetByPersonIdAsync(
-                        pregnancy.PregnantWoman.PersonId, ct);
 
-                if (vaccinatedIndividual == null)
-                {
-                    var directorates = await _unitOfWork.DirectorateRepository.GetAllAsync(cancellationToken: ct);
-                    var neighborhoods = await _unitOfWork.NeighborhoodRepository.GetAllAsync(cancellationToken: ct);
-
-                    var dirId = directorates.FirstOrDefault()?.Id ?? 0;
-                    var neighId = neighborhoods.FirstOrDefault()?.Id ?? 0;
-
-                    if (dirId > 0 && neighId > 0)
-                    {
-                        vaccinatedIndividual = VaccinatedIndividual.Create(dirId, neighId, null, userId);
-                        vaccinatedIndividual.AssignExistingPersonById(pregnancy.PregnantWoman.PersonId);
-                        await _unitOfWork.VaccinatedIndividualRepository.AddAsync(vaccinatedIndividual, ct);
-                        await _unitOfWork.SaveChangesAsync(ct);
-                    }
-                    else
-                    {
-                        throw new DomainException("MissingLocationConfiguration");
-                    }
-                }
-
-                var doseDto = new AdministerDoseDto(
-                    IndividualId: vaccinatedIndividual.Id,
-                    DoseId: request.TetanusDoseId.Value,
-                    Date: request.VisitDate,
-                    TakenIn: "Clinic",
-                    Notes: "ANC Immunization"
-                );
-
-                await _immunizationService.AdministerDoseAsync(doseDto, userId, ct);
-            }
 
             await _unitOfWork.SaveChangesAsync(ct);
             InvalidateCache(pregnancy.PregnantWomanId);
@@ -395,6 +359,13 @@ namespace ICMS.Application.Services
         {
             var pregnancy = await _unitOfWork.PregnancyDetailsRepository.GetByIdAsync(id, ct);
             if (pregnancy == null) throw new NotFoundException("PregnancyNotFound");
+
+            var woman = await _unitOfWork.PregnantWomanRepository.GetByIdAsync(pregnancy.PregnantWomanId, ct);
+            if (woman != null)
+            {
+                woman.DecrementPregnancyCount();
+                await _unitOfWork.PregnantWomanRepository.UpdateAsync(woman, ct);
+            }
 
             await _unitOfWork.PregnancyDetailsRepository.DeleteAsync(pregnancy, ct);
             await _unitOfWork.SaveChangesAsync(ct);
@@ -482,6 +453,13 @@ namespace ICMS.Application.Services
         {
             var visit = await _unitOfWork.VisitDetailsRepository.GetByIdAsync(id, ct)
                 ?? throw new NotFoundException("Visit not found");
+
+            var pregnancy = await _unitOfWork.PregnancyDetailsRepository.GetByIdAsync(visit.PregnancyDetailsId, ct);
+            if (pregnancy != null)
+            {
+                pregnancy.DecrementVisitsCount();
+                await _unitOfWork.PregnancyDetailsRepository.UpdateAsync(pregnancy, ct);
+            }
 
             await _unitOfWork.VisitDetailsRepository.DeleteAsync(visit, ct);
             await _unitOfWork.SaveChangesAsync(ct);

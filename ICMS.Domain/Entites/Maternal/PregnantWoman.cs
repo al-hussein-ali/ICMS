@@ -137,5 +137,11 @@ public class PregnantWoman : BaseEntity<int>
 
         return newPregnancy;
     }
+
+    public void DecrementPregnancyCount()
+    {
+        if (PregnancyCount > 0)
+            PregnancyCount--;
+    }
 }
 

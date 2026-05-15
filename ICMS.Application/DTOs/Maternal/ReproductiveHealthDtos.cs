@@ -45,7 +45,6 @@ namespace ICMS.Application.DTOs.Maternal
         int PregnancyDurationInWeeks,
         decimal WeightInKilo,
         string BloodPressure,
-        int? TetanusDoseId,
         DateOnly? DoctorSuggestedNextVisit = null,
         string AppInUrineTest = "N/A",
         string OgttInUrineTest = "N/A",

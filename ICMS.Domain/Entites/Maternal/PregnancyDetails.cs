@@ -240,6 +240,12 @@ namespace ICMS.Domain.Entites.Maternal
             VisitsCount++;
         }
 
+        public void DecrementVisitsCount()
+        {
+            if (VisitsCount > 0)
+                VisitsCount--;
+        }
+
         public void ConcludePregnancy(
             DateOnly deliveryDate,
             BirthNature birthNature,
