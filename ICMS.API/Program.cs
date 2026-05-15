@@ -212,7 +212,7 @@ app.UseStaticFiles();
 
 app.UseRequestLocalization(options =>
 {
-    var supportedCultures = new[] { "en-US" };
+    var supportedCultures = new[] { "en-US", "ar-YE", "ar" };
     options.SetDefaultCulture("en-US")
         .AddSupportedCultures(supportedCultures)
         .AddSupportedUICultures(supportedCultures);

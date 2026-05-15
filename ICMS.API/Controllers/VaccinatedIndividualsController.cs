@@ -13,7 +13,9 @@ namespace ICMS.API.Controllers
     [Route("api/vaccinated-individuals")]
     [ApiController]
     [Authorize(Roles = Roles.StaffRoles)]
-    public class VaccinatedIndividualsController(IVaccinatedIndividualService vaccinatedIndividualService) : ControllerBase
+    public class VaccinatedIndividualsController(
+        IVaccinatedIndividualService vaccinatedIndividualService,
+        ILocalizer localizer) : ControllerBase
     {
 
         [HttpGet]
@@ -91,6 +93,12 @@ namespace ICMS.API.Controllers
             var userId = ClaimsPrincipalExtensions.GetUserId(User);
             var result = await vaccinatedIndividualService.BulkInsertIndividualAsync(newFieldVaccinatedIndividuals, userId);
 
+            // Localize failure messages before returning to mobile app
+            if (result.Failures.Any())
+            {
+                result.Failures = result.Failures.Select(f => f with { Error = localizer[f.Error] }).ToList();
+            }
+
             return Ok(result);
         }
 
@@ -102,6 +110,12 @@ namespace ICMS.API.Controllers
 
             var userId = ClaimsPrincipalExtensions.GetUserId(User);
             var result = await vaccinatedIndividualService.BulkUpdateFieldVisitIndividualAsync(updateFieldVisitIndividuals, userId);
+
+            // Localize failure messages before returning to mobile app
+            if (result.Failures.Any())
+            {
+                result.Failures = result.Failures.Select(f => f with { Error = localizer[f.Error] }).ToList();
+            }
 
             return Ok(result);
         }

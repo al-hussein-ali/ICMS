@@ -109,4 +109,7 @@
   <data name="FutureDateNotAllowed" xml:space="preserve">
     <value>The date cannot be in the future.</value>
   </data>
+  <data name="IndividualAlreadyRegistered" xml:space="preserve">
+    <value>Individual is already registered in the system.</value>
+  </data>
 </root>

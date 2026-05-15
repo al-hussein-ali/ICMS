@@ -13,15 +13,18 @@ namespace ICMS.Application.Services
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly INotificationService _notificationService;
+        private readonly ISystemSettingService _systemSettingService;
         private readonly ILogger<BatchExpirationTrackerService> _logger;
 
         public BatchExpirationTrackerService(
             IUnitOfWork unitOfWork,
             INotificationService notificationService,
+            ISystemSettingService systemSettingService,
             ILogger<BatchExpirationTrackerService> logger)
         {
             _unitOfWork = unitOfWork;
             _notificationService = notificationService;
+            _systemSettingService = systemSettingService;
             _logger = logger;
         }
 
@@ -30,8 +33,11 @@ namespace ICMS.Application.Services
             _logger.LogInformation("Starting Batch Expiration Tracking at {Time} (UTC)", DateTime.UtcNow);
 
             var today = DateOnly.FromDateTime(DateTime.UtcNow);
-            // Increased threshold to 90 days for better visibility during testing
-            var thresholdDate = today.AddDays(90); 
+            
+            // Retrieve threshold from system settings (default to 30 if not found)
+            var thresholdDays = await _systemSettingService.GetValueAsync("InventoryExpiryThresholdDays", 30);
+            var thresholdDate = today.AddDays(thresholdDays); 
+            _logger.LogInformation("Using expiration threshold of {Days} days (Threshold Date: {Date})", thresholdDays, thresholdDate);
 
             // Log total active batches for debugging
             var activeCount = _unitOfWork.BatchRepository.GetQueryable().Count(b => b.IsActive && b.TotalQuantity > 0);
@@ -43,7 +49,7 @@ namespace ICMS.Application.Services
 
             if (!expiringBatches.Any())
             {
-                _logger.LogInformation("No batches expiring within the next 90 days found.");
+                _logger.LogInformation("No batches expiring within the next {Days} days found.", thresholdDays);
                 return;
             }
 

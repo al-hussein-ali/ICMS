@@ -109,4 +109,7 @@
   <data name="FutureDateNotAllowed" xml:space="preserve">
     <value>لا يمكن أن يكون التاريخ في المستقبل.</value>
   </data>
+  <data name="IndividualAlreadyRegistered" xml:space="preserve">
+    <value>المواطن مسجل مسبقاً في النظام.</value>
+  </data>
 </root>
