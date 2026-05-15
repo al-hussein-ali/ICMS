@@ -137,4 +137,11 @@ namespace ICMS.Application.DTOs.Maternal
         List<AddAncVisitDto> Visits,
         List<NewbornDto> Newborns
     );
+    public record ReproductiveHealthStatisticsDto(
+        int ActivePregnancies,
+        int HighRiskCases,
+        int SuccessfulDeliveries,
+        int TotalVisits,
+        int TotalNewborns
+    );
 }

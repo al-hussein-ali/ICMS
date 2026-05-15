@@ -488,5 +488,28 @@ namespace ICMS.Application.Services
 
             return null;
         }
+
+        public async Task<ReproductiveHealthStatisticsDto> GetStatisticsAsync(CancellationToken ct = default)
+        {
+            var activePregnancies = await _unitOfWork.PregnancyDetailsRepository.GetQueryable(false, ct)
+                .CountAsync(pd => !pd.IsPregnancyDone, ct);
+
+            var totalVisits = await _unitOfWork.VisitDetailsRepository.GetQueryable(false, ct)
+                .CountAsync(ct);
+
+            var totalNewborns = await _unitOfWork.PregnancyDetailsRepository.GetQueryable(false, ct)
+                .SumAsync(pd => (int)pd.NewbornCount, ct);
+
+            var successfulDeliveries = await _unitOfWork.PregnancyDetailsRepository.GetQueryable(false, ct)
+                .CountAsync(pd => pd.IsPregnancyDone, ct);
+
+            return new ReproductiveHealthStatisticsDto(
+                ActivePregnancies: activePregnancies,
+                HighRiskCases: 0, // Simplified for now
+                SuccessfulDeliveries: successfulDeliveries,
+                TotalVisits: totalVisits,
+                TotalNewborns: totalNewborns
+            );
+        }
     }
 }

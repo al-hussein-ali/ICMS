@@ -39,5 +39,6 @@ namespace ICMS.Application.Interfaces.Services
         Task UpdateVisitAsync(int id, AddAncVisitDto request, CancellationToken ct = default);
         Task DeleteVisitAsync(int id, CancellationToken ct = default);
         Task<int?> GetWomanIdByUserIdAsync(int userId, CancellationToken ct = default);
+        Task<ReproductiveHealthStatisticsDto> GetStatisticsAsync(CancellationToken ct = default);
     }
 }

@@ -175,5 +175,13 @@ namespace ICMS.API.Controllers
             await reproductiveHealthService.DeleteVisitAsync(id, ct);
             return NoContent();
         }
+
+        [HttpGet("statistics")]
+        [Authorize(Roles = Roles.StaffRoles)]
+        public async Task<IActionResult> GetStatistics(CancellationToken ct)
+        {
+            var result = await reproductiveHealthService.GetStatisticsAsync(ct);
+            return Ok(result);
+        }
     }
 }
