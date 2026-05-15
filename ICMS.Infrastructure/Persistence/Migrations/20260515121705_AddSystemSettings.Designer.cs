@@ -3,17 +3,20 @@ using System;
 using ICMS.Infrastructure.Persistence.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace ICMS.Infrastructure.Migrations
+namespace ICMS.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260515121705_AddSystemSettings")]
+    partial class AddSystemSettings
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -846,10 +849,28 @@ namespace ICMS.Infrastructure.Migrations
                         {
                             Id = 3,
                             Category = "Clinical",
+                            DataType = "bool",
+                            Description = "Enable automated tracking of missed primary doses",
+                            Key = "Clinical.MissedDoseCheckEnabled",
+                            Value = "true"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            Category = "Clinical",
                             DataType = "int",
                             Description = "Days after scheduled date before flagging as overdue",
                             Key = "Clinical.OverdueGracePeriodDays",
                             Value = "7"
+                        },
+                        new
+                        {
+                            Id = 5,
+                            Category = "Security",
+                            DataType = "int",
+                            Description = "Days before requiring a password reset",
+                            Key = "Security.PasswordExpiryDays",
+                            Value = "90"
                         });
                 });
 

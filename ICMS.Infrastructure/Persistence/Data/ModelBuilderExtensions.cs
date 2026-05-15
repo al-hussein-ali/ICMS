@@ -1,5 +1,6 @@
 using ICMS.Domain.Entites.Geography;
 using ICMS.Domain.Entites.Clinical;
+using ICMS.Domain.Entites.Common;
 using ICMS.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 
@@ -230,6 +231,15 @@ namespace ICMS.Infrastructure.Persistence.Data
                 new { Id = 21, VaccineId = 9, DoseName = "TT 3", DoseOrder = (byte)3, RecommendedAgeInWeeks = 748, RecommendedAgeGroup = "female15_49", IsPrimary = true },
                 new { Id = 22, VaccineId = 9, DoseName = "TT 4", DoseOrder = (byte)4, RecommendedAgeInWeeks = 796, RecommendedAgeGroup = "female15_49", IsPrimary = true },
                 new { Id = 23, VaccineId = 9, DoseName = "TT 5", DoseOrder = (byte)5, RecommendedAgeInWeeks = 844, RecommendedAgeGroup = "female15_49", IsPrimary = true }
+            );
+        }
+
+        public static void SeedSystemSettings(this ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<SystemSetting>().HasData(
+                new { Id = 1, Key = "Inventory.ExpiryThresholdDays", Value = "30", Category = "Inventory", Description = "Days before expiry to trigger a notification", DataType = "int" },
+                new { Id = 2, Key = "Advisory.DailyBroadcastTime", Value = "09:00", Category = "Communication", Description = "Daily time to send automated health advisories", DataType = "time" },
+                new { Id = 3, Key = "Clinical.OverdueGracePeriodDays", Value = "7", Category = "Clinical", Description = "Days after scheduled date before flagging as overdue", DataType = "int" }
             );
         }
     }

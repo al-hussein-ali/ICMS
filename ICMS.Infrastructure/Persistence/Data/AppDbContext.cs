@@ -50,6 +50,7 @@ namespace ICMS.Infrastructure.Persistence.Data
         public DbSet<VisitDetails> VisitDetails { get; set; }
         public DbSet<RefreshToken> RefreshTokens { get; set; }
         public DbSet<Notification> Notifications { get; set; }
+        public DbSet<SystemSetting> SystemSettings { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -59,6 +60,7 @@ namespace ICMS.Infrastructure.Persistence.Data
             modelBuilder.SeedGeographicalData();
             modelBuilder.SeedIdentityData();
             modelBuilder.SeedVaccineData();
+            modelBuilder.SeedSystemSettings();
 
         }
 
