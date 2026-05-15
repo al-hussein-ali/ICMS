@@ -6,6 +6,7 @@ using ICMS.Application.Interfaces.Services;
 using ICMS.Domain.Entites.Clinical;
 using ICMS.Domain.Enums;
 using ICMS.Domain.Exceptions;
+using Microsoft.Extensions.Configuration;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -19,14 +20,18 @@ namespace ICMS.Application.Services
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IPushNotificationService _pushNotificationService;
+        private readonly IConfiguration _configuration;
 
-        public HealthAdvisoryService(IUnitOfWork unitOfWork, IPushNotificationService pushNotificationService)
+        public HealthAdvisoryService(IUnitOfWork unitOfWork, IPushNotificationService pushNotificationService,
+            IConfiguration configuration)
         {
             _unitOfWork = unitOfWork;
             _pushNotificationService = pushNotificationService;
+            _configuration = configuration;
         }
 
-        public async Task<HealthAdvisoryDetailsDto> CreateAsync(HealthAdvisoryCreateDto dto, int currentUserId, CancellationToken ct = default)
+        public async Task<HealthAdvisoryDetailsDto> CreateAsync(HealthAdvisoryCreateDto dto, int currentUserId,
+            CancellationToken ct = default)
         {
             string? imageUrl = null;
             if (!string.IsNullOrEmpty(dto.ImageBase64))
@@ -34,15 +39,17 @@ namespace ICMS.Application.Services
                 imageUrl = await SaveImage(dto.ImageBase64);
             }
 
-            var advisory = HealthAdvisory.Create(dto.Title, dto.Content, dto.Target, dto.ScheduledDate, currentUserId, imageUrl);
-            
+            var advisory = HealthAdvisory.Create(dto.Title, dto.Content, dto.Target, dto.ScheduledDate, currentUserId,
+                imageUrl);
+
             await _unitOfWork.HealthAdvisoryRepository.AddAsync(advisory, ct);
             await _unitOfWork.SaveChangesAsync(ct);
 
             return advisory.ToDetailsDto();
         }
 
-        public async Task<HealthAdvisoryDetailsDto> CreateAndSendNowAsync(HealthAdvisoryCreateDto dto, int currentUserId, CancellationToken ct = default)
+        public async Task<HealthAdvisoryDetailsDto> CreateAndSendNowAsync(HealthAdvisoryCreateDto dto,
+            int currentUserId, CancellationToken ct = default)
         {
             string? imageUrl = null;
             if (!string.IsNullOrEmpty(dto.ImageBase64))
@@ -50,8 +57,9 @@ namespace ICMS.Application.Services
                 imageUrl = await SaveImage(dto.ImageBase64);
             }
 
-            var advisory = HealthAdvisory.Create(dto.Title, dto.Content, dto.Target, dto.ScheduledDate, currentUserId, imageUrl);
-            
+            var advisory = HealthAdvisory.Create(dto.Title, dto.Content, dto.Target, dto.ScheduledDate, currentUserId,
+                imageUrl);
+
             await _unitOfWork.HealthAdvisoryRepository.AddAsync(advisory, ct);
             await _unitOfWork.SaveChangesAsync(ct);
 
@@ -59,10 +67,23 @@ namespace ICMS.Application.Services
             var tokens = GetDeviceTokensForTarget(advisory.Target);
             if (tokens.Any())
             {
+                var baseUrl = _configuration["ApiBaseUrl"]?.TrimEnd('/');
+                var fullImageUrl = !string.IsNullOrEmpty(advisory.ImageUrl) && !string.IsNullOrEmpty(baseUrl)
+                    ? $"{baseUrl}{advisory.ImageUrl}"
+                    : null;
+
+                var data = new Dictionary<string, string>
+                {
+                    { "type", "advisory" },
+                    { "id", advisory.Id.ToString() }
+                };
+
                 var success = await _pushNotificationService.SendMulticastNotificationAsync(
                     tokens,
                     advisory.Title,
                     advisory.Content,
+                    fullImageUrl,
+                    data,
                     ct);
 
                 if (success)
@@ -104,7 +125,8 @@ namespace ICMS.Application.Services
             return advisory.ToDetailsDto();
         }
 
-        public async Task<PagedResult<HealthAdvisoryReadDto>> GetPagedAsync(int pageNumber, int pageSize, CancellationToken ct = default)
+        public async Task<PagedResult<HealthAdvisoryReadDto>> GetPagedAsync(int pageNumber, int pageSize,
+            CancellationToken ct = default)
         {
             var query = _unitOfWork.HealthAdvisoryRepository.GetQueryable()
                 .OrderByDescending(x => x.CreationDate);
@@ -117,7 +139,8 @@ namespace ICMS.Application.Services
             return new PagedResult<HealthAdvisoryReadDto>(items, totalCount, pageNumber, pageSize);
         }
 
-        public async Task<HealthAdvisoryDetailsDto> UpdateAsync(int id, HealthAdvisoryCreateDto dto, CancellationToken ct = default)
+        public async Task<HealthAdvisoryDetailsDto> UpdateAsync(int id, HealthAdvisoryCreateDto dto,
+            CancellationToken ct = default)
         {
             var advisory = await _unitOfWork.HealthAdvisoryRepository.GetByIdAsync(id, ct);
             if (advisory == null)
@@ -159,7 +182,7 @@ namespace ICMS.Application.Services
                 {
                     var parts = base64Image.Split(',');
                     base64Data = parts[1];
-                    
+
                     // Try to extract extension
                     var meta = parts[0];
                     if (meta.Contains("image/png")) extension = ".png";
@@ -193,7 +216,7 @@ namespace ICMS.Application.Services
                     var vaccinatedUsers = _unitOfWork.VaccinatedIndividualRepository.GetQueryable()
                         .Where(v => v.UserId != null)
                         .Select(v => v.UserId);
-                        
+
                     return userDeviceRepo
                         .Where(ud => vaccinatedUsers.Contains(ud.UserId))
                         .Select(ud => ud.FcmToken)

@@ -1,5 +1,6 @@
 using ICMS.Application.Interfaces;
 using ICMS.Application.Interfaces.Services;
+using Microsoft.Extensions.Configuration;
 using ICMS.Domain.Entites.Clinical;
 using ICMS.Domain.Entites.Identity;
 using ICMS.Domain.Entites.Maternal;
@@ -18,13 +19,17 @@ namespace ICMS.Application.Services
         private readonly IPushNotificationService _pushNotificationService;
         private readonly ILogger<AdvisoryDispatchBackgroundService> _logger;
 
+        private readonly IConfiguration _configuration;
+
         public AdvisoryDispatchBackgroundService(
             IUnitOfWork unitOfWork,
             IPushNotificationService pushNotificationService,
+            IConfiguration configuration,
             ILogger<AdvisoryDispatchBackgroundService> logger)
         {
             _unitOfWork = unitOfWork;
             _pushNotificationService = pushNotificationService;
+            _configuration = configuration;
             _logger = logger;
         }
 
@@ -51,10 +56,23 @@ namespace ICMS.Application.Services
 
                 if (deviceTokens.Any())
                 {
+                    var baseUrl = _configuration["ApiBaseUrl"]?.TrimEnd('/');
+                    var fullImageUrl = !string.IsNullOrEmpty(advisory.ImageUrl) && !string.IsNullOrEmpty(baseUrl)
+                        ? $"{baseUrl}{advisory.ImageUrl}"
+                        : null;
+
+                    var data = new Dictionary<string, string>
+                    {
+                        { "type", "advisory" },
+                        { "id", advisory.Id.ToString() }
+                    };
+
                     var success = await _pushNotificationService.SendMulticastNotificationAsync(
                         deviceTokens,
                         advisory.Title,
                         advisory.Content,
+                        fullImageUrl,
+                        data,
                         ct);
 
                     if (success)
