@@ -189,7 +189,7 @@ namespace ICMS.Domain.Entites.Identity
 
             // Invariant: Cannot take the same dose twice
             if (_immunizationRecords.Any(ir => ir.DoseId == currentDose.Id))
-                throw new InvalidDoubleDoseException($"Dose {currentDose.DoseName} has already been administered.");
+                throw new InvalidDoubleDoseException("DoubleDose", currentDose.DoseName);
 
             // 1. Record the immunization
             var newRecord = ImmunizationRecord.Create(this.Id, currentDose.Id, administrationDate, takenIn, userId,

@@ -82,6 +82,21 @@
   <data name="BatchNotFound" xml:space="preserve">
     <value>الدفعة غير موجودة.</value>
   </data>
+  <data name="DoubleDose" xml:space="preserve">
+    <value>تم إعطاء هذا الشخص الجرعة {0} بالفعل مسبقًا.</value>
+  </data>
+  <data name="TooYoung" xml:space="preserve">
+    <value>لا يمكن إعطاء الجرعة. عمر الفرد {0} أسبوع فقط؛ الحد الأدنى المطلوب هو {1} أسبوع للجرعة '{2}'.</value>
+  </data>
+  <data name="TooEarly" xml:space="preserve">
+    <value>لا يمكن إعطاء '{2}' قبل موعدها المجدول. تاريخ الإعطاء {0} سابق للموعد المجدول {1}.</value>
+  </data>
+  <data name="TooYoungForVaccine" xml:space="preserve">
+    <value>الفرد عمره {0} أسبوع؛ الحد الأدنى البيولوجي لجرعة '{2}' هو {1} أسبوع.</value>
+  </data>
+  <data name="TetanusOnlyForFemales" xml:space="preserve">
+    <value>لقاح الكزاز (TT) مخصص للإناث في سن الإنجاب فقط.</value>
+  </data>
   <data name="InsufficientStock" xml:space="preserve">
     <value>الكمية المتوفرة في المخزون غير كافية.</value>
   </data>

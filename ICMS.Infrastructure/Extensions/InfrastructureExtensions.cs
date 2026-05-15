@@ -30,7 +30,7 @@ namespace ICMS.Infrastructure.Extensions
                 });
             }
             services.AddLocalization(options => options.ResourcesPath = "Resources");
-            services.AddSingleton<ILocalizer, ResourceLocalizer>();
+            services.AddScoped<ILocalizer, ResourceLocalizer>();
 
             services.AddMemoryCache();
             services.AddSingleton<ICMS.Application.Interfaces.Services.ICacheService, MemoryCacheService>();

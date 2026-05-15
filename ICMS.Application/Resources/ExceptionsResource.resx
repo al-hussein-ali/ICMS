@@ -82,6 +82,21 @@
   <data name="BatchNotFound" xml:space="preserve">
     <value>Batch not found.</value>
   </data>
+  <data name="DoubleDose" xml:space="preserve">
+    <value>This individual has already received the {0} dose.</value>
+  </data>
+  <data name="TooYoung" xml:space="preserve">
+    <value>Cannot administer dose. Individual is only {0} weeks old; minimum required is {1} weeks for '{2}'.</value>
+  </data>
+  <data name="TooEarly" xml:space="preserve">
+    <value>Cannot administer '{2}' before its scheduled date. Administration date {0} is before scheduled date {1}.</value>
+  </data>
+  <data name="TooYoungForVaccine" xml:space="preserve">
+    <value>Individual is {0} weeks old; minimum biological age for '{2}' is {1} weeks.</value>
+  </data>
+  <data name="TetanusOnlyForFemales" xml:space="preserve">
+    <value>Tetanus Toxoid vaccine can only be administered to females of reproductive age.</value>
+  </data>
   <data name="InsufficientStock" xml:space="preserve">
     <value>Insufficient stock quantity.</value>
   </data>
