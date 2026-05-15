@@ -4,6 +4,7 @@ using ICMS.Application.Interfaces.Services;
 using ICMS.Domain.Exceptions;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
+using System.Globalization;
 
 namespace ICMS.API.Handlers
 {
@@ -22,9 +23,14 @@ namespace ICMS.API.Handlers
         {
             logger.LogError(exception, "Exception occurred: {Message}", exception.Message);
 
-            // Resolve ILocalizer from a request-lifetime scope so that the
-            // current culture (set by UseRequestLocalization from Accept-Language)
-            // is respected for every individual request.
+            // Force English (en-US) for all exception responses, regardless of the request's Accept-Language header.
+            // This ensures domain exceptions and validation errors are consistently returned in English.
+            var englishCulture = new CultureInfo("en-US");
+            CultureInfo.CurrentCulture = englishCulture;
+            CultureInfo.CurrentUICulture = englishCulture;
+
+            // Resolve ILocalizer from a request-lifetime scope. 
+            // Now that we've forced the culture above, the localizer will return English strings.
             await using var scope = scopeFactory.CreateAsyncScope();
             var localizer = scope.ServiceProvider.GetRequiredService<ILocalizer>();
 
