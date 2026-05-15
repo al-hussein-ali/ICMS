@@ -574,5 +574,10 @@ namespace ICMS.Application.Services
                 individual.ScheduleInitialVaccines(allDoses, dob, isPregnant);
             }
         }
+        public async Task<int?> GetIndividualIdByUserIdAsync(int userId, CancellationToken ct = default)
+        {
+            var individual = await unitOfWork.VaccinatedIndividualRepository.FirstOrDefaultAsync(x => x.UserId == userId, ct);
+            return individual?.Id;
+        }
     }
 }

@@ -28,5 +28,6 @@ namespace ICMS.Application.Interfaces.Services
         Task<BulkSyncResultDto> BulkInsertIndividualAsync(List<NewFieldVaccinatedIndividualDto> newFieldVaccinatedIndividuals, int userId, CancellationToken ct = default);
         Task<BulkSyncResultDto> BulkUpdateFieldVisitIndividualAsync(List<UpdateFieldVisitIndividualDto> dtos, int userId, CancellationToken ct = default);
         Task<GeneratedAccountDto> GenerateAccountAsync(int id, CancellationToken ct = default);
+        Task<int?> GetIndividualIdByUserIdAsync(int userId, CancellationToken ct = default);
     }
 }

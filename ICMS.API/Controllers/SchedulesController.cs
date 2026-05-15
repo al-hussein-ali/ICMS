@@ -8,11 +8,12 @@ namespace ICMS.Api.Controllers
 {
     [Route("api/schedules")]
     [ApiController]
-    [Authorize(Roles = Roles.StaffRoles)]
+    [Authorize]
     public class SchedulesController(ISchedulesService schedulesService, ILogger<SchedulesController> logger) : ControllerBase
     {
 
         [HttpGet("individual/{individualId}")]
+        [Authorize(Roles = Roles.Admin + "," + Roles.VaccinationManager + "," + Roles.VaccinatedIndividual)]
         public async Task<IActionResult> GetIndividualSchedules(int individualId, CancellationToken ct)
         {
             var scheduleDtos = await schedulesService.GetIndividualSchedulesAsync(individualId, ct);
@@ -20,6 +21,7 @@ namespace ICMS.Api.Controllers
         }
 
         [HttpGet("missed")]
+        [Authorize(Roles = Roles.Admin + "," + Roles.VaccinationManager)]
         public async Task<IActionResult> GetMissedSchedules(
             [FromQuery(Name = "fromDate")] DateOnly fromDate, 
             [FromQuery(Name = "toDate")] DateOnly? toDate, 
