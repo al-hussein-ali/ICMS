@@ -6,7 +6,7 @@ using FirebaseAdmin;
 using Google.Apis.Auth.OAuth2;
 using ICMS.Application.Validators;
 using ICMS.Infrastructure.Extensions;
-using Scalar.AspNetCore;
+// using Scalar.AspNetCore;
 using ICMS.Application.Settings;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.SignalR;
@@ -196,12 +196,12 @@ app.UseCors("AllowFrontend");
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
-    app.MapScalarApiReference(options =>
+    /*app.MapScalarApiReference(options =>
     {
         options.WithTitle("ICMS API");
         options.WithTheme(ScalarTheme.Default);
         options.WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.HttpClient);
-    });
+    });*/
 }
 
 if (!app.Environment.IsDevelopment())
