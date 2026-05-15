@@ -56,6 +56,8 @@ namespace ICMS.Infrastructure.Persistence.Config.Maternal
 
             builder.Metadata.FindNavigation(nameof(PregnantWoman.PregnancyDetails))?
                 .SetPropertyAccessMode(PropertyAccessMode.Field);
+
+            builder.HasQueryFilter(pw => !pw.Person.IsDeleted);
         }
     }
 }

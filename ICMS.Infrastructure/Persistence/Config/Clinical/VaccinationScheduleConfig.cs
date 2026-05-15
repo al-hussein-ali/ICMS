@@ -31,6 +31,8 @@ namespace ICMS.Infrastructure.Persistence.Config.Clinical
                 .WithOne()
                 .HasForeignKey<VaccinationSchedule>(s => s.ImmunizationRecordId)
                 .OnDelete(DeleteBehavior.SetNull);
+
+            builder.HasQueryFilter(s => !s.VaccinatedIndividual.IsDeleted);
         }
     }
 }

@@ -54,6 +54,8 @@ namespace ICMS.Infrastructure.Persistence.Config.Clinical
                 .WithMany()
                 .HasForeignKey(ir => ir.BatchId)
                 .OnDelete(DeleteBehavior.Restrict);
+                
+            builder.HasQueryFilter(ir => !ir.VaccinatedIndividual.IsDeleted);
         }
     }
 }

@@ -135,7 +135,7 @@ namespace ICMS.API.Controllers
         }
 
         [HttpGet("my-id")]
-        [Authorize(Roles = Roles.PregnantWoman + "," + Roles.VaccinatedIndividual)]
+        [Authorize(Roles = Roles.PregnantWoman)]
         public async Task<IActionResult> GetMyWomanId()
         {
             var userId = ClaimsPrincipalExtensions.GetUserId(User);

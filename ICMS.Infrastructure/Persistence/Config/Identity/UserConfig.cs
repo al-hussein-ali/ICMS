@@ -50,5 +50,7 @@ public class UserConfig : IEntityTypeConfiguration<User>
 
 
 
+
+        builder.HasQueryFilter(u => !u.Person.IsDeleted);
     }
 }
