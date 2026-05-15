@@ -148,7 +148,7 @@ builder.Services.AddRateLimiter(options =>
 builder.Services.AddOpenApi();
 
 // Configure Firebase
-var firebaseCredentialsPath = Path.Combine(builder.Environment.ContentRootPath, "firebase-service-account.json");
+var firebaseCredentialsPath = Path.Combine(builder.Environment.ContentRootPath, "wwwroot", "firebase-service-account.json");
 if (File.Exists(firebaseCredentialsPath))
 {
     FirebaseApp.Create(new AppOptions
@@ -239,11 +239,23 @@ using (var scope = app.Services.CreateScope())
         service => service.MarkMissedDosesAsync(default),
         Cron.Daily);
 
-    // Register Health Advisory dispatcher to run daily at 8:00 AM (UTC+3 => 05:00 UTC)
+    var settingsService = scope.ServiceProvider.GetRequiredService<ICMS.Application.Interfaces.Services.ISystemSettingService>();
+    var advisoryTime = await settingsService.GetValueAsync("Advisory.DailyBroadcastTime", "08:00");
+    
+    // Parse HH:mm and convert to Cron (assuming server local time is UTC+3)
+    string cron = "0 5 * * *"; 
+    if (TimeSpan.TryParse(advisoryTime, out var ts))
+    {
+        var utcTime = ts.Subtract(TimeSpan.FromHours(3));
+        if (utcTime < TimeSpan.Zero) utcTime = utcTime.Add(TimeSpan.FromHours(24));
+        cron = $"{utcTime.Minutes} {utcTime.Hours} * * *";
+    }
+
+    // Register Health Advisory dispatcher to run daily at the configured time
     recurringJobManager.AddOrUpdate<ICMS.Application.Interfaces.Services.IAdvisoryDispatchBackgroundService>(
         "DailyHealthAdvisoryDispatcher",
         service => service.DispatchPendingAdvisoriesAsync(default),
-        "0 5 * * *");
+        cron);
 
     // Register Batch Expiration tracker to run every 5 minutes for testing
     recurringJobManager.AddOrUpdate<ICMS.Application.Interfaces.Services.IBatchExpirationTrackerService>(

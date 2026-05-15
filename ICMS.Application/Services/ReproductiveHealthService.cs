@@ -489,8 +489,26 @@ namespace ICMS.Application.Services
 
         public async Task<int?> GetWomanIdByUserIdAsync(int userId, CancellationToken ct = default)
         {
+            // 1. Try finding by direct UserId link first (fastest)
             var pw = await _unitOfWork.PregnantWomanRepository.FirstOrDefaultAsync(x => x.UserId == userId, ct);
-            return pw?.Id;
+            if (pw != null) return pw.Id;
+
+            // 2. If not found, resolve via PersonId (this handles cases where a user account was 
+            // created in another module but not yet linked to this record)
+            var user = await _unitOfWork.UserRepository.GetByIdAsync(userId, ct);
+            if (user != null)
+            {
+                pw = await _unitOfWork.PregnantWomanRepository.FirstOrDefaultAsync(x => x.PersonId == user.PersonId, ct);
+                if (pw != null)
+                {
+                    // Repair the link for future fast lookups
+                    pw.AssignUser(user);
+                    await _unitOfWork.SaveChangesAsync(ct);
+                    return pw.Id;
+                }
+            }
+
+            return null;
         }
     }
 }
