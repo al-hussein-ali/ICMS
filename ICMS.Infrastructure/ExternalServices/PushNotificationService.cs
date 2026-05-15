@@ -21,9 +21,9 @@ namespace ICMS.Infrastructure.ExternalServices
             IReadOnlyList<string> deviceTokens, 
             string title, 
             string body, 
-            string? imageUrl = null, 
-            Dictionary<string, string>? data = null, 
-            CancellationToken ct = default)
+            string? imageUrl, 
+            Dictionary<string, string>? data, 
+            CancellationToken ct)
         {
             if (deviceTokens == null || !deviceTokens.Any())
             {
