@@ -37,9 +37,6 @@
   <data name="RelatedData" xml:space="preserve">
     <value>Cannot delete or update because this record is used elsewhere.</value>
   </data>
-  <data name="DoubleDose" xml:space="preserve">
-    <value>This individual has already taken this dose.</value>
-  </data>
   <data name="ServerError" xml:space="preserve">
     <value>An unexpected error occurred.</value>
   </data>
@@ -102,5 +99,14 @@
   </data>
   <data name="UnauthorizedAccess" xml:space="preserve">
     <value>You do not have the required permissions to access this application.</value>
+  </data>
+  <data name="PersonRequired" xml:space="preserve">
+    <value>Person data is required to complete this operation.</value>
+  </data>
+  <data name="RequiredField" xml:space="preserve">
+    <value>The field '{0}' is required.</value>
+  </data>
+  <data name="FutureDateNotAllowed" xml:space="preserve">
+    <value>The date cannot be in the future.</value>
   </data>
 </root>

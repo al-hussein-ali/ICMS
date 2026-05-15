@@ -180,12 +180,11 @@ namespace ICMS.Domain.Entites.Identity
                 throw new DomainException("TooEarly", administrationDate, scheduleToComplete.ScheduledDate, currentDose.DoseName);
             }
 
-            // FIXME: Temporarily disabled due to persistent timezone/server clock discrepancies causing false positives.
-            // if (administrationDate > DateOnly.FromDateTime(DateTime.UtcNow.AddDays(2)))
-            //     throw new DomainException("Administration date cannot be in the future.");
+            if (administrationDate > DateOnly.FromDateTime(DateTime.UtcNow.AddDays(1)))
+                throw new DomainException("FutureDateNotAllowed");
 
             if (string.IsNullOrEmpty(takenIn))
-                throw new DomainException("A required field is missing (takenIn)!");
+                throw new DomainException("RequiredField", nameof(takenIn));
 
             // Invariant: Cannot take the same dose twice
             if (_immunizationRecords.Any(ir => ir.DoseId == currentDose.Id))

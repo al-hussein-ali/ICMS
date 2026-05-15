@@ -37,9 +37,6 @@
   <data name="RelatedData" xml:space="preserve">
     <value>لا يمكن الحذف أو التعديل لأن هذا السجل مرتبط بسجلات أخرى.</value>
   </data>
-  <data name="DoubleDose" xml:space="preserve">
-    <value>تم إعطاء هذا الشخص الجرعة بالفعل مسبقًا.</value>
-  </data>
   <data name="ServerError" xml:space="preserve">
     <value>حدث خطأ غير متوقع. يرجى المحاولة لاحقًا.</value>
   </data>
@@ -102,5 +99,14 @@
   </data>
   <data name="UnauthorizedAccess" xml:space="preserve">
     <value>ليس لديك الصلاحيات الكافية للوصول إلى هذا التطبيق.</value>
+  </data>
+  <data name="PersonRequired" xml:space="preserve">
+    <value>بيانات الشخص مطلوبة لإتمام هذه العملية.</value>
+  </data>
+  <data name="RequiredField" xml:space="preserve">
+    <value>هذا الحقل '{0}' مطلوب.</value>
+  </data>
+  <data name="FutureDateNotAllowed" xml:space="preserve">
+    <value>لا يمكن أن يكون التاريخ في المستقبل.</value>
   </data>
 </root>
