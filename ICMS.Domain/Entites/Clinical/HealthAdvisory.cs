@@ -9,6 +9,7 @@ namespace ICMS.Domain.Entites.Clinical
     {
         public string Title { get; private set; } = string.Empty;
         public string Content { get; private set; } = string.Empty;
+        public string? ImageUrl { get; private set; }
         public AdviceTarget Target { get; private set; }
         public DateOnly ScheduledDate { get; private set; }
         public bool IsSent { get; private set; }
@@ -20,7 +21,7 @@ namespace ICMS.Domain.Entites.Clinical
         {
         }
 
-        public static HealthAdvisory Create(string title, string content, AdviceTarget target, DateOnly? scheduledDate, int userId)
+        public static HealthAdvisory Create(string title, string content, AdviceTarget target, DateOnly? scheduledDate, int userId, string? imageUrl = null)
         {
             if (string.IsNullOrWhiteSpace(title)) throw new DomainException("Title is required");
             if (string.IsNullOrWhiteSpace(content)) throw new DomainException("Content is required");
@@ -29,7 +30,16 @@ namespace ICMS.Domain.Entites.Clinical
             var finalDate = scheduledDate ?? DateOnly.FromDateTime(DateTime.UtcNow.AddHours(3));
 
             return new HealthAdvisory
-                { Title = title, Content = content, Target = target, ScheduledDate = finalDate, IsSent = false, UserId = userId, CreationDate = DateTime.UtcNow };
+            {
+                Title = title,
+                Content = content,
+                ImageUrl = imageUrl,
+                Target = target,
+                ScheduledDate = finalDate,
+                IsSent = false,
+                UserId = userId,
+                CreationDate = DateTime.UtcNow
+            };
         }
 
 
@@ -49,13 +59,14 @@ namespace ICMS.Domain.Entites.Clinical
             IsSent = true;
         }
 
-        public void Update(string title, string content, AdviceTarget target, DateOnly scheduledDate)
+        public void Update(string title, string content, AdviceTarget target, DateOnly scheduledDate, string? imageUrl = null)
         {
             if (string.IsNullOrWhiteSpace(title)) throw new DomainException("Title is required");
             if (string.IsNullOrWhiteSpace(content)) throw new DomainException("Content is required");
-            
+
             Title = title;
             Content = content;
+            ImageUrl = imageUrl ?? ImageUrl;
             Target = target;
             ScheduledDate = scheduledDate;
         }

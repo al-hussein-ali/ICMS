@@ -10,6 +10,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System;
+using System.IO;
 
 namespace ICMS.Application.Services
 {
@@ -26,7 +28,13 @@ namespace ICMS.Application.Services
 
         public async Task<HealthAdvisoryDetailsDto> CreateAsync(HealthAdvisoryCreateDto dto, int currentUserId, CancellationToken ct = default)
         {
-            var advisory = dto.ToDomain(currentUserId);
+            string? imageUrl = null;
+            if (!string.IsNullOrEmpty(dto.ImageBase64))
+            {
+                imageUrl = await SaveImage(dto.ImageBase64);
+            }
+
+            var advisory = HealthAdvisory.Create(dto.Title, dto.Content, dto.Target, dto.ScheduledDate, currentUserId, imageUrl);
             
             await _unitOfWork.HealthAdvisoryRepository.AddAsync(advisory, ct);
             await _unitOfWork.SaveChangesAsync(ct);
@@ -36,10 +44,13 @@ namespace ICMS.Application.Services
 
         public async Task<HealthAdvisoryDetailsDto> CreateAndSendNowAsync(HealthAdvisoryCreateDto dto, int currentUserId, CancellationToken ct = default)
         {
-            var advisory = dto.ToDomain(currentUserId);
-            
-            // If it's "Send Now", we ensure it's marked as "today" just in case dispatch fails and background picks it up later
-            // (The domain logic already defaults it to today if null)
+            string? imageUrl = null;
+            if (!string.IsNullOrEmpty(dto.ImageBase64))
+            {
+                imageUrl = await SaveImage(dto.ImageBase64);
+            }
+
+            var advisory = HealthAdvisory.Create(dto.Title, dto.Content, dto.Target, dto.ScheduledDate, currentUserId, imageUrl);
             
             await _unitOfWork.HealthAdvisoryRepository.AddAsync(advisory, ct);
             await _unitOfWork.SaveChangesAsync(ct);
@@ -114,13 +125,62 @@ namespace ICMS.Application.Services
                 throw new DomainException("HealthAdvisoryNotFound");
             }
 
+            string? imageUrl = advisory.ImageUrl;
+            if (!string.IsNullOrEmpty(dto.ImageBase64))
+            {
+                imageUrl = await SaveImage(dto.ImageBase64);
+            }
+
             var finalDate = dto.ScheduledDate ?? DateOnly.FromDateTime(DateTime.UtcNow.AddHours(3));
-            advisory.Update(dto.Title, dto.Content, dto.Target, finalDate);
+            advisory.Update(dto.Title, dto.Content, dto.Target, finalDate, imageUrl);
 
             await _unitOfWork.HealthAdvisoryRepository.UpdateAsync(advisory, ct);
             await _unitOfWork.SaveChangesAsync(ct);
 
             return advisory.ToDetailsDto();
+        }
+
+        private async Task<string> SaveImage(string base64Image)
+        {
+            try
+            {
+                // Standard folder for uploads
+                var uploadPath = Path.Combine("wwwroot", "uploads", "advisories");
+                if (!Directory.Exists(uploadPath))
+                {
+                    Directory.CreateDirectory(uploadPath);
+                }
+
+                // Clean the base64 string if it contains data:image/...;base64,
+                var base64Data = base64Image;
+                var extension = ".jpg";
+
+                if (base64Image.Contains(","))
+                {
+                    var parts = base64Image.Split(',');
+                    base64Data = parts[1];
+                    
+                    // Try to extract extension
+                    var meta = parts[0];
+                    if (meta.Contains("image/png")) extension = ".png";
+                    else if (meta.Contains("image/gif")) extension = ".gif";
+                    else if (meta.Contains("image/webp")) extension = ".webp";
+                }
+
+                var fileName = $"{Guid.NewGuid()}{extension}";
+                var filePath = Path.Combine(uploadPath, fileName);
+
+                var bytes = Convert.FromBase64String(base64Data);
+                await File.WriteAllBytesAsync(filePath, bytes);
+
+                return $"/uploads/advisories/{fileName}";
+            }
+            catch (Exception ex)
+            {
+                // Log and return null or handle appropriately. 
+                // For now, we'll just return null so the advisory is created without an image if saving fails.
+                return null;
+            }
         }
 
         private List<string> GetDeviceTokensForTarget(AdviceTarget target)
