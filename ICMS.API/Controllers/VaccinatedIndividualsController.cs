@@ -12,13 +12,14 @@ namespace ICMS.API.Controllers
 {
     [Route("api/vaccinated-individuals")]
     [ApiController]
-    [Authorize(Roles = Roles.StaffRoles)]
+    [Authorize]
     public class VaccinatedIndividualsController(
         IVaccinatedIndividualService vaccinatedIndividualService,
         ILocalizer localizer) : ControllerBase
     {
 
         [HttpGet]
+        [Authorize(Roles = Roles.StaffRoles)]
         public async Task<ActionResult<PagedResult<VaccinatedIndividualReadDto>>> GetAllAsync([FromQuery] PaginationParams paginationParams)
         {
             var individuals = await vaccinatedIndividualService.GetAllAsync(paginationParams);
@@ -27,6 +28,7 @@ namespace ICMS.API.Controllers
         }
 
         [HttpGet("{id}", Name = "GetVaccinatedIndividualById")]
+        [Authorize(Roles = Roles.StaffRoles + "," + Roles.VaccinatedIndividual + "," + Roles.PregnantWoman)]
         public async Task<ActionResult<VaccinatedIndividualDetailsDto>> GetByIdAsync([FromRoute] int id)
         {
             var existingIndividual = await vaccinatedIndividualService.GetByIdAsync(id);
@@ -36,6 +38,7 @@ namespace ICMS.API.Controllers
 
 
         [HttpGet("card/{cardNumber}", Name = "GetVaccinatedIndividualByCardNumber")]
+        [Authorize(Roles = Roles.StaffRoles + "," + Roles.VaccinatedIndividual + "," + Roles.PregnantWoman)]
         public async Task<ActionResult<VaccinatedIndividualDetailsDto>> GetByCardNumberAsync([FromRoute] string cardNumber)
         {
             var vaccinatedIndividual = await vaccinatedIndividualService.GetByCardNumberAsync(cardNumber);
@@ -45,6 +48,7 @@ namespace ICMS.API.Controllers
 
 
         [HttpPost("create")]
+        [Authorize(Roles = Roles.StaffRoles)]
         public async Task<IActionResult> AddAsync([FromBody] VaccinatedIndividualCreateDto vaccinatedIndividualCreateDto)
         {
             var newIndividual = await vaccinatedIndividualService.AddAsync(vaccinatedIndividualCreateDto);
@@ -54,6 +58,7 @@ namespace ICMS.API.Controllers
 
 
         [HttpPut("update/{id}")]
+        [Authorize(Roles = Roles.StaffRoles)]
         public async Task<IActionResult> UpdateAsync([FromRoute] int id, [FromBody] VaccinatedIndividualCreateDto vaccinatedIndividualCreateDto)
         {
             await vaccinatedIndividualService.UpdateAsync(id, vaccinatedIndividualCreateDto);
@@ -62,6 +67,7 @@ namespace ICMS.API.Controllers
         }
 
         [HttpDelete("delete/{id}")]
+        [Authorize(Roles = Roles.StaffRoles)]
         public async Task<IActionResult> DeleteAsync([FromRoute] int id, [FromQuery] bool deletePersonalInfo = false, [FromQuery] bool isSoftDelete = true)
         {
             await vaccinatedIndividualService.DeleteAsync(id, deletePersonalInfo, isSoftDelete);
@@ -70,6 +76,7 @@ namespace ICMS.API.Controllers
         }
 
         [HttpPost("{individualId}/vaccinations/create")]
+        [Authorize(Roles = Roles.StaffRoles)]
         public async Task<IActionResult> TakeDose([FromRoute] int individualId, [FromBody] ImmunizationRecordCreateDto dto)
         {
             // Ensure ID from route matches body or just use route ID
@@ -85,6 +92,7 @@ namespace ICMS.API.Controllers
         }
 
         [HttpPost("bulk/create")]
+        [Authorize(Roles = Roles.StaffRoles)]
         public async Task<IActionResult> BulkInsertNewIndividuals([FromBody] List<NewFieldVaccinatedIndividualDto> newFieldVaccinatedIndividuals)
         {
             if (!newFieldVaccinatedIndividuals.Any())
@@ -103,6 +111,7 @@ namespace ICMS.API.Controllers
         }
 
         [HttpPost("bulk/update")]
+        [Authorize(Roles = Roles.StaffRoles)]
         public async Task<IActionResult> BulkUpdateFieldVisitIndividuals([FromBody] List<UpdateFieldVisitIndividualDto> updateFieldVisitIndividuals)
         {
             if (!updateFieldVisitIndividuals.Any())
@@ -121,6 +130,7 @@ namespace ICMS.API.Controllers
         }
 
         [HttpPost("{id}/account")]
+        [Authorize(Roles = Roles.StaffRoles)]
         public async Task<IActionResult> GenerateAccount([FromRoute] int id)
         {
             var result = await vaccinatedIndividualService.GenerateAccountAsync(id);

@@ -16,6 +16,9 @@ using Serilog;
 using Microsoft.AspNetCore.RateLimiting;
 using System.Threading.RateLimiting;
 
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Host.UseSerilog((context, services, configuration) => configuration
@@ -89,6 +92,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             }
         };
     });
+
+builder.Services.AddAuthorization();
 
 
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();

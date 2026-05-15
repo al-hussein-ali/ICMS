@@ -11,9 +11,9 @@ namespace ICMS.API.Controllers
 {
     [Route("api/reproductive")]
     [ApiController]
+    [Authorize]
     public class ReproductiveHealthController(IReproductiveHealthService reproductiveHealthService) : ControllerBase
     {
-
         [HttpPost("new-pregnancy")]
         [Authorize(Roles = Roles.Admin + "," + Roles.ReproductiveHealthManager)]
         public async Task<IActionResult> StartPregnancyAsync([FromBody] StartPregnancyDto request)
@@ -25,7 +25,8 @@ namespace ICMS.API.Controllers
 
         [HttpPost("{pregnancyId}/visits/create")]
         [Authorize(Roles = Roles.Admin + "," + Roles.ReproductiveHealthManager)]
-        public async Task<IActionResult> AddAncVisitAsync([FromRoute] int pregnancyId, [FromBody] AddAncVisitDto request)
+        public async Task<IActionResult> AddAncVisitAsync([FromRoute] int pregnancyId,
+            [FromBody] AddAncVisitDto request)
         {
             var userId = ClaimsPrincipalExtensions.GetUserId(User);
             await reproductiveHealthService.AddAncVisitAsync(pregnancyId, request, userId);
@@ -34,7 +35,8 @@ namespace ICMS.API.Controllers
 
         [HttpPut("{pregnancyId}/conclude")]
         [Authorize(Roles = Roles.Admin + "," + Roles.ReproductiveHealthManager)]
-        public async Task<IActionResult> ConcludePregnancyAsync([FromRoute] int pregnancyId, [FromBody] ConcludePregnancyDto request)
+        public async Task<IActionResult> ConcludePregnancyAsync([FromRoute] int pregnancyId,
+            [FromBody] ConcludePregnancyDto request)
         {
             var userId = ClaimsPrincipalExtensions.GetUserId(User);
             await reproductiveHealthService.ConcludePregnancyAsync(pregnancyId, request, userId);
@@ -43,7 +45,8 @@ namespace ICMS.API.Controllers
 
         [HttpGet]
         [Authorize(Roles = Roles.Admin + "," + Roles.ReproductiveHealthManager)]
-        public async Task<IActionResult> GetAllPregnantWomen([FromQuery] PaginationParams paginationParams, CancellationToken ct)
+        public async Task<IActionResult> GetAllPregnantWomen([FromQuery] PaginationParams paginationParams,
+            CancellationToken ct)
         {
             var result = await reproductiveHealthService.GetAllPregnantWomenAsync(paginationParams, ct);
             return Ok(result);
@@ -99,7 +102,8 @@ namespace ICMS.API.Controllers
 
         [HttpPost("create")]
         [Authorize(Roles = Roles.Admin + "," + Roles.ReproductiveHealthManager)]
-        public async Task<IActionResult> CreatePregnantWoman([FromBody] PregnantWomanCreateDto request, CancellationToken ct)
+        public async Task<IActionResult> CreatePregnantWoman([FromBody] PregnantWomanCreateDto request,
+            CancellationToken ct)
         {
             var result = await reproductiveHealthService.CreatePregnantWomanAsync(request, ct);
             return CreatedAtAction(nameof(GetPregnantWomanById), new { id = result.Id }, result);
@@ -107,7 +111,8 @@ namespace ICMS.API.Controllers
 
         [HttpPut("update/{id}")]
         [Authorize(Roles = Roles.Admin + "," + Roles.ReproductiveHealthManager)]
-        public async Task<IActionResult> UpdatePregnantWoman(int id, [FromBody] PregnantWomanCreateDto request, CancellationToken ct)
+        public async Task<IActionResult> UpdatePregnantWoman(int id, [FromBody] PregnantWomanCreateDto request,
+            CancellationToken ct)
         {
             await reproductiveHealthService.UpdatePregnantWomanAsync(id, request, ct);
             return NoContent();
@@ -130,7 +135,7 @@ namespace ICMS.API.Controllers
         }
 
         [HttpGet("my-id")]
-        [Authorize(Roles = Roles.PregnantWoman)]
+        [Authorize(Roles = Roles.PregnantWoman + "," + Roles.VaccinatedIndividual)]
         public async Task<IActionResult> GetMyWomanId()
         {
             var userId = ClaimsPrincipalExtensions.GetUserId(User);
@@ -140,7 +145,8 @@ namespace ICMS.API.Controllers
 
         [HttpPut("pregnancies/{id}")]
         [Authorize(Roles = Roles.Admin + "," + Roles.ReproductiveHealthManager)]
-        public async Task<IActionResult> UpdatePregnancy(int id, [FromBody] UpdatePregnancyDto request, CancellationToken ct)
+        public async Task<IActionResult> UpdatePregnancy(int id, [FromBody] UpdatePregnancyDto request,
+            CancellationToken ct)
         {
             await reproductiveHealthService.UpdatePregnancyAsync(id, request, ct);
             return NoContent();
@@ -163,7 +169,7 @@ namespace ICMS.API.Controllers
         }
 
         [HttpDelete("visits/{id}")]
-        [Authorize(Roles = Roles.Admin + "," + Roles.ReproductiveHealthManager)]
+        [Authorize(Roles = Roles.StaffRoles)]
         public async Task<IActionResult> DeleteVisit(int id, CancellationToken ct)
         {
             await reproductiveHealthService.DeleteVisitAsync(id, ct);

@@ -21,8 +21,9 @@ public class TokenService(IRefreshTokenService refreshTokenService,JwtOptions jw
 
         var claims = new List<Claim>()
         {
-            new Claim(JwtRegisteredClaimNames.Name,user.UserName), 
-            new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString())
+            new Claim(JwtRegisteredClaimNames.Name, user.UserName), 
+            new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
+            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString())
         };
         
         claims.AddRange(roles.Select(role => new Claim(ClaimTypes.Role,role)));
