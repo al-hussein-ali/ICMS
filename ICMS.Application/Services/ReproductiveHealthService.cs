@@ -486,5 +486,11 @@ namespace ICMS.Application.Services
             await _unitOfWork.VisitDetailsRepository.DeleteAsync(visit, ct);
             await _unitOfWork.SaveChangesAsync(ct);
         }
+
+        public async Task<int?> GetWomanIdByUserIdAsync(int userId, CancellationToken ct = default)
+        {
+            var pw = await _unitOfWork.PregnantWomanRepository.FirstOrDefaultAsync(x => x.UserId == userId, ct);
+            return pw?.Id;
+        }
     }
 }

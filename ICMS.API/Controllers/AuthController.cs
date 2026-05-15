@@ -10,12 +10,13 @@ namespace ICMS.API.Controllers
     [Route("api/auth")]
     [ApiController]
     [EnableRateLimiting("stricter")]
-    public class AuthController(IAuthService authService) : ControllerBase
+    public class AuthController(IAuthService authService, ILogger<AuthController> logger) : ControllerBase
     {
         [AllowAnonymous]
         [HttpPost("login")]
         public async Task<ActionResult<AuthResponseDto>> LoginAsync([FromBody] LoginDto loginDto)
         {
+            logger.LogInformation("Standard login attempt for user: {UserName}", loginDto.UserName);
             var result = await authService.LoginAsync(loginDto);
             return Ok(result);
         }
@@ -24,8 +25,24 @@ namespace ICMS.API.Controllers
         [HttpPost("beneficiary-login")]
         public async Task<ActionResult<AuthResponseDto>> BeneficiaryLoginAsync([FromBody] LoginDto loginDto)
         {
-            var result = await authService.BeneficiaryLoginAsync(loginDto);
-            return Ok(result);
+            try 
+            {
+                logger.LogInformation("Beneficiary login attempt for user: {UserName}", loginDto.UserName);
+                var result = await authService.BeneficiaryLoginAsync(loginDto);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error during beneficiary login for user: {UserName}", loginDto.UserName);
+                throw; // Let GlobalExceptionHandler handle it, but we have the log now
+            }
+        }
+
+        [AllowAnonymous]
+        [HttpGet("beneficiary-login")]
+        public IActionResult BeneficiaryLoginHealthCheck()
+        {
+            return Ok(new { status = "Beneficiary login endpoint is reachable via GET. Use POST for actual login." });
         }
 
         [AllowAnonymous]
