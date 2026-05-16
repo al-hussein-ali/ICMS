@@ -78,6 +78,11 @@ namespace ICMS.Application.Services
                     { "id", advisory.Id.ToString() }
                 };
 
+                if (!string.IsNullOrEmpty(fullImageUrl))
+                {
+                    data.Add("image", fullImageUrl);
+                }
+
                 var success = await _pushNotificationService.SendMulticastNotificationAsync(
                     tokens,
                     advisory.Title,
@@ -149,16 +154,9 @@ namespace ICMS.Application.Services
             }
 
             string? imageUrl = advisory.ImageUrl;
-            if (!string.IsNullOrEmpty(dto.ImageBase64))
+            if (!string.IsNullOrEmpty(dto.ImageBase64) && dto.ImageBase64.StartsWith("data:image"))
             {
-                if (dto.ImageBase64.StartsWith("data:image"))
-                {
-                    imageUrl = await SaveImage(dto.ImageBase64);
-                }
-            }
-            else
-            {
-                imageUrl = null;
+                imageUrl = await SaveImage(dto.ImageBase64);
             }
 
             var finalDate = dto.ScheduledDate ?? DateOnly.FromDateTime(DateTime.UtcNow.AddHours(3));
@@ -166,6 +164,92 @@ namespace ICMS.Application.Services
 
             await _unitOfWork.HealthAdvisoryRepository.UpdateAsync(advisory, ct);
             await _unitOfWork.SaveChangesAsync(ct);
+
+            return advisory.ToDetailsDto();
+        }
+
+        public async Task<(byte[] content, string contentType, string fileName)> GetImageAsync(int id, CancellationToken ct = default)
+        {
+            var advisory = await _unitOfWork.HealthAdvisoryRepository.GetByIdAsync(id, ct);
+            if (advisory == null || string.IsNullOrEmpty(advisory.ImageUrl))
+            {
+                throw new DomainException("HealthAdvisoryImageNotFound");
+            }
+
+            // Path is stored as /uploads/advisories/filename.jpg
+            // We need to map it to the physical path
+            var relativePath = advisory.ImageUrl.TrimStart('/');
+            var physicalPath = Path.Combine("wwwroot", relativePath.Replace("/", Path.DirectorySeparatorChar.ToString()));
+
+            if (!File.Exists(physicalPath))
+            {
+                throw new DomainException("HealthAdvisoryImageFileNotFound");
+            }
+
+            var content = await File.ReadAllBytesAsync(physicalPath, ct);
+            var fileName = Path.GetFileName(physicalPath);
+            var extension = Path.GetExtension(physicalPath).ToLowerInvariant();
+
+            var contentType = extension switch
+            {
+                ".jpg" or ".jpeg" => "image/jpeg",
+                ".png" => "image/png",
+                ".gif" => "image/gif",
+                ".webp" => "image/webp",
+                _ => "application/octet-stream"
+            };
+
+            return (content, contentType, fileName);
+        }
+
+        public async Task<HealthAdvisoryDetailsDto> ResendAsync(int id, CancellationToken ct = default)
+        {
+            var advisory = await _unitOfWork.HealthAdvisoryRepository.GetByIdAsync(id, ct);
+            if (advisory == null)
+            {
+                throw new DomainException("HealthAdvisoryNotFound");
+            }
+
+            // Trigger immediate dispatch
+            var tokens = GetDeviceTokensForTarget(advisory.Target);
+            if (tokens.Any())
+            {
+                var baseUrl = _configuration["ApiBaseUrl"]?.TrimEnd('/');
+                var fullImageUrl = !string.IsNullOrEmpty(advisory.ImageUrl) && !string.IsNullOrEmpty(baseUrl)
+                    ? $"{baseUrl}{advisory.ImageUrl}"
+                    : null;
+
+                var data = new Dictionary<string, string>
+                {
+                    { "type", "advisory" },
+                    { "id", advisory.Id.ToString() }
+                };
+
+                if (!string.IsNullOrEmpty(fullImageUrl))
+                {
+                    data.Add("image", fullImageUrl);
+                }
+
+                var success = await _pushNotificationService.SendMulticastNotificationAsync(
+                    tokens,
+                    advisory.Title,
+                    advisory.Content,
+                    fullImageUrl,
+                    data,
+                    ct);
+
+                if (success)
+                {
+                    advisory.MarkAsSent();
+                    await _unitOfWork.SaveChangesAsync(ct);
+                }
+            }
+            else
+            {
+                // Mark as sent even if no tokens to prevent background service from trying
+                advisory.MarkAsSent();
+                await _unitOfWork.SaveChangesAsync(ct);
+            }
 
             return advisory.ToDetailsDto();
         }
@@ -180,16 +264,9 @@ namespace ICMS.Application.Services
             }
 
             string? imageUrl = advisory.ImageUrl;
-            if (!string.IsNullOrEmpty(dto.ImageBase64))
+            if (!string.IsNullOrEmpty(dto.ImageBase64) && dto.ImageBase64.StartsWith("data:image"))
             {
-                if (dto.ImageBase64.StartsWith("data:image"))
-                {
-                    imageUrl = await SaveImage(dto.ImageBase64);
-                }
-            }
-            else
-            {
-                imageUrl = null;
+                imageUrl = await SaveImage(dto.ImageBase64);
             }
 
             var finalDate = dto.ScheduledDate ?? DateOnly.FromDateTime(DateTime.UtcNow.AddHours(3));
@@ -212,6 +289,11 @@ namespace ICMS.Application.Services
                     { "type", "advisory" },
                     { "id", advisory.Id.ToString() }
                 };
+
+                if (!string.IsNullOrEmpty(fullImageUrl))
+                {
+                    data.Add("image", fullImageUrl);
+                }
 
                 var success = await _pushNotificationService.SendMulticastNotificationAsync(
                     tokens,

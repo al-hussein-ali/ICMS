@@ -31,6 +31,14 @@ namespace ICMS.API.Controllers
             return Ok(result);
         }
 
+        [AllowAnonymous]
+        [HttpGet("{id}/image")]
+        public async Task<IActionResult> GetImage(int id, CancellationToken ct = default)
+        {
+            var (content, contentType, fileName) = await healthAdvisoryService.GetImageAsync(id, ct);
+            return File(content, contentType, fileName);
+        }
+
         [HttpPost("send-now")]
         public async Task<ActionResult<HealthAdvisoryDetailsDto>> SendNow(
             [FromBody] HealthAdvisoryCreateDto dto,
@@ -72,12 +80,16 @@ namespace ICMS.API.Controllers
         }
 
         [HttpPut("{id}/send-now")]
-        public async Task<ActionResult<HealthAdvisoryDetailsDto>> SendNowUpdate(
-            int id,
-            [FromBody] HealthAdvisoryCreateDto dto,
-            CancellationToken ct = default)
+        public async Task<ActionResult<HealthAdvisoryDetailsDto>> UpdateAndSendNow(int id, [FromBody] HealthAdvisoryCreateDto dto, CancellationToken ct)
         {
             var result = await healthAdvisoryService.UpdateAndSendNowAsync(id, dto, ct);
+            return Ok(result);
+        }
+
+        [HttpPost("{id}/resend")]
+        public async Task<ActionResult<HealthAdvisoryDetailsDto>> Resend(int id, CancellationToken ct)
+        {
+            var result = await healthAdvisoryService.ResendAsync(id, ct);
             return Ok(result);
         }
 

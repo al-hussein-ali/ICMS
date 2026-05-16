@@ -67,6 +67,11 @@ namespace ICMS.Application.Services
                         { "id", advisory.Id.ToString() }
                     };
 
+                    if (!string.IsNullOrEmpty(fullImageUrl))
+                    {
+                        data.Add("image", fullImageUrl);
+                    }
+
                     var success = await _pushNotificationService.SendMulticastNotificationAsync(
                         deviceTokens,
                         advisory.Title,
