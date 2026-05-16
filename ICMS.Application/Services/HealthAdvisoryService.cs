@@ -151,7 +151,14 @@ namespace ICMS.Application.Services
             string? imageUrl = advisory.ImageUrl;
             if (!string.IsNullOrEmpty(dto.ImageBase64))
             {
-                imageUrl = await SaveImage(dto.ImageBase64);
+                if (dto.ImageBase64.StartsWith("data:image"))
+                {
+                    imageUrl = await SaveImage(dto.ImageBase64);
+                }
+            }
+            else
+            {
+                imageUrl = null;
             }
 
             var finalDate = dto.ScheduledDate ?? DateOnly.FromDateTime(DateTime.UtcNow.AddHours(3));
@@ -159,6 +166,73 @@ namespace ICMS.Application.Services
 
             await _unitOfWork.HealthAdvisoryRepository.UpdateAsync(advisory, ct);
             await _unitOfWork.SaveChangesAsync(ct);
+
+            return advisory.ToDetailsDto();
+        }
+
+        public async Task<HealthAdvisoryDetailsDto> UpdateAndSendNowAsync(int id, HealthAdvisoryCreateDto dto,
+            CancellationToken ct = default)
+        {
+            var advisory = await _unitOfWork.HealthAdvisoryRepository.GetByIdAsync(id, ct);
+            if (advisory == null)
+            {
+                throw new DomainException("HealthAdvisoryNotFound");
+            }
+
+            string? imageUrl = advisory.ImageUrl;
+            if (!string.IsNullOrEmpty(dto.ImageBase64))
+            {
+                if (dto.ImageBase64.StartsWith("data:image"))
+                {
+                    imageUrl = await SaveImage(dto.ImageBase64);
+                }
+            }
+            else
+            {
+                imageUrl = null;
+            }
+
+            var finalDate = dto.ScheduledDate ?? DateOnly.FromDateTime(DateTime.UtcNow.AddHours(3));
+            advisory.Update(dto.Title, dto.Content, dto.Target, finalDate, imageUrl);
+
+            await _unitOfWork.HealthAdvisoryRepository.UpdateAsync(advisory, ct);
+            await _unitOfWork.SaveChangesAsync(ct);
+
+            // Trigger immediate dispatch
+            var tokens = GetDeviceTokensForTarget(advisory.Target);
+            if (tokens.Any())
+            {
+                var baseUrl = _configuration["ApiBaseUrl"]?.TrimEnd('/');
+                var fullImageUrl = !string.IsNullOrEmpty(advisory.ImageUrl) && !string.IsNullOrEmpty(baseUrl)
+                    ? $"{baseUrl}{advisory.ImageUrl}"
+                    : null;
+
+                var data = new Dictionary<string, string>
+                {
+                    { "type", "advisory" },
+                    { "id", advisory.Id.ToString() }
+                };
+
+                var success = await _pushNotificationService.SendMulticastNotificationAsync(
+                    tokens,
+                    advisory.Title,
+                    advisory.Content,
+                    fullImageUrl,
+                    data,
+                    ct);
+
+                if (success)
+                {
+                    advisory.MarkAsSent();
+                    await _unitOfWork.SaveChangesAsync(ct);
+                }
+            }
+            else
+            {
+                // Mark as sent even if no tokens to prevent background service from trying
+                advisory.MarkAsSent();
+                await _unitOfWork.SaveChangesAsync(ct);
+            }
 
             return advisory.ToDetailsDto();
         }

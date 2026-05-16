@@ -71,6 +71,16 @@ namespace ICMS.API.Controllers
             return Ok(result);
         }
 
+        [HttpPut("{id}/send-now")]
+        public async Task<ActionResult<HealthAdvisoryDetailsDto>> SendNowUpdate(
+            int id,
+            [FromBody] HealthAdvisoryCreateDto dto,
+            CancellationToken ct = default)
+        {
+            var result = await healthAdvisoryService.UpdateAndSendNowAsync(id, dto, ct);
+            return Ok(result);
+        }
+
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id, CancellationToken ct = default)
         {

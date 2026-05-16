@@ -12,6 +12,7 @@ namespace ICMS.Application.Interfaces.Services
         Task<HealthAdvisoryDetailsDto> CreateAsync(HealthAdvisoryCreateDto dto, int currentUserId, CancellationToken ct = default);
         Task<HealthAdvisoryDetailsDto> CreateAndSendNowAsync(HealthAdvisoryCreateDto dto, int currentUserId, CancellationToken ct = default);
         Task<HealthAdvisoryDetailsDto> UpdateAsync(int id, HealthAdvisoryCreateDto dto, CancellationToken ct = default);
+        Task<HealthAdvisoryDetailsDto> UpdateAndSendNowAsync(int id, HealthAdvisoryCreateDto dto, CancellationToken ct = default);
         Task DeleteAsync(int id, CancellationToken ct = default);
     }
 }
