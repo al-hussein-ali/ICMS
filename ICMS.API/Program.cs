@@ -151,18 +151,22 @@ builder.Services.AddOpenApi();
 var firebaseCredentialsPath = Path.Combine(builder.Environment.ContentRootPath, "wwwroot", "firebase-service-account.json");
 if (File.Exists(firebaseCredentialsPath))
 {
-    FirebaseApp.Create(new AppOptions
+    try 
     {
-        Credential = CredentialFactory
-            .FromFile<ServiceAccountCredential>(firebaseCredentialsPath)
-            .ToGoogleCredential()
-    });
+        FirebaseApp.Create(new AppOptions
+        {
+            Credential = GoogleCredential.FromFile(firebaseCredentialsPath)
+        });
+        Console.WriteLine(">>> Firebase Admin SDK initialized successfully.");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($">>> Firebase initialization failed: {ex.Message}");
+    }
 }
 else
 {
-    // Log warning or throw exception if Firebase is required for startup
-    Console.WriteLine(
-        $"Firebase configuration file not found at {firebaseCredentialsPath}. Push notifications will fail.");
+    Console.WriteLine($">>> Firebase configuration file NOT FOUND at: {firebaseCredentialsPath}");
 }
 
 builder.Services.AddCors(options =>

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "773416680036",
+    "project_id": "icms-1bcd9",
+    "storage_bucket": "icms-1bcd9.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:773416680036:android:cf8589d97d56ca2007fd71",
+        "android_client_info": {
+          "package_name": "icms.com"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDA8nxyVzP4FncfHo3rfbVUKLmyUKd8YTc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

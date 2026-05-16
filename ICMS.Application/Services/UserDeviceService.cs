@@ -5,6 +5,8 @@ using ICMS.Domain.Exceptions;
 using System.Threading;
 using System.Threading.Tasks;
 
+using Microsoft.EntityFrameworkCore;
+
 namespace ICMS.Application.Services
 {
     public class UserDeviceService : IUserDeviceService
@@ -24,7 +26,34 @@ namespace ICMS.Application.Services
                 throw new DomainException("UserNotFound");
             }
 
-            user.AddDevice(fcmToken);
+            // Check if this token is already registered to ANY user (unique constraint)
+            var existingDevice = await _unitOfWork.UserDeviceRepository.GetQueryable()
+                .FirstOrDefaultAsync(d => d.FcmToken == fcmToken, ct);
+
+            if (existingDevice != null)
+            {
+                if (existingDevice.UserId == userId)
+                {
+                    // Same user, just update activity
+                    existingDevice.UpdateLastActive();
+                    await _unitOfWork.UserDeviceRepository.UpdateAsync(existingDevice, ct);
+                }
+                else
+                {
+                    // Token belongs to someone else (maybe a shared device or old login)
+                    // We need to reassign it to the current user
+                    await _unitOfWork.UserDeviceRepository.DeleteAsync(existingDevice, ct);
+                    await _unitOfWork.SaveChangesAsync(ct); // Flush deletion first
+                    
+                    user.AddDevice(fcmToken);
+                }
+            }
+            else
+            {
+                // New token entirely
+                user.AddDevice(fcmToken);
+            }
+
             await _unitOfWork.SaveChangesAsync(ct);
         }
 

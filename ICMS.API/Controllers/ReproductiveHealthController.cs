@@ -169,7 +169,7 @@ namespace ICMS.API.Controllers
         }
 
         [HttpDelete("visits/{id}")]
-        [Authorize(Roles = Roles.StaffRoles)]
+        [Authorize(Roles = Roles.Admin + "," + Roles.ReproductiveHealthManager)]
         public async Task<IActionResult> DeleteVisit(int id, CancellationToken ct)
         {
             await reproductiveHealthService.DeleteVisitAsync(id, ct);
