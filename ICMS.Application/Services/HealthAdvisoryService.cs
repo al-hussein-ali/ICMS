@@ -60,6 +60,8 @@ namespace ICMS.Application.Services
             var advisory = HealthAdvisory.Create(dto.Title, dto.Content, dto.Target, dto.ScheduledDate, currentUserId,
                 imageUrl);
 
+            // Mark as sent BEFORE the first save to prevent background service race condition
+            advisory.MarkAsSent();
             await _unitOfWork.HealthAdvisoryRepository.AddAsync(advisory, ct);
             await _unitOfWork.SaveChangesAsync(ct);
 
@@ -83,25 +85,13 @@ namespace ICMS.Application.Services
                     data.Add("image", fullImageUrl);
                 }
 
-                var success = await _pushNotificationService.SendMulticastNotificationAsync(
+                await _pushNotificationService.SendMulticastNotificationAsync(
                     tokens,
                     advisory.Title,
                     advisory.Content,
                     fullImageUrl,
                     data,
                     ct);
-
-                if (success)
-                {
-                    advisory.MarkAsSent();
-                    await _unitOfWork.SaveChangesAsync(ct);
-                }
-            }
-            else
-            {
-                // Mark as sent even if no tokens to prevent background service from trying
-                advisory.MarkAsSent();
-                await _unitOfWork.SaveChangesAsync(ct);
             }
 
             return advisory.ToDetailsDto();
@@ -210,6 +200,10 @@ namespace ICMS.Application.Services
                 throw new DomainException("HealthAdvisoryNotFound");
             }
 
+            // Mark as sent BEFORE save to prevent race condition with background worker
+            advisory.MarkAsSent();
+            await _unitOfWork.SaveChangesAsync(ct);
+
             // Trigger immediate dispatch
             var tokens = GetDeviceTokensForTarget(advisory.Target);
             if (tokens.Any())
@@ -230,25 +224,13 @@ namespace ICMS.Application.Services
                     data.Add("image", fullImageUrl);
                 }
 
-                var success = await _pushNotificationService.SendMulticastNotificationAsync(
+                await _pushNotificationService.SendMulticastNotificationAsync(
                     tokens,
                     advisory.Title,
                     advisory.Content,
                     fullImageUrl,
                     data,
                     ct);
-
-                if (success)
-                {
-                    advisory.MarkAsSent();
-                    await _unitOfWork.SaveChangesAsync(ct);
-                }
-            }
-            else
-            {
-                // Mark as sent even if no tokens to prevent background service from trying
-                advisory.MarkAsSent();
-                await _unitOfWork.SaveChangesAsync(ct);
             }
 
             return advisory.ToDetailsDto();
@@ -272,6 +254,8 @@ namespace ICMS.Application.Services
             var finalDate = dto.ScheduledDate ?? DateOnly.FromDateTime(DateTime.UtcNow.AddHours(3));
             advisory.Update(dto.Title, dto.Content, dto.Target, finalDate, imageUrl);
 
+            // Mark as sent BEFORE the first save to prevent background worker race condition
+            advisory.MarkAsSent();
             await _unitOfWork.HealthAdvisoryRepository.UpdateAsync(advisory, ct);
             await _unitOfWork.SaveChangesAsync(ct);
 
@@ -295,25 +279,13 @@ namespace ICMS.Application.Services
                     data.Add("image", fullImageUrl);
                 }
 
-                var success = await _pushNotificationService.SendMulticastNotificationAsync(
+                await _pushNotificationService.SendMulticastNotificationAsync(
                     tokens,
                     advisory.Title,
                     advisory.Content,
                     fullImageUrl,
                     data,
                     ct);
-
-                if (success)
-                {
-                    advisory.MarkAsSent();
-                    await _unitOfWork.SaveChangesAsync(ct);
-                }
-            }
-            else
-            {
-                // Mark as sent even if no tokens to prevent background service from trying
-                advisory.MarkAsSent();
-                await _unitOfWork.SaveChangesAsync(ct);
             }
 
             return advisory.ToDetailsDto();

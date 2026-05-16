@@ -46,29 +46,6 @@ namespace ICMS.Infrastructure.ExternalServices
                         Body = body,
                         ImageUrl = imageUrl
                     },
-                    Android = new AndroidConfig()
-                    {
-                        Notification = new AndroidNotification()
-                        {
-                            ImageUrl = imageUrl
-                        }
-                    },
-                    Apns = new ApnsConfig()
-                    {
-                        Headers = new Dictionary<string, string>
-                        {
-                            { "apns-push-type", "alert" }
-                        },
-                        Aps = new Aps()
-                        {
-                            MutableContent = true,
-                            Alert = new ApsAlert()
-                            {
-                                Title = title,
-                                Body = body
-                            }
-                        }
-                    },
                     Data = data
                 };
 
