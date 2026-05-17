@@ -40,18 +40,24 @@ namespace ICMS.Application.DTOs.Maternal
         PregnancyType PregnancyType
     );
 
+    public record FetalDetailDto(
+        int? FetalDetailId,
+        string FetusLabel,
+        string FetalHeartbeat,
+        string FetalMovement,
+        string FetalPosition,
+        string? FetalHeartbeatValue = null
+    );
+
     public record AddAncVisitDto(
         DateOnly VisitDate,
         int PregnancyDurationInWeeks,
         decimal WeightInKilo,
         string BloodPressure,
+        List<FetalDetailDto> FetalDetails,
         DateOnly? DoctorSuggestedNextVisit = null,
         string AppInUrineTest = "N/A",
         string OgttInUrineTest = "N/A",
-        string FetalHeartbeat = "N/A",
-        string? FetalHeartbeatValue = null,
-        string FetalMovement = "N/A",
-        string FetalPosition = "N/A",
         string AnaemiaOrHemoglobinType = "N/A",
         int? Id = null,
         string? ClinicalExaminationAndObservation = null,

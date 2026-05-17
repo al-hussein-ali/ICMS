@@ -28,6 +28,7 @@ namespace ICMS.Infrastructure.Repositories.Maternal
             return await _dbSet
                 .Include(pd => pd.PregnantWoman)
                 .Include(pd => pd.VisitDetails)
+                    .ThenInclude(vd => vd.FetalDetailsList)
                 .Include(pd => pd.Newborns)
                 .Include(pd => pd.PreviousPregnancyComplications)
                 .Include(pd => pd.PreviousPostpartumComplications)

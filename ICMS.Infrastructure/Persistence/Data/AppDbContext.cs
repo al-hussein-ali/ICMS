@@ -47,6 +47,7 @@ namespace ICMS.Infrastructure.Persistence.Data
         public DbSet<UserRole> UserRoles { get; set; }
         public DbSet<VaccinatedIndividual> VaccinatedIndividuals { get; set; }
         public DbSet<Vaccine> Vaccines { get; set; }
+        public DbSet<FetalDetails> FetalDetails { get; set; }
         public DbSet<VisitDetails> VisitDetails { get; set; }
         public DbSet<RefreshToken> RefreshTokens { get; set; }
         public DbSet<Notification> Notifications { get; set; }

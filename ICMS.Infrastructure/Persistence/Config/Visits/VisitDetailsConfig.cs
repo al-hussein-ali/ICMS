@@ -31,12 +31,6 @@ namespace ICMS.Infrastructure.Persistence.Config.Visits
 
             builder.Property(vd => vd.OGTTInUrineTest).HasMaxLength(30).IsUnicode(true).IsRequired();
 
-            builder.Property(vd => vd.FetalHeartbeat).HasMaxLength(30).IsUnicode(true).IsRequired();
-
-            builder.Property(vd => vd.FetalMovement).HasMaxLength(50).IsUnicode(true).IsRequired();
-
-            builder.Property(vd => vd.FetalPosition).HasMaxLength(40).IsUnicode(true).IsRequired();
-
             builder.Property(vd => vd.PregnancyDurationInWeeks).IsRequired();
             builder.Property(vd => vd.AnaemiaOrHemoglobinType).HasMaxLength(100).IsUnicode(true).IsRequired();
             builder.Property(vd => vd.LegsSwelling).HasDefaultValue(false);

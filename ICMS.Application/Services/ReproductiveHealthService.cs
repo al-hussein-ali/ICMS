@@ -9,6 +9,7 @@ using ICMS.Application.Extensions;
 using ICMS.Application.Utilities;
 using ICMS.Domain.Constants;
 using ICMS.Domain.Entites.Maternal;
+using ICMS.Domain.Entites.Visits;
 using ICMS.Domain.Entites.Identity;
 using ICMS.Domain.Exceptions;
 using ICMS.Domain.ValueObjects;
@@ -258,27 +259,31 @@ namespace ICMS.Application.Services
                 throw new DomainException("MotherNotFound");
             }
 
+            var fetalDetailsList = request.FetalDetails.Select(fd => FetalDetails.Create(
+                visitDetailsId: 0,
+                fetusLabel: fd.FetusLabel,
+                fetalHeartbeat: fd.FetalHeartbeat,
+                fetalMovement: fd.FetalMovement,
+                fetalPosition: fd.FetalPosition,
+                fetalHeartbeatValue: fd.FetalHeartbeatValue
+            )).ToList();
+
             pregnancy.AddVisit(
                 visitDate: request.VisitDate,
                 pregnancyDurationInWeeks: request.PregnancyDurationInWeeks,
                 weight: request.WeightInKilo,
                 bloodPressure: request.BloodPressure,
                 userId: userId,
+                fetalDetails: fetalDetailsList,
                 doctorSuggestedNextVisit: request.DoctorSuggestedNextVisit,
                 appInUrineTest: request.AppInUrineTest,
                 ogttInUrineTest: request.OgttInUrineTest,
-                fetalHeartbeat: request.FetalHeartbeat,
-                fetalHeartbeatValue: request.FetalHeartbeatValue,
-                fetalMovement: request.FetalMovement,
-                fetalPosition: request.FetalPosition,
                 anaemiaOrHemoglobinType: request.AnaemiaOrHemoglobinType,
                 clinicalExaminationAndObservation: request.ClinicalExaminationAndObservation,
                 treatmentsGiven: request.TreatmentsGiven,
                 legsSwelling: request.LegsSwelling,
                 vaginalBleeding: request.VaginalBleeding
             );
-
-
 
             await _unitOfWork.SaveChangesAsync(ct);
             InvalidateCache(pregnancy.PregnantWomanId);
@@ -311,7 +316,9 @@ namespace ICMS.Application.Services
 
         public async Task<AddAncVisitDto> GetVisitByIdAsync(int visitId, CancellationToken ct = default)
         {
-            var visit = await _unitOfWork.VisitDetailsRepository.GetByIdAsync(visitId, ct);
+            var visit = await _unitOfWork.VisitDetailsRepository.GetQueryable(false, ct)
+                .Include(v => v.FetalDetailsList)
+                .FirstOrDefaultAsync(v => v.Id == visitId, ct);
             if (visit == null) throw new NotFoundException("VisitNotFound");
 
             return visit.ToAncVisitDto();
@@ -423,7 +430,9 @@ namespace ICMS.Application.Services
         }
         public async Task UpdateVisitAsync(int id, AddAncVisitDto request, CancellationToken ct = default)
         {
-            var visit = await _unitOfWork.VisitDetailsRepository.GetByIdAsync(id, ct)
+            var visit = await _unitOfWork.VisitDetailsRepository.GetQueryable(true, ct)
+                .Include(v => v.FetalDetailsList)
+                .FirstOrDefaultAsync(v => v.Id == id, ct)
                 ?? throw new NotFoundException("Visit not found");
 
             visit.Update(
@@ -433,17 +442,27 @@ namespace ICMS.Application.Services
                 bloodPressure: request.BloodPressure,
                 appInUrineTest: request.AppInUrineTest,
                 ogttInUrineTest: request.OgttInUrineTest,
-                fetalHeartbeat: request.FetalHeartbeat,
-                fetalMovement: request.FetalMovement,
-                fetalPosition: request.FetalPosition,
                 anaemiaOrHemoglobinType: request.AnaemiaOrHemoglobinType,
                 legsSwelling: request.LegsSwelling,
                 vaginalBleeding: request.VaginalBleeding,
                 clinicalExaminationAndObservation: request.ClinicalExaminationAndObservation,
                 nextVisitDate: request.DoctorSuggestedNextVisit,
-                treatmentsGiven: request.TreatmentsGiven,
-                fetalHeartbeatValue: request.FetalHeartbeatValue
+                treatmentsGiven: request.TreatmentsGiven
             );
+
+            visit.ClearFetalDetails();
+            if (request.FetalDetails != null)
+            {
+                var newFetalDetails = request.FetalDetails.Select(fd => FetalDetails.Create(
+                    visitDetailsId: visit.Id,
+                    fetusLabel: fd.FetusLabel,
+                    fetalHeartbeat: fd.FetalHeartbeat,
+                    fetalMovement: fd.FetalMovement,
+                    fetalPosition: fd.FetalPosition,
+                    fetalHeartbeatValue: fd.FetalHeartbeatValue
+                )).ToList();
+                visit.AddFetalDetailsRange(newFetalDetails);
+            }
 
             await _unitOfWork.VisitDetailsRepository.UpdateAsync(visit, ct);
             await _unitOfWork.SaveChangesAsync(ct);

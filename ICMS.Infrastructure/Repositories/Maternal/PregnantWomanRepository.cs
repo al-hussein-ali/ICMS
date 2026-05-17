@@ -36,6 +36,7 @@ namespace ICMS.Infrastructure.Repositories.Maternal
                 .Include(pw => pw.Person)
                 .Include(pw => pw.PregnancyDetails)
                     .ThenInclude(pd => pd.VisitDetails)
+                        .ThenInclude(vd => vd.FetalDetailsList)
                 .Include(pw => pw.PregnancyDetails)
                     .ThenInclude(pd => pd.Newborns)
                 .Include(pw => pw.PregnancyDetails)

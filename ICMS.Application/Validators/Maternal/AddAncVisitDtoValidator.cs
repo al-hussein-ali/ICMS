@@ -22,9 +22,18 @@ namespace ICMS.Application.Validators.Maternal
                 .NotEmpty().WithMessage(x => localizer["RequiredField", "This field"])
                 .Matches(@"^\d{2,3}/\d{2,3}$").WithMessage(x => localizer["ValidationError", "Blood pressure must follow the 'number/number' format (e.g., 120/80)."]);
 
-            RuleFor(x => x.FetalHeartbeat)
-                .Must(value => value == "N/A" || int.TryParse(value, out _))
-                .WithMessage(x => localizer["InvalidField", "This field"]);
+            RuleFor(x => x.FetalDetails)
+                .NotEmpty().WithMessage(x => localizer["RequiredField", "This field"]);
+
+            RuleForEach(x => x.FetalDetails).ChildRules(fetus =>
+            {
+                fetus.RuleFor(f => f.FetusLabel)
+                    .NotEmpty().WithMessage(x => localizer["RequiredField", "This field"]);
+
+                fetus.RuleFor(f => f.FetalHeartbeat)
+                    .Must(value => value == "N/A" || int.TryParse(value, out _))
+                    .WithMessage(x => localizer["InvalidField", "This field"]);
+            });
 
             RuleFor(x => x.DoctorSuggestedNextVisit)
                 .Must((dto, nextVisit) => !nextVisit.HasValue || nextVisit.Value > dto.VisitDate)

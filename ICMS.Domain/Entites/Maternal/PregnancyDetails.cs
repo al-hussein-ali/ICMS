@@ -180,13 +180,10 @@ namespace ICMS.Domain.Entites.Maternal
             decimal weight,
             string bloodPressure,
             int userId,
+            IEnumerable<FetalDetails> fetalDetails,
             DateOnly? doctorSuggestedNextVisit = null,
             string appInUrineTest = "N/A",
             string ogttInUrineTest = "N/A",
-            string fetalHeartbeat = "N/A",
-            string? fetalHeartbeatValue = null,
-            string fetalMovement = "N/A",
-            string fetalPosition = "N/A",
             string anaemiaOrHemoglobinType = "N/A",
             string? clinicalExaminationAndObservation = null,
             string? treatmentsGiven = null,
@@ -223,18 +220,19 @@ namespace ICMS.Domain.Entites.Maternal
                 bloodPressure: bloodPressure,
                 appInUrineTest: appInUrineTest,
                 ogttInUrineTest: ogttInUrineTest,
-                fetalHeartbeat: fetalHeartbeat,
-                fetalMovement: fetalMovement,
-                fetalPosition: fetalPosition,
                 anaemiaOrHemoglobinType: anaemiaOrHemoglobinType,
                 nextVisitDate: nextVisitDate,
                 userId: userId,
                 legsSwelling: legsSwelling,
                 vaginalBleeding: vaginalBleeding,
                 clinicalExaminationAndObservation: clinicalExaminationAndObservation,
-                treatmentsGiven: treatmentsGiven,
-                fetalHeartbeatValue: fetalHeartbeatValue
+                treatmentsGiven: treatmentsGiven
             );
+
+            if (fetalDetails != null)
+            {
+                visit.AddFetalDetailsRange(fetalDetails);
+            }
 
             _visitDetails.Add(visit);
             VisitsCount++;

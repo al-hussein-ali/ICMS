@@ -1,6 +1,7 @@
 using ICMS.Application.DTOs.Maternal;
 using ICMS.Application.DTOs.VisitDetails;
 using ICMS.Domain.Entites.Visits;
+using System.Linq;
 
 namespace ICMS.Application.Extensions
 {
@@ -21,9 +22,6 @@ namespace ICMS.Application.Extensions
                 dto.BloodPressure, 
                 dto.APPInUrineTest,
                 dto.OGTTInUrineTest, 
-                dto.FetalHeartbeat,
-                dto.FetalMovement, 
-                dto.FetalPosition,
                 dto.AnaemiaOrHemoglobinType,
                 userId,
                 dto.LegsSwelling,
@@ -37,13 +35,17 @@ namespace ICMS.Application.Extensions
                 vd.PregnancyDurationInWeeks,
                 vd.WeightInKilo,
                 vd.BloodPressure,
+                vd.FetalDetailsList.Select(fd => new FetalDetailDto(
+                    fd.Id,
+                    fd.FetusLabel,
+                    fd.FetalHeartbeat,
+                    fd.FetalMovement,
+                    fd.FetalPosition,
+                    fd.FetalHeartbeatValue
+                )).ToList(),
                 vd.NextVisitDate,
                 vd.APPInUrineTest,
                 vd.OGTTInUrineTest,
-                vd.FetalHeartbeat,
-                vd.FetalHeartbeatValue,
-                vd.FetalMovement,
-                vd.FetalPosition,
                 vd.AnaemiaOrHemoglobinType,
                 vd.Id,
                 vd.ClinicalExaminationAndObservation,
