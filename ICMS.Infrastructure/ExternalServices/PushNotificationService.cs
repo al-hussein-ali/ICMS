@@ -17,7 +17,7 @@ namespace ICMS.Infrastructure.ExternalServices
             _logger = logger;
         }
 
-        public async Task<bool> SendMulticastNotificationAsync(
+        public async Task<PushNotificationResult> SendMulticastNotificationAsync(
             IReadOnlyList<string> deviceTokens, 
             string title, 
             string body, 
@@ -25,10 +25,13 @@ namespace ICMS.Infrastructure.ExternalServices
             Dictionary<string, string>? data, 
             CancellationToken ct)
         {
+            var result = new PushNotificationResult();
+
             if (deviceTokens == null || !deviceTokens.Any())
             {
                 _logger.LogWarning("No device tokens provided for push notification.");
-                return false;
+                result.IsSuccess = false;
+                return result;
             }
 
             // Firebase restricts multicast to 500 tokens per request
@@ -37,9 +40,10 @@ namespace ICMS.Infrastructure.ExternalServices
 
             foreach (var batch in batches)
             {
+                var batchList = batch.ToList();
                 var message = new MulticastMessage()
                 {
-                    Tokens = batch.ToList(),
+                    Tokens = batchList,
                     Notification = new Notification()
                     {
                         Title = title,
@@ -57,10 +61,27 @@ namespace ICMS.Infrastructure.ExternalServices
                     
                     if (response.FailureCount > 0)
                     {
-                        success = false;
-                        foreach (var res in response.Responses.Where(r => !r.IsSuccess))
+                        for (int i = 0; i < response.Responses.Count; i++)
                         {
-                            _logger.LogError("Error sending message: {ErrorMessage}", res.Exception.Message);
+                            var res = response.Responses[i];
+                            if (!res.IsSuccess)
+                            {
+                                _logger.LogError("Error sending message: {ErrorMessage}", res.Exception.Message);
+
+                                // Check if token is unregistered/not found
+                                var errMsg = res.Exception.Message;
+                                if (errMsg.Contains("Requested entity was not found") || 
+                                    errMsg.Contains("unregistered") || 
+                                    errMsg.Contains("NotFound"))
+                                {
+                                    result.UnregisteredTokens.Add(batchList[i]);
+                                }
+                                else
+                                {
+                                    // Other kinds of failures are treated as delivery failures for the advisory itself
+                                    success = false;
+                                }
+                            }
                         }
                     }
                 }
@@ -71,7 +92,8 @@ namespace ICMS.Infrastructure.ExternalServices
                 }
             }
 
-            return success;
+            result.IsSuccess = success;
+            return result;
         }
     }
 }

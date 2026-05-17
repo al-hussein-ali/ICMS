@@ -74,7 +74,7 @@ namespace ICMS.Application.Services
                         data.Add("image", fullImageUrl);
                     }
 
-                    var success = await _pushNotificationService.SendMulticastNotificationAsync(
+                    var result = await _pushNotificationService.SendMulticastNotificationAsync(
                         deviceTokens,
                         advisory.Title,
                         advisory.Content,
@@ -82,9 +82,22 @@ namespace ICMS.Application.Services
                         data,
                         ct);
 
-                    if (success)
+                    if (result.IsSuccess)
                     {
                         advisory.MarkAsSent();
+                    }
+
+                    if (result.UnregisteredTokens.Any())
+                    {
+                        _logger.LogInformation("Cleaning up {Count} unregistered FCM tokens.", result.UnregisteredTokens.Count);
+                        var unregisteredDevices = _unitOfWork.UserDeviceRepository.GetQueryable()
+                            .Where(ud => result.UnregisteredTokens.Contains(ud.FcmToken))
+                            .ToList();
+
+                        foreach (var dev in unregisteredDevices)
+                        {
+                            await _unitOfWork.UserDeviceRepository.DeleteAsync(dev, ct);
+                        }
                     }
                 }
                 else

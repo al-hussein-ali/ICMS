@@ -9,6 +9,7 @@ namespace ICMS.Application.Extensions
         public static BatchReadDto ToReadDto(this Batch b)
         {
             var status = GetStatus(b);
+            var remaining = status == "expired" ? 0 : b.TotalQuantity;
             
             return new BatchReadDto(
                 b.Id, 
@@ -20,7 +21,7 @@ namespace ICMS.Application.Extensions
                 b.CreationDate, 
                 b.ExpiryDate, 
                 b.TotalQuantity + b.ConsumedQuantity, // Original Total
-                b.TotalQuantity, // Remaining
+                remaining, // Remaining
                 b.ConsumedQuantity,
                 b.CookNumber,
                 b.CountryOfOrigin,
@@ -31,6 +32,7 @@ namespace ICMS.Application.Extensions
         public static BatchDetailsDto ToDetailsDto(this Batch b)
         {
             var status = GetStatus(b);
+            var remaining = status == "expired" ? 0 : b.TotalQuantity;
 
             return new BatchDetailsDto(
                 b.Id, 
@@ -42,7 +44,7 @@ namespace ICMS.Application.Extensions
                 b.CreationDate, 
                 b.ExpiryDate, 
                 b.TotalQuantity + b.ConsumedQuantity, 
-                b.TotalQuantity, 
+                remaining, 
                 b.ConsumedQuantity,
                 b.CountryOfOrigin, 
                 b.CookNumber, 

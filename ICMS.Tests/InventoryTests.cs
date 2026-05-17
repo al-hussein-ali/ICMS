@@ -5,7 +5,9 @@ using ICMS.Application.DTOs.Transaction;
 using ICMS.Application.Interfaces;
 using ICMS.Application.Interfaces.Services;
 using ICMS.Application.Services;
+using ICMS.Application.Extensions;
 using ICMS.Domain.Entites.Clinical;
+using ICMS.Domain.Entites.Identity;
 using ICMS.Domain.Enums;
 using ICMS.Application.DTOs.DoseReport;
 using ICMS.Application.Interfaces.Repositories;
@@ -30,6 +32,25 @@ namespace ICMS.Tests
                 .Options;
 
             _context = new AppDbContext(options);
+
+            // Seed Person and User to satisfy the global query filter !b.User.Person.IsDeleted
+            var person = Person.Create("Test", "User", "One", "Admin", Gender.Male, new DateOnly(1990, 1, 1), "1234567890");
+            _context.People.Add(person);
+            _context.SaveChanges();
+
+            var user = User.Create("admin", "hashed_password", person.Id, true);
+            user.AssignPerson(person);
+            _context.Users.Add(user);
+            _context.SaveChanges();
+
+            // Seed Vaccine and Dose for DoseId = 1
+            var vaccine = Vaccine.Create("BCG", "BCG-01", "Tuberculosis vaccine", true, 5, 0, 12, TargetAudience.InfantRoutine);
+            _context.Vaccines.Add(vaccine);
+            _context.SaveChanges();
+
+            var dose = Dose.Create(vaccine.Id, "BCG Dose 1", 1, 0, "At Birth", true, "First dose");
+            _context.Doses.Add(dose);
+            _context.SaveChanges();
 
             var unitOfWork = new UnitOfWork(_context);
             _batchService = new BatchService(unitOfWork, new FakeCacheService());
@@ -94,6 +115,14 @@ namespace ICMS.Tests
 
             batch.AddInventory(50, "P1", "Source", userId); // Transaction 1 (In)
             batch.RemoveInventory(20, "P2", "Dest", userId); // Transaction 2 (Out)
+            
+            var user = await _context.Users.Include(u => u.Person).FirstOrDefaultAsync(u => u.Id == userId);
+            batch.GetType().GetProperty("User")?.SetValue(batch, user);
+            foreach (var t in batch.Transactions)
+            {
+                t.GetType().GetProperty("User")?.SetValue(t, user);
+            }
+
             await _context.SaveChangesAsync();
 
             var filterIn = new TransactionFilterDto(TransactionType.In);
@@ -135,6 +164,50 @@ namespace ICMS.Tests
             batch.TotalQuantity.Should().Be(0);
             _context.Transactions.Should().Contain(t =>
                 t.BatchId == batch.Id && t.TransactionType == TransactionType.Out && t.PermissionNumber == "REPORTED");
+        }
+
+        [Fact]
+        public void ToReadDto_ShouldReturnZeroRemainingQuantity_WhenBatchIsExpired()
+        {
+            // Arrange
+            var doseId = 1;
+            var userId = 1;
+            var expiredDate = DateOnly.FromDateTime(DateTime.Today.AddDays(-1));
+            var batch = Batch.Create(doseId, userId, "ExpiredBatch", DateOnly.FromDateTime(DateTime.Today.AddDays(-10)), expiredDate, 50, "Jordan", "CN-EXP");
+
+            // Act
+            var dto = batch.ToReadDto();
+
+            // Assert
+            dto.RemainingQuantity.Should().Be(0);
+            dto.Status.Should().Be("expired");
+            dto.TotalQuantity.Should().Be(50); // Original Total should remain
+            dto.ConsumedQuantity.Should().Be(0); // Consumed should not be incremented
+        }
+
+        [Fact]
+        public async Task RemoveStockByDoseAsync_ShouldExcludeExpiredBatches()
+        {
+            // Arrange
+            int doseId = 2;
+            int userId = 1;
+
+            // Batch 1 is expired (50 available, but expired yesterday)
+            var expiredBatch = Batch.Create(doseId, userId, "ExpiredBatch", DateOnly.FromDateTime(DateTime.Today.AddDays(-10)), DateOnly.FromDateTime(DateTime.Today.AddDays(-1)), 50, "Country", "CN1");
+            // Batch 2 is active (20 available, expiring in 1 month)
+            var activeBatch = Batch.Create(doseId, userId, "ActiveBatch", DateOnly.FromDateTime(DateTime.Today), DateOnly.FromDateTime(DateTime.Today.AddMonths(1)), 20, "Country", "CN2");
+
+            _context.Batches.AddRange(expiredBatch, activeBatch);
+            await _context.SaveChangesAsync();
+
+            var dto = new InventoryRemoveByDoseDto(doseId, 10, "Perm123", "Dest1");
+
+            // Act
+            await _batchService.RemoveStockByDoseAsync(dto, userId);
+
+            // Assert
+            expiredBatch.TotalQuantity.Should().Be(50); // Expired batch was not touched
+            activeBatch.TotalQuantity.Should().Be(10); // 10 was subtracted from the active batch
         }
     }
 }

@@ -142,8 +142,9 @@ namespace ICMS.Application.Services
         {
             await unitOfWork.ExecuteInTransactionAsync(async () =>
             {
+                var today = DateOnly.FromDateTime(DateTime.Today);
                 var batches = unitOfWork.BatchRepository.GetQueryable(track: true)
-                    .Where(b => b.DoseId == dto.DoseId && b.TotalQuantity > 0)
+                    .Where(b => b.DoseId == dto.DoseId && b.TotalQuantity > 0 && b.ExpiryDate >= today)
                     .OrderBy(b => b.ExpiryDate)
                     .ToList(); // ToList because we need to iterate and modify
 

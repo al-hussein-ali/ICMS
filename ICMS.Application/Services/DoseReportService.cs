@@ -47,6 +47,7 @@ namespace ICMS.Application.Services
                 var report = dto.ToDomain(userId);
 
                 await unitOfWork.DoseReportRepository.AddAsync(report, ct);
+                await unitOfWork.SaveChangesAsync(ct);
 
                 return report.ToReadDto();
             });

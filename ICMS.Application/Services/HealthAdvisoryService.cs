@@ -87,13 +87,15 @@ namespace ICMS.Application.Services
                     data.Add("image", fullImageUrl);
                 }
 
-                await _pushNotificationService.SendMulticastNotificationAsync(
+                var result = await _pushNotificationService.SendMulticastNotificationAsync(
                     tokens,
                     advisory.Title,
                     advisory.Content,
                     fullImageUrl,
                     data,
                     ct);
+
+                await CleanUnregisteredTokensAsync(result.UnregisteredTokens, ct);
             }
 
             return advisory.ToDetailsDto();
@@ -228,13 +230,15 @@ namespace ICMS.Application.Services
                     data.Add("image", fullImageUrl);
                 }
 
-                await _pushNotificationService.SendMulticastNotificationAsync(
+                var result = await _pushNotificationService.SendMulticastNotificationAsync(
                     tokens,
                     advisory.Title,
                     advisory.Content,
                     fullImageUrl,
                     data,
                     ct);
+
+                await CleanUnregisteredTokensAsync(result.UnregisteredTokens, ct);
             }
 
             return advisory.ToDetailsDto();
@@ -285,16 +289,34 @@ namespace ICMS.Application.Services
                     data.Add("image", fullImageUrl);
                 }
 
-                await _pushNotificationService.SendMulticastNotificationAsync(
+                var result = await _pushNotificationService.SendMulticastNotificationAsync(
                     tokens,
                     advisory.Title,
                     advisory.Content,
                     fullImageUrl,
                     data,
                     ct);
+
+                await CleanUnregisteredTokensAsync(result.UnregisteredTokens, ct);
             }
 
             return advisory.ToDetailsDto();
+        }
+
+        private async Task CleanUnregisteredTokensAsync(List<string> unregisteredTokens, CancellationToken ct)
+        {
+            if (unregisteredTokens != null && unregisteredTokens.Any())
+            {
+                var unregisteredDevices = _unitOfWork.UserDeviceRepository.GetQueryable()
+                    .Where(ud => unregisteredTokens.Contains(ud.FcmToken))
+                    .ToList();
+
+                foreach (var dev in unregisteredDevices)
+                {
+                    await _unitOfWork.UserDeviceRepository.DeleteAsync(dev, ct);
+                }
+                await _unitOfWork.SaveChangesAsync(ct);
+            }
         }
 
         private async Task<string> SaveImage(string base64Image)
