@@ -9,7 +9,6 @@ namespace ICMS.Infrastructure.Persistence.Config.Identity
         public void Configure(EntityTypeBuilder<Notification> builder)
         {
             builder.HasKey(n => n.Id);
-            builder.Property(n => n.Id).HasColumnName("NotificationId");
 
             builder.Property(n => n.Title).HasMaxLength(250).IsRequired();
             builder.Property(n => n.Message).HasMaxLength(1000).IsRequired();

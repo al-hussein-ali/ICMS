@@ -64,7 +64,9 @@ namespace ICMS.Application.Services
                     var data = new Dictionary<string, string>
                     {
                         { "type", "advisory" },
-                        { "id", advisory.Id.ToString() }
+                        { "id", advisory.Id.ToString() },
+                        { "target", advisory.Target.ToString() },
+                        { "audience", advisory.Target.ToString() }
                     };
 
                     if (!string.IsNullOrEmpty(fullImageUrl))
