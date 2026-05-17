@@ -44,6 +44,8 @@ namespace ICMS.Infrastructure.Persistence.Config.Clinical
             builder.Navigation(nameof(Batch.Transactions))?
                 .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasField("_transactions");
+
+            builder.HasQueryFilter(b => !b.User.Person.IsDeleted);
         }
     }
 }

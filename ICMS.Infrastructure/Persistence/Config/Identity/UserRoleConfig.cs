@@ -25,6 +25,8 @@ namespace ICMS.Infrastructure.Persistence.Config.Identity
                 .WithMany(r => r.UserRoles)
                 .HasForeignKey(ur => ur.RoleId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasQueryFilter(ur => !ur.User.Person.IsDeleted);
         }
     }
 }

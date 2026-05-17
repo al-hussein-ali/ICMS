@@ -42,6 +42,8 @@ public class HealthAdvisoryConfig : IEntityTypeConfiguration<HealthAdvisory>
             .WithMany()
             .HasForeignKey(ha => ha.UserId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasQueryFilter(ha => !ha.User.Person.IsDeleted);
     }
 }
 

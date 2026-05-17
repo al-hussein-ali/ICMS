@@ -32,6 +32,8 @@ namespace ICMS.Infrastructure.Persistence.Config.Clinical
                 .WithMany()
                 .HasForeignKey(dr => dr.UserId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasQueryFilter(dr => !dr.User.Person.IsDeleted);
         }
     }
 }

@@ -20,6 +20,8 @@ namespace ICMS.Infrastructure.Persistence.Config.Identity
                 .WithMany(u => u.Devices)
                 .HasForeignKey(ud => ud.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            builder.HasQueryFilter(ud => !ud.User.Person.IsDeleted);
         }
     }
 }

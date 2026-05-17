@@ -53,6 +53,8 @@ namespace ICMS.Infrastructure.Persistence.Config.Visits
                 .WithMany()
                 .HasForeignKey(vd => vd.UserId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasQueryFilter(vd => !vd.User.Person.IsDeleted && !vd.PregnancyDetails.PregnantWoman.Person.IsDeleted);
         }
     }
 }

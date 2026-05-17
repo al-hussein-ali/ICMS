@@ -28,6 +28,8 @@ namespace ICMS.Infrastructure.Persistence.Config.Identity
                 .OnDelete(DeleteBehavior.Cascade);
 
             builder.HasIndex(rt => rt.Token).IsUnique();
+
+            builder.HasQueryFilter(rt => !rt.User.Person.IsDeleted);
         }
     }
 }

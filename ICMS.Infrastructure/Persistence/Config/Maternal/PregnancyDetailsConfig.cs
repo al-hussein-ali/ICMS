@@ -114,6 +114,8 @@ namespace ICMS.Infrastructure.Persistence.Config.Maternal
                 .WithMany()
                 .HasForeignKey(pd => pd.UserId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasQueryFilter(pd => !pd.User.Person.IsDeleted && !pd.PregnantWoman.Person.IsDeleted);
         }
     }
 }
