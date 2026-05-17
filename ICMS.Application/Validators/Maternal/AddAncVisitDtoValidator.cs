@@ -31,8 +31,8 @@ namespace ICMS.Application.Validators.Maternal
                     .NotEmpty().WithMessage(x => localizer["RequiredField", "This field"]);
 
                 fetus.RuleFor(f => f.FetalHeartbeat)
-                    .Must(value => value == "N/A" || int.TryParse(value, out _))
-                    .WithMessage(x => localizer["InvalidField", "This field"]);
+                    .NotEmpty().WithMessage(x => localizer["RequiredField", "This field"])
+                    .MaximumLength(50).WithMessage(x => localizer["InvalidField", "This field"]);
             });
 
             RuleFor(x => x.DoctorSuggestedNextVisit)
