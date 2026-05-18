@@ -66,19 +66,19 @@ namespace ICMS.Infrastructure.ExternalServices
                             var res = response.Responses[i];
                             if (!res.IsSuccess)
                             {
-                                _logger.LogError("Error sending message: {ErrorMessage}", res.Exception.Message);
-
-                                // Check if token is unregistered/not found
                                 var errMsg = res.Exception.Message;
-                                if (errMsg.Contains("Requested entity was not found") || 
-                                    errMsg.Contains("unregistered") || 
-                                    errMsg.Contains("NotFound"))
+                                var isUnregistered = errMsg.Contains("Requested entity was not found") || 
+                                                      errMsg.Contains("unregistered") || 
+                                                      errMsg.Contains("NotFound");
+
+                                if (isUnregistered)
                                 {
+                                    _logger.LogWarning("Expired or unregistered token detected: {ErrorMessage}. Marking for automatic removal.", errMsg);
                                     result.UnregisteredTokens.Add(batchList[i]);
                                 }
                                 else
                                 {
-                                    // Other kinds of failures are treated as delivery failures for the advisory itself
+                                    _logger.LogError("Critical error sending push notification: {ErrorMessage}", errMsg);
                                     success = false;
                                 }
                             }
