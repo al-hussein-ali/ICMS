@@ -200,5 +200,22 @@ namespace ICMS.Application.Services
             await unitOfWork.SaveChangesAsync(ct);
             return true;
         }
+
+        public async Task<bool> ChangeOwnPasswordAsync(int id, string oldPassword, string newPassword, CancellationToken ct = default)
+        {
+            var user = await unitOfWork.UserRepository.GetByIdAsync(id, ct);
+            if (user == null) return false;
+
+            if (!ICMS.Application.Utilities.PasswordHasher.VerifyPassword(oldPassword, user.PasswordHash))
+            {
+                throw new DomainException("IncorrectOldPassword");
+            }
+
+            user.ChangePassword(BCrypt.Net.BCrypt.HashPassword(newPassword));
+            await unitOfWork.UserRepository.UpdateAsync(user, ct);
+            await refreshTokenService.InvalidateUserRefreshTokensAsync(id, ct);
+            await unitOfWork.SaveChangesAsync(ct);
+            return true;
+        }
     }
 }

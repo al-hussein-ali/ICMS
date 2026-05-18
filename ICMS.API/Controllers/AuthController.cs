@@ -4,13 +4,16 @@ using Microsoft.AspNetCore.Mvc;
 
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.Authorization;
+using ICMS.Application.DTOs.User;
+using ICMS.API.Extensions;
+using ICMS.Domain.Constants;
 
 namespace ICMS.API.Controllers
 {
     [Route("api/auth")]
     [ApiController]
     [EnableRateLimiting("stricter")]
-    public class AuthController(IAuthService authService, ILogger<AuthController> logger) : ControllerBase
+    public class AuthController(IAuthService authService, IUserService userService, ILogger<AuthController> logger) : ControllerBase
     {
         [AllowAnonymous]
         [HttpPost("login")]
@@ -59,6 +62,19 @@ namespace ICMS.API.Controllers
         {
             var result = await authService.RefreshTokenAsync(refreshDto);
             return Ok(result);
+        }
+
+        [Authorize(Roles = Roles.VaccinatedIndividual + "," + Roles.PregnantWoman)]
+        [HttpPut("change-password")]
+        public async Task<IActionResult> ChangePasswordAsync([FromBody] ChangeOwnPasswordDto changeOwnPasswordDto)
+        {
+            var userId = ClaimsPrincipalExtensions.GetUserId(User);
+            logger.LogInformation("Authenticated user {UserId} is attempting to change their password.", userId);
+
+            var success = await userService.ChangeOwnPasswordAsync(userId, changeOwnPasswordDto.OldPassword, changeOwnPasswordDto.NewPassword);
+            if (!success) return NotFound();
+
+            return NoContent();
         }
     }
 }

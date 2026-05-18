@@ -40,7 +40,7 @@ namespace ICMS.Application.Validators.Dose
                 .WithMessage(x => localizer["InvalidField", "This field"]);
 
 
-            When(x => x.Notes != null, () =>
+            When(x => !string.IsNullOrEmpty(x.Notes), () =>
             {
                 RuleFor(x => x.Notes)
                     .Length(1, 500)

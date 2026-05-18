@@ -30,7 +30,7 @@ namespace ICMS.Application.Validators.Batch
                 .Must(d => d != default)
                 .WithMessage(x => localizer["RequiredField", "Expiry Date"]);
 
-            When(x => x.Notes != null, () =>
+            When(x => !string.IsNullOrEmpty(x.Notes), () =>
             {
                 RuleFor(x => x.Notes)
                     .MaximumLength(500)

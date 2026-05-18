@@ -42,7 +42,7 @@ namespace ICMS.Application.Validators.Batch
                 .GreaterThanOrEqualTo(0)
                 .WithMessage(x => localizer["PositiveNumber", "Total quantity"]);
 
-            When(x => x.Notes != null, () =>
+            When(x => !string.IsNullOrEmpty(x.Notes), () =>
             {
                 RuleFor(x => x.Notes)
                     .MaximumLength(500)

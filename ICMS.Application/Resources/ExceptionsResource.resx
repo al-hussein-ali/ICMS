@@ -112,4 +112,7 @@
   <data name="IndividualAlreadyRegistered" xml:space="preserve">
     <value>Individual is already registered in the system.</value>
   </data>
+  <data name="IncorrectOldPassword" xml:space="preserve">
+    <value>The old password provided is incorrect.</value>
+  </data>
 </root>

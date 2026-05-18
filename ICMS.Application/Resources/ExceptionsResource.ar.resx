@@ -112,4 +112,7 @@
   <data name="IndividualAlreadyRegistered" xml:space="preserve">
     <value>المواطن مسجل مسبقاً في النظام.</value>
   </data>
+  <data name="IncorrectOldPassword" xml:space="preserve">
+    <value>كلمة المرور القديمة المدخلة غير صحيحة.</value>
+  </data>
 </root>
