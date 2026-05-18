@@ -23,7 +23,8 @@ namespace ICMS.Application.Services
 
         public async Task<IEnumerable<ScheduleReadDto>> GetIndividualSchedulesAsync(int individualId, CancellationToken ct = default)
         {
-            string cacheKey = $"schedules:individual:{individualId}";
+            var lang = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName.ToLower();
+            string cacheKey = $"schedules:individual:{individualId}:{lang}";
             if (_cacheService.TryGet(cacheKey, out IEnumerable<ScheduleReadDto>? cached) && cached != null)
                 return cached;
 

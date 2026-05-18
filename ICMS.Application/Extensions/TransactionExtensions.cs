@@ -10,7 +10,7 @@ namespace ICMS.Application.Extensions
                 t.Id, 
                 t.BatchId, 
                 t.Batch?.CookNumber ?? "N/A",
-                t.Batch?.Dose?.Vaccine?.VaccineName ?? "N/A",
+                LocalizationHelper.GetLocalizedValue(t.Batch?.Dose?.Vaccine?.VaccineName) ?? "N/A",
                 t.TransactionType, 
                 t.TransactionDate, 
                 t.Quantity,

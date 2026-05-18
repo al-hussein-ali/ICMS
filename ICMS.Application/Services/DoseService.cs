@@ -33,13 +33,16 @@ namespace ICMS.Application.Services
 
         private void InvalidateDoseCache(int vaccineId)
         {
-            _cacheService.Remove("doses:all:vaccine:all");
-            _cacheService.Remove($"doses:all:vaccine:{vaccineId}");
+            _cacheService.Remove("doses:all:vaccine:all:en");
+            _cacheService.Remove("doses:all:vaccine:all:ar");
+            _cacheService.Remove($"doses:all:vaccine:{vaccineId}:en");
+            _cacheService.Remove($"doses:all:vaccine:{vaccineId}:ar");
         }
 
         public async Task<IReadOnlyList<DoseReadDto>> GetAllAsync(int? vaccineId, CancellationToken ct = default)
         {
-            string cacheKey = $"doses:all:vaccine:{vaccineId?.ToString() ?? "all"}";
+            var lang = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName.ToLower();
+            string cacheKey = $"doses:all:vaccine:{vaccineId?.ToString() ?? "all"}:{lang}";
             if (_cacheService.TryGet(cacheKey, out IReadOnlyList<DoseReadDto>? cached) && cached != null)
                 return cached;
 
