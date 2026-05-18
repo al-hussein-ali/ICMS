@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 using FluentValidation;
 using ICMS.Application.DTOs;
 using ICMS.Application.DTOs.Dose;
@@ -116,12 +117,38 @@ namespace ICMS.Application.Services
             if (existingDose == null)
                 throw new NotFoundException("NotFound");
 
+            // 1. Check if anyone has already taken this dose
+            bool hasImmunizations = await _unitOfWork.ImmunizationRecordRepository.ExistAsync(ir => ir.DoseId == id, ct);
+            if (hasImmunizations)
+            {
+                throw new DomainException("CannotDeleteDoseWithImmunizationRecords");
+            }
+
+            // 2. Check if there are physical vaccine batches associated with this dose in the inventory
+            bool hasBatches = await _unitOfWork.BatchRepository.ExistAsync(b => b.DoseId == id, ct);
+            if (hasBatches)
+            {
+                throw new DomainException("CannotDeleteDoseWithBatches");
+            }
+
+            // 3. Since no one has taken the dose and there are no inventory batches,
+            // we can safely clean up all auto-generated future schedules for this dose first!
+            var schedules = await _unitOfWork.VaccinationScheduleRepository
+                .GetQueryable(track: true, ct)
+                .Where(s => s.DoseId == id)
+                .ToListAsync(ct);
+
+            foreach (var schedule in schedules)
+            {
+                await _unitOfWork.VaccinationScheduleRepository.DeleteAsync(schedule, ct);
+            }
+
+            // 4. Finally, delete the dose itself
             await _unitOfWork.DoseRepository.DeleteAsync(existingDose, ct);
 
             var result = await _unitOfWork.SaveChangesAsync(ct) > 0;
             if (result) InvalidateDoseCache(existingDose.VaccineId);
             return result;
-
         }
 
 

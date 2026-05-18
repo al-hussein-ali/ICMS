@@ -165,6 +165,16 @@ namespace ICMS.Domain.Entites.Identity
                 int minAgeInWeeks = currentDose.Vaccine.MinEligibleAgeInMonths * 4; 
                 if (biologicalAgeInWeeks < minAgeInWeeks)
                     throw new DomainException("TooYoungForVaccine", biologicalAgeInWeeks, minAgeInWeeks, currentDose.Vaccine.VaccineName);
+
+                // Check if the biological age is greater than Vaccine's Maximum Eligible Age
+                int ageInMonths = ((administrationDate.Year - Person.DateOfBirth.Year) * 12) + administrationDate.Month - Person.DateOfBirth.Month;
+                if (administrationDate.Day < Person.DateOfBirth.Day)
+                {
+                    ageInMonths--;
+                }
+
+                if (ageInMonths > currentDose.Vaccine.MaxEligibleAgeInMonths)
+                    throw new DomainException("TooOldForVaccine", ageInMonths, currentDose.Vaccine.MaxEligibleAgeInMonths, currentDose.Vaccine.VaccineName);
             }
 
             // Rule: Progress check relative to registration timeline (Scheduling Rule)
