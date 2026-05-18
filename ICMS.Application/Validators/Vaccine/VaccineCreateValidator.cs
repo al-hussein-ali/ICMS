@@ -11,7 +11,7 @@ namespace ICMS.Application.Validators.Vaccine
             RuleFor(x => x.VaccineName)
                 .NotEmpty()
                 .WithMessage(x => localizer["RequiredField", "This field"])
-                .MaximumLength(100)
+                .MaximumLength(500)
                 .WithMessage(x => localizer["InvalidField", "This field"]);
 
             RuleFor(x => x.VaccineCode)

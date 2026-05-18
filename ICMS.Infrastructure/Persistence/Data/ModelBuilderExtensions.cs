@@ -186,15 +186,15 @@ namespace ICMS.Infrastructure.Persistence.Data
         {
             // Seed Vaccines
             modelBuilder.Entity<Vaccine>().HasData(
-                new { Id = 1, VaccineName = "BCG", VaccineCode = "BCG", TotalDosages = (byte)1, MinEligibleAgeInMonths = 0, MaxEligibleAgeInMonths = 1, IsActive = true, Audience = TargetAudience.InfantRoutine },
-                new { Id = 2, VaccineName = "Oral Polio (OPV)", VaccineCode = "OPV", TotalDosages = (byte)4, MinEligibleAgeInMonths = 0, MaxEligibleAgeInMonths = 60, IsActive = true, Audience = TargetAudience.InfantRoutine },
-                new { Id = 3, VaccineName = "Pentavalent", VaccineCode = "PENTA", TotalDosages = (byte)3, MinEligibleAgeInMonths = 1, MaxEligibleAgeInMonths = 12, IsActive = true, Audience = TargetAudience.InfantRoutine },
-                new { Id = 4, VaccineName = "Rotavirus", VaccineCode = "ROTA", TotalDosages = (byte)2, MinEligibleAgeInMonths = 1, MaxEligibleAgeInMonths = 8, IsActive = true, Audience = TargetAudience.InfantRoutine },
-                new { Id = 5, VaccineName = "Pneumococcal (PCV)", VaccineCode = "PCV", TotalDosages = (byte)3, MinEligibleAgeInMonths = 1, MaxEligibleAgeInMonths = 24, IsActive = true, Audience = TargetAudience.InfantRoutine },
-                new { Id = 6, VaccineName = "Measles & Rubella (MR)", VaccineCode = "MR", TotalDosages = (byte)2, MinEligibleAgeInMonths = 9, MaxEligibleAgeInMonths = 60, IsActive = true, Audience = TargetAudience.InfantRoutine },
-                new { Id = 7, VaccineName = "Inactivated Polio (IPV)", VaccineCode = "IPV", TotalDosages = (byte)1, MinEligibleAgeInMonths = 3, MaxEligibleAgeInMonths = 12, IsActive = true, Audience = TargetAudience.InfantRoutine },
-                new { Id = 8, VaccineName = "Vitamin A", VaccineCode = "VITA", TotalDosages = (byte)2, MinEligibleAgeInMonths = 6, MaxEligibleAgeInMonths = 60, IsActive = true, Audience = TargetAudience.InfantRoutine },
-                new { Id = 9, VaccineName = "Tetanus Toxoid", VaccineCode = "TT", TotalDosages = (byte)5, MinEligibleAgeInMonths = 180, MaxEligibleAgeInMonths = 600, IsActive = true, Audience = TargetAudience.GeneralAdult }
+                new { Id = 1, VaccineName = "{\"en\":\"BCG\",\"ar\":\"بي سي جي\"}", VaccineCode = "BCG", TotalDosages = (byte)1, MinEligibleAgeInMonths = 0, MaxEligibleAgeInMonths = 1, IsActive = true, Audience = TargetAudience.InfantRoutine },
+                new { Id = 2, VaccineName = "{\"en\":\"Oral Polio (OPV)\",\"ar\":\"شلل الأطفال الفموي\"}", VaccineCode = "OPV", TotalDosages = (byte)4, MinEligibleAgeInMonths = 0, MaxEligibleAgeInMonths = 60, IsActive = true, Audience = TargetAudience.InfantRoutine },
+                new { Id = 3, VaccineName = "{\"en\":\"Pentavalent\",\"ar\":\"اللقاح الخماسي\"}", VaccineCode = "PENTA", TotalDosages = (byte)3, MinEligibleAgeInMonths = 1, MaxEligibleAgeInMonths = 12, IsActive = true, Audience = TargetAudience.InfantRoutine },
+                new { Id = 4, VaccineName = "{\"en\":\"Rotavirus\",\"ar\":\"فيروس الروتا\"}", VaccineCode = "ROTA", TotalDosages = (byte)2, MinEligibleAgeInMonths = 1, MaxEligibleAgeInMonths = 8, IsActive = true, Audience = TargetAudience.InfantRoutine },
+                new { Id = 5, VaccineName = "{\"en\":\"Pneumococcal (PCV)\",\"ar\":\"المكورات الرئوية\"}", VaccineCode = "PCV", TotalDosages = (byte)3, MinEligibleAgeInMonths = 1, MaxEligibleAgeInMonths = 24, IsActive = true, Audience = TargetAudience.InfantRoutine },
+                new { Id = 6, VaccineName = "{\"en\":\"Measles & Rubella (MR)\",\"ar\":\"الحصبة والحصبة الألمانية\"}", VaccineCode = "MR", TotalDosages = (byte)2, MinEligibleAgeInMonths = 9, MaxEligibleAgeInMonths = 60, IsActive = true, Audience = TargetAudience.InfantRoutine },
+                new { Id = 7, VaccineName = "{\"en\":\"Inactivated Polio (IPV)\",\"ar\":\"شلل الأطفال غير النشط\"}", VaccineCode = "IPV", TotalDosages = (byte)1, MinEligibleAgeInMonths = 3, MaxEligibleAgeInMonths = 12, IsActive = true, Audience = TargetAudience.InfantRoutine },
+                new { Id = 8, VaccineName = "{\"en\":\"Vitamin A\",\"ar\":\"فيتامين أ\"}", VaccineCode = "VITA", TotalDosages = (byte)2, MinEligibleAgeInMonths = 6, MaxEligibleAgeInMonths = 60, IsActive = true, Audience = TargetAudience.InfantRoutine },
+                new { Id = 9, VaccineName = "{\"en\":\"Tetanus Toxoid\",\"ar\":\"ذوفان الكزاز\"}", VaccineCode = "TT", TotalDosages = (byte)5, MinEligibleAgeInMonths = 180, MaxEligibleAgeInMonths = 600, IsActive = true, Audience = TargetAudience.GeneralAdult }
             );
 
             // Seed Doses
