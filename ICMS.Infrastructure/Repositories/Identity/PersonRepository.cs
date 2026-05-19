@@ -48,17 +48,26 @@ namespace ICMS.Infrastructure.Repositories.Identity
         public async Task<List<Person>> GetByName(string fullName, CancellationToken ct = default)
         {
             var search = fullName.Trim().ToLower();
-            
-            // Flexible name search that checks individual parts and combinations
-            return await _dbSet
-                .Where(p => !p.IsDeleted && (
-                    p.FirstName.ToLower().Contains(search) ||
-                    p.LastName.ToLower().Contains(search) ||
-                    (p.FirstName + " " + p.LastName).ToLower().Contains(search) ||
-                    (p.FirstName + " " + p.SecondName + " " + p.LastName).ToLower().Contains(search) ||
-                    (p.FirstName + " " + p.SecondName + " " + p.ThirdName + " " + p.LastName).ToLower().Contains(search)
-                ))
-                .ToListAsync(ct);
+            var terms = search.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+
+            if (terms.Length == 0)
+            {
+                return new List<Person>();
+            }
+
+            var query = _dbSet.Where(p => !p.IsDeleted);
+
+            foreach (var term in terms)
+            {
+                query = query.Where(p =>
+                    p.FirstName.ToLower().Contains(term) ||
+                    p.SecondName.ToLower().Contains(term) ||
+                    (p.ThirdName != null && p.ThirdName.ToLower().Contains(term)) ||
+                    p.LastName.ToLower().Contains(term)
+                );
+            }
+
+            return await query.ToListAsync(ct);
         }
 
         public async Task<List<Person>> GetByPhone(string phoneNumber, CancellationToken ct = default)

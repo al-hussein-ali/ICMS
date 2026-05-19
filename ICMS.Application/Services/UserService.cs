@@ -5,6 +5,7 @@ using ICMS.Application.Extensions;
 using ICMS.Application.Interfaces;
 using ICMS.Application.Interfaces.Services;
 using ICMS.Domain.Exceptions;
+using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -21,7 +22,32 @@ namespace ICMS.Application.Services
     {
         public async Task<IReadOnlyList<UserReadDto>> GetAllAsync(PaginationParams paginationParams, CancellationToken ct = default)
         {
-            var users = await unitOfWork.UserRepository.GetPagedAsync(paginationParams.PageNumber, paginationParams.PageSize, false, ct, u => u.Person);
+            var query = unitOfWork.UserRepository.GetQueryable(false, ct, u => u.Person);
+
+            if (!string.IsNullOrWhiteSpace(paginationParams.Search))
+            {
+                var search = paginationParams.Search.Trim().ToLower();
+                var searchTerms = search.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+
+                foreach (var term in searchTerms)
+                {
+                    query = query.Where(u =>
+                        u.UserName.ToLower().Contains(term) ||
+                        (u.Person != null && (
+                            u.Person.FirstName.ToLower().Contains(term) ||
+                            u.Person.SecondName.ToLower().Contains(term) ||
+                            (u.Person.ThirdName != null && u.Person.ThirdName.ToLower().Contains(term)) ||
+                            u.Person.LastName.ToLower().Contains(term)
+                        ))
+                    );
+                }
+            }
+
+            var users = await query
+                .OrderBy(u => u.Id)
+                .Skip((paginationParams.PageNumber - 1) * paginationParams.PageSize)
+                .Take(paginationParams.PageSize)
+                .ToListAsync(ct);
 
             var userDtos = new List<UserReadDto>();
             foreach (var user in users)

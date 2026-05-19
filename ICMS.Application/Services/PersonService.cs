@@ -23,10 +23,17 @@ namespace ICMS.Application.Services
             if (!string.IsNullOrWhiteSpace(paginationParams.Search))
             {
                 var search = paginationParams.Search.Trim().ToLower();
-                query = query.Where(p => 
-                    p.FirstName.ToLower().Contains(search) || 
-                    p.LastName.ToLower().Contains(search) || 
-                    p.PhoneNumber.Contains(search));
+                var terms = search.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                foreach (var term in terms)
+                {
+                    query = query.Where(p => 
+                        p.FirstName.ToLower().Contains(term) || 
+                        p.SecondName.ToLower().Contains(term) ||
+                        (p.ThirdName != null && p.ThirdName.ToLower().Contains(term)) ||
+                        p.LastName.ToLower().Contains(term) || 
+                        p.PhoneNumber.Contains(term)
+                    );
+                }
             }
 
             var people = query.Select(p => p.ToReadDto());
