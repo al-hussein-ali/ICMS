@@ -21,7 +21,7 @@ namespace ICMS.Api.Controllers
         }
 
         [HttpGet("missed")]
-        [Authorize(Roles = Roles.Admin + "," + Roles.VaccinationManager)]
+        [Authorize(Roles = Roles.Admin + "," + Roles.VaccinationManager + "," + Roles.FieldVisitWorker)]
         public async Task<IActionResult> GetMissedSchedules(
             [FromQuery(Name = "fromDate")] DateOnly fromDate, 
             [FromQuery(Name = "toDate")] DateOnly? toDate, 

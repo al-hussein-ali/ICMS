@@ -57,6 +57,13 @@ namespace ICMS.Tests.Infrastructure
                         logger.LogError(ex, "An error occurred seeding the database with test messages. Error: {Message}", ex.Message);
                     }
                 }
+
+                // Add Mock Authentication for Integration Tests
+                services.AddAuthentication(options =>
+                {
+                    options.DefaultAuthenticateScheme = "Test";
+                    options.DefaultChallengeScheme = "Test";
+                }).AddScheme<Microsoft.AspNetCore.Authentication.AuthenticationSchemeOptions, TestAuthHandler>("Test", options => { });
             });
         }
     }

@@ -34,5 +34,9 @@ namespace ICMS.Application.DTOs.Reports
         public Dictionary<string, string> SummaryStats { get; set; } = new();
         public List<string> ColumnHeaders { get; set; } = new();
         public List<ReportRow> Rows { get; set; } = new();
+
+        public string? SecondaryTableTitle { get; set; } = string.Empty;
+        public List<string>? SecondaryColumnHeaders { get; set; } = new();
+        public List<ReportRow>? SecondaryRows { get; set; } = new();
     }
 }

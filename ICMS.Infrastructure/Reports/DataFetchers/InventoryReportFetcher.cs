@@ -74,7 +74,7 @@ namespace ICMS.Infrastructure.Reports.DataFetchers
                 Columns = new Dictionary<string, string?>
                 {
                     [colCook]      = b.CookNumber,
-                    [colDose]      = b.Dose?.DoseName ?? "-",
+                    [colDose]      = ICMS.Application.Extensions.LocalizationHelper.GetLocalizedValue(b.Dose?.DoseName, lang) ?? "-",
                     [colOrigin]    = b.CountryOfOrigin,
                     [colExpiry]    = b.ExpiryDate.ToString("yyyy-MM-dd"),
                     [colStock]     = b.TotalQuantity.ToString(),

@@ -84,6 +84,10 @@ namespace ICMS.Infrastructure.Reports.Templates
   .tfoot-label-cell {{ font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; font-size: 9.5px; color: #fff !important; }}
   .tfoot-value-cell {{ font-weight: 800; font-size: 15px; text-align: center; background: rgba(0, 0, 0, 0.15); width: 130px; color: #fff !important; }}
   .tfoot-value-cell.status-ready {{ color: #fef08a !important; }}
+  
+  /* Report Summary Block specifically */
+  .summary-block-table tbody tr {{ background: transparent !important; }}
+  .summary-block-table tbody tr:nth-child(even) {{ background: transparent !important; }}
 
   /* ── Footer ── */
   .footer {{ text-align: center; color: #94a3b8; font-size: 10px; padding-top: 30px; margin-top: 50px; border-top: 1px dotted #e2e8f0; letter-spacing: 0.5px; }}
@@ -185,6 +189,32 @@ namespace ICMS.Infrastructure.Reports.Templates
             }
 
             return $@"<tbody class='summary-body'>{rows}</tbody>";
+        }
+
+        public static string BuildSummaryStatsBlock(Dictionary<string, string> stats, string accentColor, bool isAr)
+        {
+            if (stats == null || stats.Count == 0) return string.Empty;
+
+            var rows = new StringBuilder();
+            foreach (var kv in stats)
+            {
+                rows.Append($@"
+                    <tr>
+                        <td class='tfoot-label-cell' style='padding: 10px 14px; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;'>{kv.Key}</td>
+                        <td style='padding: 10px 14px; font-weight: 800; font-size: 13px; text-align: center; background: rgba(0, 0, 0, 0.15); width: 150px; color: #fff;'>{kv.Value}</td>
+                    </tr>");
+            }
+
+            var sectionTitle = isAr ? "ملخص التقرير" : "Report Summary";
+
+            return $@"<div class='table-wrapper' style='max-width: 400px; margin-top: 30px; page-break-inside: avoid;'>
+              <div class='table-header'>{sectionTitle}</div>
+              <table class='summary-block-table' style='border-radius: 6px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.05);'>
+                <tbody style='background: linear-gradient(135deg, {accentColor} 0%, {Darken(accentColor)} 100%); color: #fff;'>
+                  {rows}
+                </tbody>
+              </table>
+            </div>";
         }
 
         private static string Darken(string hex)
