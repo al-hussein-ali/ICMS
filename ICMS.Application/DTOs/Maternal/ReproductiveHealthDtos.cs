@@ -108,7 +108,8 @@ namespace ICMS.Application.DTOs.Maternal
         string? Gender = null,
         string? PhoneNumber = null,
         string? CurrentAddress = null,
-        string? Username = null
+        string? Username = null,
+        DateTime? CreatedAt = null
     );
 
     public record PregnantWomanDetailsDto(

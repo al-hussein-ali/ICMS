@@ -25,7 +25,8 @@ namespace ICMS.Application.Extensions
                 pw.Person?.Gender.ToString(),
                 pw.Person?.PhoneNumber,
                 pw.CurrentAddress,
-                pw.User?.UserName
+                pw.User?.UserName,
+                pw.Person?.CreatedAt
             );
         }
 
