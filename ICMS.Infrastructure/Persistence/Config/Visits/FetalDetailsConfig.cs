@@ -20,6 +20,7 @@ namespace ICMS.Infrastructure.Persistence.Config.Visits
             builder.HasOne(fd => fd.VisitDetails)
                 .WithMany(vd => vd.FetalDetailsList)
                 .HasForeignKey(fd => fd.VisitDetailsId)
+                .IsRequired(false)
                 .OnDelete(DeleteBehavior.Cascade);
         }
     }

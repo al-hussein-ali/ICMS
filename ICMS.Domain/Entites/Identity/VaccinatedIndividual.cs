@@ -160,7 +160,7 @@ namespace ICMS.Domain.Entites.Identity
             int weeksSinceRegistration = (int)((administrationDate.ToDateTime(TimeOnly.MinValue) - RegistrationDate.ToDateTime(TimeOnly.MinValue)).TotalDays / 7);
 
             // Rule: Biological age must be within vaccine's allowed range (Safety Rule)
-            if (currentDose.Vaccine != null)
+            if (!isAdvancedDose && currentDose.Vaccine != null)
             {
                 int minAgeInWeeks = currentDose.Vaccine.MinEligibleAgeInMonths * 4; 
                 if (biologicalAgeInWeeks < minAgeInWeeks)

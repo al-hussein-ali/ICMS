@@ -31,6 +31,7 @@ namespace ICMS.Infrastructure.Persistence.Config.Maternal
             builder.HasOne(ppc => ppc.PregnancyDetails)
                 .WithOne(pd => pd.PreviousPregnancyComplications)
                 .HasForeignKey<PreviousPregnancyComplications>(ppc => ppc.PregnancyDetailId)
+                .IsRequired(false)
                 .OnDelete(DeleteBehavior.Restrict);
         }
     }

@@ -82,16 +82,19 @@ namespace ICMS.Infrastructure.Persistence.Config.Maternal
             builder.HasOne(pd => pd.PreviousPregnancyComplications)
                 .WithOne(ppc => ppc.PregnancyDetails)
                 .HasForeignKey<PreviousPregnancyComplications>(ppc => ppc.PregnancyDetailId)
+                .IsRequired(false)
                 .OnDelete(DeleteBehavior.Cascade);
 
             builder.HasOne(pd => pd.PreviousPostpartumComplications)
                 .WithOne(pp => pp.PregnancyDetails)
                 .HasForeignKey<PreviousPostpartumComplications>(pp => pp.PregnancyDetailId)
+                .IsRequired(false)
                 .OnDelete(DeleteBehavior.Cascade);
 
             builder.HasOne(pd => pd.PreviousPregnancyDeliveryComplications)
                 .WithOne(ppd => ppd.PregnancyDetails)
                 .HasForeignKey<PreviousPregnancyDeliveryComplications>(ppd => ppd.PregnancyDetailId)
+                .IsRequired(false)
                 .OnDelete(DeleteBehavior.Cascade);
 
             builder.HasMany(pd => pd.VisitDetails)

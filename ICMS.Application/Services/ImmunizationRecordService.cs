@@ -19,7 +19,8 @@ namespace ICMS.Application.Services
 {
     public class ImmunizationRecordService(IUnitOfWork unitOfWork,
         IValidator<PaginationParams> paginationValidator,
-        IValidator<ImmunizationRecordCreateDto> immunizationCreateValidator) : IImmunizationRecordService
+        IValidator<ImmunizationRecordCreateDto> immunizationCreateValidator,
+        ICacheService cacheService) : IImmunizationRecordService
     {
         public async Task<PagedResult<ImmunizationRecordReadDto>> GetAllAsync(PaginationParams paginationParams, int? individualId = null, CancellationToken ct = default)
         {
@@ -98,6 +99,7 @@ namespace ICMS.Application.Services
                 }
 
                 await unitOfWork.SaveChangesAsync(ct);
+                InvalidateCache(entity.IndividualId);
 
                 var newRecord = individual.ImmunizationRecords.FirstOrDefault(ir => ir.DoseId == dose.Id);
                 return newRecord!.ToReadDto();
@@ -129,7 +131,12 @@ namespace ICMS.Application.Services
                 updatedEntity.FieldVisitId,
                 updatedEntity.Notes);
 
-            return await unitOfWork.SaveChangesAsync(ct) > 0;
+            var result = await unitOfWork.SaveChangesAsync(ct) > 0;
+            if (result)
+            {
+                InvalidateCache(updatedEntity.IndividualId);
+            }
+            return result;
 
         }
         public async Task<bool> DeleteAsync(Guid id, CancellationToken ct = default)
@@ -141,6 +148,7 @@ namespace ICMS.Application.Services
 
             ct.ThrowIfCancellationRequested();
 
+            var individualId = existingRecord.IndividualId;
             await unitOfWork.ImmunizationRecordRepository.DeleteAsync(existingRecord);
 
             // Revert inventory subtraction if linked to a batch
@@ -163,9 +171,18 @@ namespace ICMS.Application.Services
                 }
             }
 
-            return await unitOfWork.SaveChangesAsync(ct) > 0;
-
+            var result = await unitOfWork.SaveChangesAsync(ct) > 0;
+            if (result)
+            {
+                InvalidateCache(individualId);
+            }
+            return result;
         }
 
+        private void InvalidateCache(int individualId)
+        {
+            cacheService.Remove($"schedules:individual:{individualId}:en");
+            cacheService.Remove($"schedules:individual:{individualId}:ar");
+        }
     }
 }

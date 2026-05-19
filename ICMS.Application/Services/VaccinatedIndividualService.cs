@@ -20,7 +20,7 @@ using System;
 
 namespace ICMS.Application.Services
 {
-    public class VaccinatedIndividualService(IUnitOfWork unitOfWork, IIdentityService identityService)
+    public class VaccinatedIndividualService(IUnitOfWork unitOfWork, IIdentityService identityService, ICacheService cacheService)
         : IVaccinatedIndividualService
     {
         public async Task<PagedResult<VaccinatedIndividualReadDto>> GetAllAsync(PaginationParams paginationParams,
@@ -49,6 +49,7 @@ namespace ICMS.Application.Services
             var isPregnant = await unitOfWork.PregnantWomanRepository.ExistAsync(pw => pw.PersonId == individual.PersonId, ct);
             individual.ScheduleInitialVaccines(allDoses, individual.Person.DateOfBirth, isPregnant);
             await unitOfWork.SaveChangesAsync(ct);
+            InvalidateCache(id);
 
             return individual.ToDetailsDto();
         }
@@ -67,6 +68,7 @@ namespace ICMS.Application.Services
             var isPregnant = await unitOfWork.PregnantWomanRepository.ExistAsync(pw => pw.PersonId == individual.PersonId, ct);
             individual.ScheduleInitialVaccines(allDoses, individual.Person.DateOfBirth, isPregnant);
             await unitOfWork.SaveChangesAsync(ct);
+            InvalidateCache(individual.Id);
 
             return individual.ToDetailsDto();
         }
@@ -242,6 +244,7 @@ namespace ICMS.Application.Services
                 fieldVisitId: dto.FieldVisitId, notes: dto.Notes, allDoses: allDoses);
 
             await unitOfWork.SaveChangesAsync(ct);
+            InvalidateCache(dto.IndividualId);
             return true;
         }
 
@@ -333,6 +336,7 @@ namespace ICMS.Application.Services
                 {
                     result.Successes.Add(new SyncSuccessDetail(item.Dto.CorrelationId, item.Entity.Id));
                     result.SuccessCount++;
+                    InvalidateCache(item.Entity.Id);
                 }
             }
             catch (Exception)
@@ -394,6 +398,7 @@ namespace ICMS.Application.Services
 
                         result.Successes.Add(new SyncSuccessDetail(item.Dto.CorrelationId, individual.Id));
                         result.SuccessCount++;
+                        InvalidateCache(individual.Id);
                     }
                     catch (Exception ex)
                     {
@@ -466,6 +471,7 @@ namespace ICMS.Application.Services
                 {
                     result.Successes.Add(new SyncSuccessDetail(item.Dto.CorrelationId, item.Entity.Id));
                     result.SuccessCount++;
+                    InvalidateCache(item.Entity.Id);
                 }
             }
             catch (Exception)
@@ -499,6 +505,7 @@ namespace ICMS.Application.Services
 
                         result.Successes.Add(new SyncSuccessDetail(dto.CorrelationId, individual.Id));
                         result.SuccessCount++;
+                        InvalidateCache(individual.Id);
                     }
                     catch (Exception ex)
                     {
@@ -574,6 +581,12 @@ namespace ICMS.Application.Services
                 individual.ScheduleInitialVaccines(allDoses, dob, isPregnant);
             }
         }
+        private void InvalidateCache(int individualId)
+        {
+            cacheService.Remove($"schedules:individual:{individualId}:en");
+            cacheService.Remove($"schedules:individual:{individualId}:ar");
+        }
+
         public async Task<int?> GetIndividualIdByUserIdAsync(int userId, CancellationToken ct = default)
         {
             var individual = await unitOfWork.VaccinatedIndividualRepository.FirstOrDefaultAsync(x => x.UserId == userId, ct);
