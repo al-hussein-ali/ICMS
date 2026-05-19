@@ -115,4 +115,7 @@
   <data name="IncorrectOldPassword" xml:space="preserve">
     <value>The old password provided is incorrect.</value>
   </data>
+  <data name="AccountAlreadyExists" xml:space="preserve">
+    <value>An account already exists for this individual.</value>
+  </data>
 </root>

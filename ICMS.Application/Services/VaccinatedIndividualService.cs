@@ -527,9 +527,7 @@ namespace ICMS.Application.Services
 
             if (individual.UserId.HasValue)
             {
-                var existingUser =
-                    await unitOfWork.UserRepository.GetByIdAsync(individual.UserId.Value, cancellationToken: ct);
-                return new GeneratedAccountDto(existingUser?.UserName ?? "Unknown", "********", false);
+                throw new UserAlreadyExistsException("AccountAlreadyExists");
             }
 
             // Check if a user already exists for this person (e.g. from another module)

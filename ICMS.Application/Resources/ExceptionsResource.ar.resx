@@ -115,4 +115,7 @@
   <data name="IncorrectOldPassword" xml:space="preserve">
     <value>كلمة المرور القديمة المدخلة غير صحيحة.</value>
   </data>
+  <data name="AccountAlreadyExists" xml:space="preserve">
+    <value>يوجد حساب مسبقًا لهذا الشخص.</value>
+  </data>
 </root>

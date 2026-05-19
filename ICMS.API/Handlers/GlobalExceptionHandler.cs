@@ -23,14 +23,10 @@ namespace ICMS.API.Handlers
         {
             logger.LogError(exception, "Exception occurred: {Message}", exception.Message);
 
-            // Force English (en-US) for all exception responses, regardless of the request's Accept-Language header.
-            // This ensures domain exceptions and validation errors are consistently returned in English.
-            var englishCulture = new CultureInfo("en-US");
-            CultureInfo.CurrentCulture = englishCulture;
-            CultureInfo.CurrentUICulture = englishCulture;
+
 
             // Resolve ILocalizer from a request-lifetime scope. 
-            // Now that we've forced the culture above, the localizer will return English strings.
+            // The localizer will return strings based on the request's current culture (Accept-Language).
             await using var scope = scopeFactory.CreateAsyncScope();
             var localizer = scope.ServiceProvider.GetRequiredService<ILocalizer>();
 

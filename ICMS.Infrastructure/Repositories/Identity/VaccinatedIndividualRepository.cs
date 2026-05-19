@@ -102,6 +102,7 @@ namespace ICMS.Infrastructure.Repositories.Identity
         {
             return _dbSet
                 .Include(vi => vi.Person)
+                .Include(vi => vi.User)
                 .Include(vi => vi.Directorate)
                     .ThenInclude(d => d.Governorate)
                 .Include(vi => vi.Neighborhood);
