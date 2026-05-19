@@ -64,11 +64,23 @@ namespace ICMS.Application.Services
             if (_cacheService.TryGet(cacheKey, out PregnantWomanReadDto? cached) && cached != null)
                 return cached;
 
-            var pw = await _unitOfWork.PregnantWomanRepository.GetQueryable(false, ct)
+            var pw = await _unitOfWork.PregnantWomanRepository.GetQueryable(true, ct)
                 .Include(pw => pw.Person)
+                .Include(pw => pw.User)
                 .FirstOrDefaultAsync(x => x.Id == id, ct);
 
             if (pw == null) throw new NotFoundException("NotFound");
+
+            if (pw.UserId == null)
+            {
+                var user = await _unitOfWork.UserRepository.GetQueryable(true, ct)
+                    .FirstOrDefaultAsync(u => u.PersonId == pw.PersonId, ct);
+                if (user != null)
+                {
+                    pw.AssignUser(user);
+                    await _unitOfWork.SaveChangesAsync(ct);
+                }
+            }
 
             var dto = pw.ToReadDto();
             _cacheService.Set(cacheKey, dto, TimeSpan.FromMinutes(10));
@@ -84,6 +96,17 @@ namespace ICMS.Application.Services
             var pw = await _unitOfWork.PregnantWomanRepository.GetByIdWithDetailsAsync(id, ct);
 
             if (pw == null) throw new NotFoundException("NotFound");
+
+            if (pw.UserId == null)
+            {
+                var user = await _unitOfWork.UserRepository.GetQueryable(true, ct)
+                    .FirstOrDefaultAsync(u => u.PersonId == pw.PersonId, ct);
+                if (user != null)
+                {
+                    pw.AssignUser(user);
+                    await _unitOfWork.SaveChangesAsync(ct);
+                }
+            }
 
             var dto = pw.ToDetailsDto();
             _cacheService.Set(cacheKey, dto, TimeSpan.FromMinutes(10));
@@ -126,7 +149,7 @@ namespace ICMS.Application.Services
                 .Include(vi => vi.Person)
                 .Include(vi => vi.Schedules)
                 .FirstOrDefaultAsync(vi => vi.PersonId == selectedPersonId, ct);
-            
+
             if (vaccinatedIndividual != null)
             {
                 var allDoses = await _unitOfWork.DoseRepository.GetAllAsync(false, ct, d => d.Vaccine);
@@ -147,7 +170,8 @@ namespace ICMS.Application.Services
             if (pw == null) throw new NotFoundException("NotFound");
 
             // Update PregnantWoman fields
-            pw.Update(request.AgeRange, request.PregnancyCount, request.BloodGroup, request.RhFactor, request.CurrentAddress, request.UserId);
+            pw.Update(request.AgeRange, request.PregnancyCount, request.BloodGroup, request.RhFactor,
+                request.CurrentAddress, request.UserId);
 
             // Update linked Person fields if data is provided
             if (request.PersonCreateDto != null && pw.Person != null)
@@ -210,11 +234,12 @@ namespace ICMS.Application.Services
                     .Include(vi => vi.Person)
                     .Include(vi => vi.Schedules)
                     .FirstOrDefaultAsync(vi => vi.PersonId == request.PersonId, ct);
-                
+
                 if (vaccinatedIndividual != null)
                 {
                     var allDoses = await _unitOfWork.DoseRepository.GetAllAsync(false, ct, d => d.Vaccine);
-                    vaccinatedIndividual.ScheduleInitialVaccines(allDoses, vaccinatedIndividual.Person.DateOfBirth, true);
+                    vaccinatedIndividual.ScheduleInitialVaccines(allDoses, vaccinatedIndividual.Person.DateOfBirth,
+                        true);
                     await _unitOfWork.SaveChangesAsync(ct);
                 }
             }
@@ -391,7 +416,8 @@ namespace ICMS.Application.Services
             }
 
             // Check if a user already exists for this person (e.g. from another module)
-            var existingUser = await _unitOfWork.UserRepository.FirstOrDefaultAsync(u => u.PersonId == pregnantWoman.PersonId, ct);
+            var existingUser =
+                await _unitOfWork.UserRepository.FirstOrDefaultAsync(u => u.PersonId == pregnantWoman.PersonId, ct);
 
             string username;
             string password = PasswordHasher.GenerateSimplePassword();
@@ -402,10 +428,10 @@ namespace ICMS.Application.Services
                 // Use existing user, but update password for this request
                 username = existingUser.UserName;
                 existingUser.ChangePassword(passwordHash);
-                
+
                 // Assign role if missing
                 await _identityService.AssignRolesToUserAsync(existingUser.Id, [Roles.PregnantWoman], ct);
-                
+
                 pregnantWoman.AssignUser(existingUser);
                 await _unitOfWork.SaveChangesAsync(ct);
             }
@@ -428,12 +454,13 @@ namespace ICMS.Application.Services
             InvalidateCache(id);
             return new GeneratedAccountDto(username, password, true);
         }
+
         public async Task UpdateVisitAsync(int id, AddAncVisitDto request, CancellationToken ct = default)
         {
             var visit = await _unitOfWork.VisitDetailsRepository.GetQueryable(true, ct)
-                .Include(v => v.FetalDetailsList)
-                .FirstOrDefaultAsync(v => v.Id == id, ct)
-                ?? throw new NotFoundException("Visit not found");
+                            .Include(v => v.FetalDetailsList)
+                            .FirstOrDefaultAsync(v => v.Id == id, ct)
+                        ?? throw new NotFoundException("Visit not found");
 
             visit.Update(
                 visitDate: request.VisitDate,
@@ -471,7 +498,7 @@ namespace ICMS.Application.Services
         public async Task DeleteVisitAsync(int id, CancellationToken ct = default)
         {
             var visit = await _unitOfWork.VisitDetailsRepository.GetByIdAsync(id, ct)
-                ?? throw new NotFoundException("Visit not found");
+                        ?? throw new NotFoundException("Visit not found");
 
             var pregnancy = await _unitOfWork.PregnancyDetailsRepository.GetByIdAsync(visit.PregnancyDetailsId, ct);
             if (pregnancy != null)
@@ -495,7 +522,8 @@ namespace ICMS.Application.Services
             var user = await _unitOfWork.UserRepository.GetByIdAsync(userId, ct);
             if (user != null)
             {
-                pw = await _unitOfWork.PregnantWomanRepository.FirstOrDefaultAsync(x => x.PersonId == user.PersonId, ct);
+                pw = await _unitOfWork.PregnantWomanRepository.FirstOrDefaultAsync(x => x.PersonId == user.PersonId,
+                    ct);
                 if (pw != null)
                 {
                     // Repair the link for future fast lookups

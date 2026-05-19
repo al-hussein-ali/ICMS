@@ -17,7 +17,7 @@ using System.Threading.Tasks;
 
 namespace ICMS.Infrastructure.Repositories.Maternal
 {
-    public class PregnantWomanRepository : Repository<PregnantWoman,int>,IPregnantWomanRepository
+    public class PregnantWomanRepository : Repository<PregnantWoman, int>, IPregnantWomanRepository
     {
         public PregnantWomanRepository(AppDbContext context) : base(context)
         {
@@ -34,17 +34,18 @@ namespace ICMS.Infrastructure.Repositories.Maternal
         {
             return await _dbSet
                 .Include(pw => pw.Person)
+                .Include(pw => pw.User)
                 .Include(pw => pw.PregnancyDetails)
-                    .ThenInclude(pd => pd.VisitDetails)
-                        .ThenInclude(vd => vd.FetalDetailsList)
+                .ThenInclude(pd => pd.VisitDetails)
+                .ThenInclude(vd => vd.FetalDetailsList)
                 .Include(pw => pw.PregnancyDetails)
-                    .ThenInclude(pd => pd.Newborns)
+                .ThenInclude(pd => pd.Newborns)
                 .Include(pw => pw.PregnancyDetails)
-                    .ThenInclude(pd => pd.PreviousPregnancyComplications)
+                .ThenInclude(pd => pd.PreviousPregnancyComplications)
                 .Include(pw => pw.PregnancyDetails)
-                    .ThenInclude(pd => pd.PreviousPostpartumComplications)
+                .ThenInclude(pd => pd.PreviousPostpartumComplications)
                 .Include(pw => pw.PregnancyDetails)
-                    .ThenInclude(pd => pd.PreviousPregnancyDeliveryComplications)
+                .ThenInclude(pd => pd.PreviousPregnancyDeliveryComplications)
                 .FirstOrDefaultAsync(pw => pw.Id == id, ct);
         }
     }

@@ -107,7 +107,8 @@ namespace ICMS.Application.DTOs.Maternal
         string? LastName = null,
         string? Gender = null,
         string? PhoneNumber = null,
-        string? CurrentAddress = null
+        string? CurrentAddress = null,
+        string? Username = null
     );
 
     public record PregnantWomanDetailsDto(
@@ -120,7 +121,8 @@ namespace ICMS.Application.DTOs.Maternal
         int? UserId,
         string? CurrentAddress,
         ICMS.Application.DTOs.Person.PersonReadDto? Person,
-        List<PregnancyDetailsReadDto> Pregnancies
+        List<PregnancyDetailsReadDto> Pregnancies,
+        string? Username = null
     );
 
     public record PregnancyDetailsReadDto(

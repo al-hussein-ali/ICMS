@@ -24,7 +24,8 @@ namespace ICMS.Application.Extensions
                 pw.Person?.LastName,
                 pw.Person?.Gender.ToString(),
                 pw.Person?.PhoneNumber,
-                pw.CurrentAddress
+                pw.CurrentAddress,
+                pw.User?.UserName
             );
         }
 
@@ -120,7 +121,8 @@ namespace ICMS.Application.Extensions
                 pw.UserId,
                 pw.CurrentAddress,
                 personDto,
-                pregnancies
+                pregnancies,
+                pw.User?.UserName
             );
         }
 

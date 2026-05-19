@@ -32,9 +32,15 @@ namespace ICMS.Infrastructure.ExternalServices
         public async Task<bool> UpdateSettingAsync(string key, string value)
         {
             var setting = await _context.SystemSettings.FirstOrDefaultAsync(s => s.Key == key);
-            if (setting == null) return false;
-
-            setting.UpdateValue(value);
+            if (setting == null)
+            {
+                setting = SystemSetting.Create(key, value, "System", "Auto-generated system setting", "string");
+                await _context.SystemSettings.AddAsync(setting);
+            }
+            else
+            {
+                setting.UpdateValue(value);
+            }
             await _context.SaveChangesAsync();
             return true;
         }
