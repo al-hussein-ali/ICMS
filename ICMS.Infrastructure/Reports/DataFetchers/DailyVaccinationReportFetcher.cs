@@ -121,7 +121,7 @@ namespace ICMS.Infrastructure.Reports.DataFetchers
 
             // ── Secondary Table: Subtracted Inventory Transactions ────────
             var startDateTime = DateTime.SpecifyKind(startDate.ToDateTime(TimeOnly.MinValue), DateTimeKind.Utc);
-            var endDateTime   = DateTime.SpecifyKind(endDate.ToDateTime(TimeOnly.MaxValue), DateTimeKind.Utc);
+            var endDateTime   = DateTime.SpecifyKind(endDate.ToDateTime(TimeOnly.MinValue), DateTimeKind.Utc).AddDays(1);
 
             var txQuery = _unitOfWork.TransactionRepository
                 .GetQueryable(false, ct)
@@ -130,7 +130,7 @@ namespace ICMS.Infrastructure.Reports.DataFetchers
                         .ThenInclude(d => d.Vaccine)
                 .Where(t => t.TransactionType == TransactionType.Out
                          && t.TransactionDate >= startDateTime
-                         && t.TransactionDate <= endDateTime);
+                         && t.TransactionDate < endDateTime);
 
             if (parameters != null)
             {

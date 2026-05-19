@@ -244,5 +244,20 @@ namespace ICMS.Domain.Entites.Identity
             }
         }
 
+        public void RevertAdministeredDose(Guid recordId)
+        {
+            var schedule = _schedules.FirstOrDefault(s => s.ImmunizationRecordId == recordId);
+            if (schedule != null)
+            {
+                schedule.RevertToPending();
+            }
+
+            var record = _immunizationRecords.FirstOrDefault(r => r.Id == recordId);
+            if (record != null)
+            {
+                _immunizationRecords.Remove(record);
+            }
+        }
+
     }
 }

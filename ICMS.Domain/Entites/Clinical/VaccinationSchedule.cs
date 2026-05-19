@@ -65,5 +65,13 @@ namespace ICMS.Domain.Entites.Clinical
         {
             Status = ScheduleStatus.Missed;
         }
+
+        public void RevertToPending()
+        {
+            ActualDate = null;
+            Status = ScheduleStatus.Pending;
+            ImmunizationRecordId = null;
+            ImmunizationRecord = null;
+        }
     }
 }

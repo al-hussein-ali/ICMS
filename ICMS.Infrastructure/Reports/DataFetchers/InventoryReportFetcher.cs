@@ -20,7 +20,7 @@ namespace ICMS.Infrastructure.Reports.DataFetchers
         {
             var isAr = lang.StartsWith("ar", StringComparison.OrdinalIgnoreCase);
             var startDateTime = DateTime.SpecifyKind(startDate.ToDateTime(TimeOnly.MinValue), DateTimeKind.Utc);
-            var endDateTime   = DateTime.SpecifyKind(endDate.ToDateTime(TimeOnly.MaxValue), DateTimeKind.Utc);
+            var endDateTime   = DateTime.SpecifyKind(endDate.ToDateTime(TimeOnly.MinValue), DateTimeKind.Utc).AddDays(1);
 
             var queryable = unitOfWork.BatchRepository
                 .GetQueryable(false, ct, b => b.Dose, b => b.Transactions);
@@ -41,7 +41,7 @@ namespace ICMS.Infrastructure.Reports.DataFetchers
 
             var batches = await queryable
                 .Where(b => b.Transactions.Any(t =>
-                    t.TransactionDate >= startDateTime && t.TransactionDate <= endDateTime &&
+                    t.TransactionDate >= startDateTime && t.TransactionDate < endDateTime &&
                     (!transactionType.HasValue || t.TransactionType == transactionType.Value))
                     && (!vaccineId.HasValue || b.Dose.VaccineId == vaccineId.Value))
                 .ToListAsync(ct);

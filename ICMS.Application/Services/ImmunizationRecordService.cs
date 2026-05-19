@@ -149,6 +149,13 @@ namespace ICMS.Application.Services
             ct.ThrowIfCancellationRequested();
 
             var individualId = existingRecord.IndividualId;
+            // Revert the associated schedule status back to Pending
+            var individual = await unitOfWork.VaccinatedIndividualRepository.GetIndividualWithSchedulesAsync(individualId, ct);
+            if (individual != null)
+            {
+                individual.RevertAdministeredDose(id);
+            }
+
             await unitOfWork.ImmunizationRecordRepository.DeleteAsync(existingRecord);
 
             // Revert inventory subtraction if linked to a batch
