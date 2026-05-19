@@ -49,7 +49,8 @@ namespace ICMS.Infrastructure.Repositories.Visits
                         .Where(s => s.Status == ICMS.Domain.Enums.ScheduleStatus.Missed &&
                                    s.VaccinatedIndividual.SubNeighborhoodId == fv.SubNeighborhoodId &&
                                    s.ScheduledDate >= fv.FromDate &&
-                                   s.ScheduledDate <= fv.ToDate)
+                                   s.ScheduledDate <= fv.ToDate &&
+                                   s.VaccinatedIndividual.Person.DateOfBirth.AddMonths(s.Dose.Vaccine.MaxEligibleAgeInMonths) >= fv.ToDate)
                         .Select(s => s.VaccinatedIndividualId)
                         .Distinct()
                         .Count()

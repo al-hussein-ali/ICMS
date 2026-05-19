@@ -26,12 +26,21 @@ namespace ICMS.API.Controllers
 
         [AllowAnonymous]
         [HttpPost("beneficiary-login")]
-        public async Task<ActionResult<AuthResponseDto>> BeneficiaryLoginAsync([FromBody] LoginDto loginDto)
+        public async Task<ActionResult<AuthResponseDto>> BeneficiaryLoginAsync([FromBody] LoginDto loginDto, [FromQuery] string role)
         {
             try 
             {
-                logger.LogInformation("Beneficiary login attempt for user: {UserName}", loginDto.UserName);
+                logger.LogInformation("Beneficiary login attempt for user: {UserName} with role: {Role}", loginDto.UserName, role);
                 var result = await authService.BeneficiaryLoginAsync(loginDto);
+                
+                if (string.IsNullOrWhiteSpace(role) || 
+                    result.User.Roles == null || 
+                    !result.User.Roles.Any(r => string.Equals(r, role, StringComparison.OrdinalIgnoreCase)))
+                {
+                    logger.LogWarning("Beneficiary login failed: User {UserName} does not have the requested role: {Role}", loginDto.UserName, role);
+                    return Unauthorized();
+                }
+
                 return Ok(result);
             }
             catch (Exception ex)

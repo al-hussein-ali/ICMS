@@ -39,7 +39,8 @@ namespace ICMS.Infrastructure.Repositories.Clinical
                 .AsNoTracking()
                 .Where(s => s.Status == ICMS.Domain.Enums.ScheduleStatus.Missed &&
                             s.ScheduledDate >= fromDate &&
-                            s.ScheduledDate <= toDate);
+                            s.ScheduledDate <= toDate &&
+                            s.VaccinatedIndividual.Person.DateOfBirth.AddMonths(s.Dose.Vaccine.MaxEligibleAgeInMonths) >= toDate);
 
             if (subNeighborhoodId.HasValue)
             {
