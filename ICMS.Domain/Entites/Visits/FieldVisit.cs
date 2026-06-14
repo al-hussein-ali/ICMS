@@ -9,8 +9,12 @@ namespace ICMS.Domain.Entites.Visits
     public class FieldVisit : BaseEntity<int>
     {
         private readonly List<ImmunizationRecord> _immunizationRecords = new();
+        private readonly List<FieldVisitIndividual> _fieldVisitIndividuals = new();
+        private readonly List<FieldVisitWorker> _fieldVisitWorkers = new();
 
         public IReadOnlyList<ImmunizationRecord> ImmunizationRecords => _immunizationRecords.AsReadOnly();
+        public IReadOnlyList<FieldVisitIndividual> FieldVisitIndividuals => _fieldVisitIndividuals.AsReadOnly();
+        public IReadOnlyList<FieldVisitWorker> FieldVisitWorkers => _fieldVisitWorkers.AsReadOnly();
 
         public string CampaignName { get; private set; } = string.Empty;
         public DateOnly VisitDate { get; private set; }
@@ -60,6 +64,24 @@ namespace ICMS.Domain.Entites.Visits
         public void MarkCompleted()
         {
             IsCompleted = true;
+        }
+
+        public void ClearIndividuals() => _fieldVisitIndividuals.Clear();
+
+        public void AddIndividual(int vaccinatedIndividualId)
+        {
+            if (_fieldVisitIndividuals.Any(x => x.VaccinatedIndividualId == vaccinatedIndividualId))
+                return;
+            _fieldVisitIndividuals.Add(FieldVisitIndividual.Create(this.Id, vaccinatedIndividualId));
+        }
+
+        public void ClearWorkers() => _fieldVisitWorkers.Clear();
+
+        public void AddWorker(int userId)
+        {
+            if (_fieldVisitWorkers.Any(x => x.UserId == userId))
+                return;
+            _fieldVisitWorkers.Add(FieldVisitWorker.Create(this.Id, userId));
         }
 
         public void UpdateVisitInfo(

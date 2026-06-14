@@ -19,6 +19,16 @@ namespace ICMS.Infrastructure.Repositories.Visits
                     .ThenInclude(sn => sn.Neighborhood)
                         .ThenInclude(n => n.Directorate)
                             .ThenInclude(d => d.Governorate)
+                .Include(fv => fv.FieldVisitIndividuals)
+                    .ThenInclude(fvi => fvi.VaccinatedIndividual)
+                        .ThenInclude(vi => vi.Person)
+                .Include(fv => fv.FieldVisitIndividuals)
+                    .ThenInclude(fvi => fvi.VaccinatedIndividual)
+                        .ThenInclude(vi => vi.Schedules)
+                            .ThenInclude(s => s.Dose)
+                .Include(fv => fv.FieldVisitWorkers)
+                    .ThenInclude(fvw => fvw.User)
+                        .ThenInclude(u => u.Person)
                 .FirstOrDefaultAsync(fv => fv.Id == id, ct);
         }
 
@@ -45,15 +55,7 @@ namespace ICMS.Infrastructure.Repositories.Visits
                 .Select(fv => new
                 {
                     FieldVisit = fv,
-                    TargetedCount = _context.VaccinationSchedules
-                        .Where(s => s.Status == ICMS.Domain.Enums.ScheduleStatus.Missed &&
-                                   s.VaccinatedIndividual.SubNeighborhoodId == fv.SubNeighborhoodId &&
-                                   s.ScheduledDate >= fv.FromDate &&
-                                   s.ScheduledDate <= fv.ToDate &&
-                                   s.VaccinatedIndividual.Person.DateOfBirth.AddMonths(s.Dose.Vaccine.MaxEligibleAgeInMonths) >= fv.ToDate)
-                        .Select(s => s.VaccinatedIndividualId)
-                        .Distinct()
-                        .Count()
+                    TargetedCount = fv.FieldVisitIndividuals.Count()
                 })
                 .ToListAsync(ct);
 

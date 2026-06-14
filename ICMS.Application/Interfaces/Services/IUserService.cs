@@ -25,5 +25,6 @@ namespace ICMS.Application.Interfaces.Services
         Task<bool> ChangePasswordAsync(int id, UserChangePasswordDto changePasswordDto, CancellationToken ct = default);
 
         Task<bool> ChangeOwnPasswordAsync(int id, ChangeOwnPasswordDto changeOwnPasswordDto, CancellationToken ct = default);
+        Task<IReadOnlyList<UserReadDto>> GetAvailableFieldWorkersAsync(CancellationToken ct = default);
     }
 }

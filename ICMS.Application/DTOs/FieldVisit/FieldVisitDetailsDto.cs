@@ -1,3 +1,7 @@
+using System;
+using System.Collections.Generic;
+using ICMS.Application.DTOs.User;
+
 namespace ICMS.Application.DTOs.FieldVisit
 {
     public record FieldVisitDetailsDto(
@@ -12,5 +16,9 @@ namespace ICMS.Application.DTOs.FieldVisit
         DateOnly FromDate,
         DateOnly ToDate,
         bool IsCompleted,
-        int ImmunizationRecordsCount);
+        int ImmunizationRecordsCount,
+        List<FieldVisitTargetedIndividualDto> SelectedIndividuals,
+        List<int> SelectedIndividualIds,
+        List<UserReadDto> SelectedWorkers,
+        List<int> SelectedWorkerIds);
 }

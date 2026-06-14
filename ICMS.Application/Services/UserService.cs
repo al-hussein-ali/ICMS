@@ -249,5 +249,19 @@ namespace ICMS.Application.Services
             await unitOfWork.SaveChangesAsync(ct);
             return true;
         }
+
+        public async Task<IReadOnlyList<UserReadDto>> GetAvailableFieldWorkersAsync(CancellationToken ct = default)
+        {
+            var workers = await unitOfWork.UserRepository.GetQueryable(false, ct, u => u.Person)
+                .Where(u => u.IsActive && u.UserRoles.Any(ur => ur.Role.RoleName == ICMS.Domain.Constants.Roles.FieldVisitWorker))
+                .ToListAsync(ct);
+
+            var dtos = new List<UserReadDto>();
+            foreach (var worker in workers)
+            {
+                dtos.Add(worker.ToReadDto(new List<string> { ICMS.Domain.Constants.Roles.FieldVisitWorker }));
+            }
+            return dtos;
+        }
     }
 }

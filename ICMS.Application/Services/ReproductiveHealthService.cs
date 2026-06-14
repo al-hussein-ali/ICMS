@@ -545,7 +545,7 @@ namespace ICMS.Application.Services
 
         public async Task<GeneratedAccountDto> GenerateAccountAsync(int id, CancellationToken ct = default)
         {
-            var pregnantWoman = await _unitOfWork.PregnantWomanRepository.GetByIdAsync(id, ct);
+            var pregnantWoman = await _unitOfWork.PregnantWomanRepository.GetByIdWithDetailsAsync(id, ct);
             if (pregnantWoman == null) throw new NotFoundException("NotFound");
 
             // Check if this pregnant woman record already has a user linked
@@ -577,7 +577,16 @@ namespace ICMS.Application.Services
             else
             {
                 // Create new user
-                username = $"pw_{id}";
+                var person = pregnantWoman.Person;
+                var digitsOnly = new string(person.PhoneNumber.Where(char.IsDigit).ToArray());
+                var phoneSuffix = digitsOnly.Length >= 3 ? digitsOnly.Substring(digitsOnly.Length - 3) : digitsOnly.PadLeft(3, '0');
+                var firstName = person.FirstName.Replace(" ", "_").Trim();
+                var lastName = person.LastName.Replace(" ", "_").Trim();
+                username = $"{firstName}_{lastName}_{phoneSuffix}";
+                if (username.Length > 50)
+                {
+                    username = username.Substring(0, 50).TrimEnd('_');
+                }
                 var user = User.Create(username, passwordHash, pregnantWoman.PersonId);
 
                 await _unitOfWork.UserRepository.AddAsync(user, ct);

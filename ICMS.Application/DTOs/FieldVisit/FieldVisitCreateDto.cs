@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace ICMS.Application.DTOs.FieldVisit
 {
@@ -7,5 +8,7 @@ namespace ICMS.Application.DTOs.FieldVisit
         DateOnly VisitDate,
         int SubNeighborhoodId,
         DateOnly FromDate,
-        DateOnly ToDate);
+        DateOnly ToDate,
+        List<int> SelectedIndividualIds,
+        List<int> SelectedWorkerIds);
 }

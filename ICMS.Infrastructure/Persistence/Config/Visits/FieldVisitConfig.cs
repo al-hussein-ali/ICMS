@@ -35,6 +35,14 @@ namespace ICMS.Infrastructure.Persistence.Config.Visits
                 .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasField("_immunizationRecords");
 
+            builder.Navigation(nameof(FieldVisit.FieldVisitIndividuals))?
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
+                .HasField("_fieldVisitIndividuals");
+
+            builder.Navigation(nameof(FieldVisit.FieldVisitWorkers))?
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
+                .HasField("_fieldVisitWorkers");
+
 
             builder.HasMany(fv => fv.ImmunizationRecords)
                 .WithOne(ir => ir.FieldVisit)

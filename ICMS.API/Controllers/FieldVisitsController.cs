@@ -11,8 +11,15 @@ namespace ICMS.Api.Controllers
     [Route("api/field-visits")]
     [ApiController]
     [Authorize(Roles = Roles.StaffRoles)]
-    public class FieldVisitsController(IFieldVisitService fieldVisitService) : ControllerBase
+    public class FieldVisitsController(IFieldVisitService fieldVisitService, IUserService userService) : ControllerBase
     {
+        [HttpGet("workers")]
+        public async Task<ActionResult<IReadOnlyList<ICMS.Application.DTOs.User.UserReadDto>>> GetAvailableWorkersAsync(CancellationToken ct)
+        {
+            var workers = await userService.GetAvailableFieldWorkersAsync(ct);
+            return Ok(workers);
+        }
+
         [HttpGet]
         public async Task<ActionResult<PagedResult<FieldVisitReadDto>>> GetAllAsync(
             [FromQuery] PaginationParams paginationParams, [FromQuery] bool? onlyUncompleted, CancellationToken ct)

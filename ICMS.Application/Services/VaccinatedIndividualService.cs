@@ -569,7 +569,16 @@ namespace ICMS.Application.Services
             else
             {
                 // Create new user
-                username = $"iv_{id}";
+                var person = individual.Person;
+                var digitsOnly = new string(person.PhoneNumber.Where(char.IsDigit).ToArray());
+                var phoneSuffix = digitsOnly.Length >= 3 ? digitsOnly.Substring(digitsOnly.Length - 3) : digitsOnly.PadLeft(3, '0');
+                var firstName = person.FirstName.Replace(" ", "_").Trim();
+                var lastName = person.LastName.Replace(" ", "_").Trim();
+                username = $"{firstName}_{lastName}_{phoneSuffix}";
+                if (username.Length > 50)
+                {
+                    username = username.Substring(0, 50).TrimEnd('_');
+                }
                 user = User.Create(username, passwordHash, individual.PersonId);
 
                 await unitOfWork.UserRepository.AddAsync(user, ct);

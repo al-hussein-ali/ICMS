@@ -55,6 +55,15 @@ namespace ICMS.Application.Services
                 dto.FromDate,
                 dto.ToDate);
 
+            foreach (var individualId in dto.SelectedIndividualIds ?? new List<int>())
+            {
+                fieldVisit.AddIndividual(individualId);
+            }
+
+            foreach (var workerId in dto.SelectedWorkerIds ?? new List<int>())
+            {
+                fieldVisit.AddWorker(workerId);
+            }
 
             await _unitOfWork.FieldVisitRepository.AddAsync(fieldVisit, ct);
             await _unitOfWork.SaveChangesAsync(ct);
@@ -65,7 +74,7 @@ namespace ICMS.Application.Services
         public async Task<bool> UpdateAsync(int id, FieldVisitCreateDto dto, CancellationToken ct = default)
         {
             await _validator.ValidateAndThrowAsync(dto, ct);
-            var fieldVisit = await _unitOfWork.FieldVisitRepository.GetByIdAsync(id, ct);
+            var fieldVisit = await _unitOfWork.FieldVisitRepository.GetByIdWithDetailsAsync(id, ct);
 
             if (fieldVisit == null)
                 throw new NotFoundException("NotFound");
@@ -77,6 +86,17 @@ namespace ICMS.Application.Services
                 dto.FromDate,
                 dto.ToDate);
 
+            fieldVisit.ClearIndividuals();
+            foreach (var individualId in dto.SelectedIndividualIds ?? new List<int>())
+            {
+                fieldVisit.AddIndividual(individualId);
+            }
+
+            fieldVisit.ClearWorkers();
+            foreach (var workerId in dto.SelectedWorkerIds ?? new List<int>())
+            {
+                fieldVisit.AddWorker(workerId);
+            }
 
             return await _unitOfWork.SaveChangesAsync(ct) > 0;
         }
