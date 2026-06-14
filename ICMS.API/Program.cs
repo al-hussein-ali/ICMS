@@ -231,7 +231,10 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.UseRateLimiter();
 
-app.UseHangfireDashboard("/hangfire");
+app.UseHangfireDashboard("/hangfire", new DashboardOptions
+{
+    Authorization = new[] { new HangfireDashboardAuthorizationFilter() }
+});
 
 using (var scope = app.Services.CreateScope())
 {

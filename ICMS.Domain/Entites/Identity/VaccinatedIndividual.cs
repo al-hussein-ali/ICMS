@@ -155,6 +155,22 @@ namespace ICMS.Domain.Entites.Identity
                 throw new DomainException("TetanusOnlyForFemales");
             }
 
+            // 1.5. Vaccine dose sequence check
+            var vaccineDoses = allDoses?.Where(d => d.VaccineId == currentDose.VaccineId)
+                               ?? currentDose.Vaccine?.Doses;
+            if (vaccineDoses != null)
+            {
+                var lowerOrderDoses = vaccineDoses.Where(d => d.DoseOrder < currentDose.DoseOrder).ToList();
+                foreach (var lowerDose in lowerOrderDoses)
+                {
+                    var hasTaken = _immunizationRecords.Any(ir => ir.DoseId == lowerDose.Id);
+                    if (!hasTaken)
+                    {
+                        throw new DomainException("DoseSequenceViolation");
+                    }
+                }
+            }
+
             // 2. Calculate biological age and weeks since registration
             int biologicalAgeInWeeks = (int)((administrationDate.ToDateTime(TimeOnly.MinValue) - Person.DateOfBirth.ToDateTime(TimeOnly.MinValue)).TotalDays / 7);
             int weeksSinceRegistration = (int)((administrationDate.ToDateTime(TimeOnly.MinValue) - RegistrationDate.ToDateTime(TimeOnly.MinValue)).TotalDays / 7);

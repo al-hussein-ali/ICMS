@@ -17,7 +17,7 @@ namespace ICMS.Tests.Infrastructure
             db.Doses.RemoveRange(db.Doses);
             db.Vaccines.RemoveRange(db.Vaccines);
             db.VaccinatedIndividuals.RemoveRange(db.VaccinatedIndividuals);
-            db.People.RemoveRange(db.People);
+            db.People.RemoveRange(db.People.Where(p => p.Id != 999));
             db.Neighborhoods.RemoveRange(db.Neighborhoods);
             db.Directorates.RemoveRange(db.Directorates);
             db.Governorates.RemoveRange(db.Governorates);

@@ -13,6 +13,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System;
 using System.IO;
+using FluentValidation;
 
 namespace ICMS.Application.Services
 {
@@ -22,17 +23,22 @@ namespace ICMS.Application.Services
         private readonly IPushNotificationService _pushNotificationService;
         private readonly IConfiguration _configuration;
 
+        private readonly IValidator<HealthAdvisoryCreateDto> _healthAdvisoryCreateValidator;
+
         public HealthAdvisoryService(IUnitOfWork unitOfWork, IPushNotificationService pushNotificationService,
-            IConfiguration configuration)
+            IConfiguration configuration, IValidator<HealthAdvisoryCreateDto> healthAdvisoryCreateValidator)
         {
             _unitOfWork = unitOfWork;
             _pushNotificationService = pushNotificationService;
             _configuration = configuration;
+            _healthAdvisoryCreateValidator = healthAdvisoryCreateValidator;
         }
 
         public async Task<HealthAdvisoryDetailsDto> CreateAsync(HealthAdvisoryCreateDto dto, int currentUserId,
             CancellationToken ct = default)
         {
+            await _healthAdvisoryCreateValidator.ValidateAndThrowAsync(dto, ct);
+
             string? imageUrl = null;
             if (!string.IsNullOrEmpty(dto.ImageBase64))
             {
@@ -51,6 +57,8 @@ namespace ICMS.Application.Services
         public async Task<HealthAdvisoryDetailsDto> CreateAndSendNowAsync(HealthAdvisoryCreateDto dto,
             int currentUserId, CancellationToken ct = default)
         {
+            await _healthAdvisoryCreateValidator.ValidateAndThrowAsync(dto, ct);
+
             string? imageUrl = null;
             if (!string.IsNullOrEmpty(dto.ImageBase64))
             {
@@ -141,6 +149,8 @@ namespace ICMS.Application.Services
         public async Task<HealthAdvisoryDetailsDto> UpdateAsync(int id, HealthAdvisoryCreateDto dto,
             CancellationToken ct = default)
         {
+            await _healthAdvisoryCreateValidator.ValidateAndThrowAsync(dto, ct);
+
             var advisory = await _unitOfWork.HealthAdvisoryRepository.GetByIdAsync(id, ct);
             if (advisory == null)
             {
@@ -247,6 +257,8 @@ namespace ICMS.Application.Services
         public async Task<HealthAdvisoryDetailsDto> UpdateAndSendNowAsync(int id, HealthAdvisoryCreateDto dto,
             CancellationToken ct = default)
         {
+            await _healthAdvisoryCreateValidator.ValidateAndThrowAsync(dto, ct);
+
             var advisory = await _unitOfWork.HealthAdvisoryRepository.GetByIdAsync(id, ct);
             if (advisory == null)
             {

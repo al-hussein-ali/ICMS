@@ -6,6 +6,7 @@ using ICMS.Domain.Entites.Visits;
 using ICMS.Domain.Entites.Audit;
 using ICMS.Domain.Entites.Geography;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ICMS.Domain.Entites.Identity;
 
@@ -14,6 +15,10 @@ public class RefreshToken
     public Guid TokenId { get; set; }
 
     public string Token {  get; set; }
+
+    [NotMapped]
+    public string? RawToken { get; set; }
+
     public int UserId { get; set; } 
 
     public DateTime CreatedAt { get; set; }

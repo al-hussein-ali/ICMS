@@ -18,6 +18,8 @@ namespace ICMS.Application.Validators.User
             RuleFor(x => x.Password)
                 .NotEmpty()
                 .WithMessage(x => localizer["RequiredField", "This field"])
+                .MinimumLength(6)
+                .WithMessage(x => localizer["PasswordTooShort", 6])
                 .MaximumLength(256)
                 .WithMessage(x => localizer["InvalidField", "This field"]);
 

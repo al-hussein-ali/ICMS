@@ -73,14 +73,14 @@ namespace ICMS.API.Controllers
             return Ok(result);
         }
 
-        [Authorize(Roles = Roles.VaccinatedIndividual + "," + Roles.PregnantWoman)]
+        [Authorize]
         [HttpPut("change-password")]
         public async Task<IActionResult> ChangePasswordAsync([FromBody] ChangeOwnPasswordDto changeOwnPasswordDto)
         {
             var userId = ClaimsPrincipalExtensions.GetUserId(User);
             logger.LogInformation("Authenticated user {UserId} is attempting to change their password.", userId);
 
-            var success = await userService.ChangeOwnPasswordAsync(userId, changeOwnPasswordDto.OldPassword, changeOwnPasswordDto.NewPassword);
+            var success = await userService.ChangeOwnPasswordAsync(userId, changeOwnPasswordDto);
             if (!success) return NotFound();
 
             return NoContent();

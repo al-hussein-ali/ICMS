@@ -21,6 +21,7 @@ namespace ICMS.Infrastructure.Persistence.Config.Identity
         {
             builder.HasKey(rt => rt.TokenId);
 
+            builder.Ignore(rt => rt.RawToken);
 
             builder.HasOne(rt => rt.User)
                 .WithMany(u => u.RefreshTokens)

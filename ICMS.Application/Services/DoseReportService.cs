@@ -9,9 +9,13 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
+using FluentValidation;
+
 namespace ICMS.Application.Services
 {
-    public class DoseReportService(IUnitOfWork unitOfWork) : IDoseReportService
+    public class DoseReportService(
+        IUnitOfWork unitOfWork,
+        IValidator<DoseReportCreateDto> doseReportCreateValidator) : IDoseReportService
     {
         public async Task<PagedResult<DoseReportReadDto>> GetAllAsync(PaginationParams paginationParams, CancellationToken ct = default)
         {
@@ -29,6 +33,8 @@ namespace ICMS.Application.Services
 
         public async Task<DoseReportReadDto> AddAsync(DoseReportCreateDto dto, int userId, CancellationToken ct = default)
         {
+            await doseReportCreateValidator.ValidateAndThrowAsync(dto, ct);
+
             return await unitOfWork.ExecuteInTransactionAsync<DoseReportReadDto>(async () =>
             {
                 var batch = await unitOfWork.BatchRepository.GetByIdAsync(dto.BatchId, ct);

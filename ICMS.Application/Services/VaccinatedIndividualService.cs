@@ -18,9 +18,18 @@ using System.Threading;
 using System.Threading.Tasks;
 using System;
 
+using FluentValidation;
+
 namespace ICMS.Application.Services
 {
-    public class VaccinatedIndividualService(IUnitOfWork unitOfWork, IIdentityService identityService, ICacheService cacheService)
+    public class VaccinatedIndividualService(
+        IUnitOfWork unitOfWork,
+        IIdentityService identityService,
+        ICacheService cacheService,
+        IValidator<VaccinatedIndividualCreateDto> vaccinatedIndividualCreateValidator,
+        IValidator<NewFieldVaccinatedIndividualDto> newFieldVaccinatedIndividualValidator,
+        IValidator<UpdateFieldVisitIndividualDto> updateFieldVisitIndividualValidator,
+        IValidator<ImmunizationRecordCreateDto> immunizationRecordCreateValidator)
         : IVaccinatedIndividualService
     {
         public async Task<PagedResult<VaccinatedIndividualReadDto>> GetAllAsync(PaginationParams paginationParams,
@@ -76,6 +85,8 @@ namespace ICMS.Application.Services
         public async Task<VaccinatedIndividualReadDto> AddAsync(
             VaccinatedIndividualCreateDto vaccinatedIndividualCreateDto, CancellationToken ct = default)
         {
+            await vaccinatedIndividualCreateValidator.ValidateAndThrowAsync(vaccinatedIndividualCreateDto, ct);
+
             Person? person;
 
             if (vaccinatedIndividualCreateDto.PersonId is > 0)
@@ -152,6 +163,8 @@ namespace ICMS.Application.Services
         public async Task<bool> UpdateAsync(int id, VaccinatedIndividualCreateDto updatedEntity,
             CancellationToken ct = default)
         {
+            await vaccinatedIndividualCreateValidator.ValidateAndThrowAsync(updatedEntity, ct);
+
             var individual = await unitOfWork.VaccinatedIndividualRepository.GetByIdAsync(id, ct);
             if (individual == null)
             {
@@ -228,6 +241,8 @@ namespace ICMS.Application.Services
 
         public async Task<bool> GiveDose(ImmunizationRecordCreateDto dto, int userId, CancellationToken ct = default)
         {
+            await immunizationRecordCreateValidator.ValidateAndThrowAsync(dto, ct);
+
             var individual =
                 await unitOfWork.VaccinatedIndividualRepository.GetIndividualWithSchedulesAsync(dto.IndividualId, ct);
             if (individual == null)
@@ -262,6 +277,7 @@ namespace ICMS.Application.Services
             {
                 try
                 {
+                    await newFieldVaccinatedIndividualValidator.ValidateAndThrowAsync(dto, ct);
                     var personDto = dto.Person;
                     if (personDto == null) throw new ArgumentNullException(nameof(dto.Person));
 
@@ -430,6 +446,7 @@ namespace ICMS.Application.Services
             {
                 try
                 {
+                    await updateFieldVisitIndividualValidator.ValidateAndThrowAsync(dto, ct);
                     var individual = individuals.FirstOrDefault(vi => vi.Id == dto.IndividualId);
                     if (individual == null)
                     {

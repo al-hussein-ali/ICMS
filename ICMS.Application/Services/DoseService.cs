@@ -90,6 +90,8 @@ namespace ICMS.Application.Services
 
         public async Task<bool> UpdateAsync(int id, DoseCreateDto updatedEntity, CancellationToken ct = default)
         {
+            await createDTOValidator.ValidateAndThrowAsync(updatedEntity, ct);
+
             var existingDose = await _unitOfWork.DoseRepository.GetByIdAsync(id, ct);
 
             if (existingDose == null)

@@ -69,7 +69,8 @@ namespace ICMS.Application.Services
 
             if (tokenEntity.IsRevoked)
             {
-                throw new DomainException("InvalidRefreshToken:Revoked");
+                await refreshTokenService.InvalidateUserRefreshTokensAsync(tokenEntity.UserId, ct);
+                throw new DomainException("InvalidRefreshToken:SecurityBreach");
             }
 
             if (tokenEntity.ExpirationDate <= System.DateTime.UtcNow)

@@ -6,6 +6,7 @@ using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using FluentValidation;
 
 namespace ICMS.Infrastructure.Reports
 {
@@ -17,22 +18,26 @@ namespace ICMS.Infrastructure.Reports
     public class ReportService : IReportService
     {
         private readonly IBackgroundJobClient _backgroundJobClient;
+        private readonly IValidator<ReportRequestDto> _validator;
 
-        public ReportService(IBackgroundJobClient backgroundJobClient)
+        public ReportService(IBackgroundJobClient backgroundJobClient, IValidator<ReportRequestDto> validator)
         {
             _backgroundJobClient = backgroundJobClient;
+            _validator = validator;
         }
 
-        public Task<ReportJobResponseDto> EnqueueReportAsync(ReportRequestDto dto, int requestingUserId, CancellationToken ct = default)
+        public async Task<ReportJobResponseDto> EnqueueReportAsync(ReportRequestDto dto, int requestingUserId, CancellationToken ct = default)
         {
+            await _validator.ValidateAndThrowAsync(dto, ct);
+
             var jobId = Guid.NewGuid().ToString("N");
 
             _backgroundJobClient.Enqueue<IReportGeneratorJob>(
                 job => job.GenerateAsync(jobId, dto, requestingUserId, CancellationToken.None));
 
-            return Task.FromResult(new ReportJobResponseDto(
+            return new ReportJobResponseDto(
                 jobId,
-                "Report generation has been queued. You will be notified via real-time connection when it is ready."));
+                "Report generation has been queued. You will be notified via real-time connection when it is ready.");
         }
 
         public Task<ReportStatusDto?> GetStatusAsync(string jobId, CancellationToken ct = default)

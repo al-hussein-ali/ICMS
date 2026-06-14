@@ -10,8 +10,8 @@ namespace ICMS.Application.Interfaces.Services
         Task<ICMS.Domain.ValueObjects.PagedResult<PregnantWomanReadDto>> GetAllPregnantWomenAsync(
             ICMS.Application.DTOs.Pagination.PaginationParams paginationParams, CancellationToken ct = default);
 
-        Task<PregnantWomanReadDto> GetPregnantWomanByIdAsync(int id, CancellationToken ct = default);
-        Task<PregnantWomanDetailsDto> GetPregnantWomanDetailsAsync(int id, CancellationToken ct = default);
+        Task<PregnantWomanReadDto> GetPregnantWomanByIdAsync(int id, int? authenticatedUserId = null, string? userRole = null, CancellationToken ct = default);
+        Task<PregnantWomanDetailsDto> GetPregnantWomanDetailsAsync(int id, int? authenticatedUserId = null, string? userRole = null, CancellationToken ct = default);
 
         Task<PregnantWomanReadDto> CreatePregnantWomanAsync(PregnantWomanCreateDto request,
             CancellationToken ct = default);
@@ -28,11 +28,11 @@ namespace ICMS.Application.Interfaces.Services
         Task<GeneratedAccountDto> GenerateAccountAsync(int id, CancellationToken ct = default);
 
         Task<List<PregnancyDetailsReadDto>> GetPregnancyHistoryAsync(int pregnantWomanId,
-            CancellationToken ct = default);
+            int? authenticatedUserId = null, string? userRole = null, CancellationToken ct = default);
 
-        Task<PregnancyDetailsReadDto> GetPregnancyByIdAsync(int id, CancellationToken ct = default);
-        Task<List<AddAncVisitDto>> GetVisitsAsync(int pregnancyId, CancellationToken ct = default);
-        Task<AddAncVisitDto> GetVisitByIdAsync(int visitId, CancellationToken ct = default);
+        Task<PregnancyDetailsReadDto> GetPregnancyByIdAsync(int id, int? authenticatedUserId = null, string? userRole = null, CancellationToken ct = default);
+        Task<List<AddAncVisitDto>> GetVisitsAsync(int pregnancyId, int? authenticatedUserId = null, string? userRole = null, CancellationToken ct = default);
+        Task<AddAncVisitDto> GetVisitByIdAsync(int visitId, int? authenticatedUserId = null, string? userRole = null, CancellationToken ct = default);
 
         Task UpdatePregnancyAsync(int id, UpdatePregnancyDto request, CancellationToken ct = default);
         Task DeletePregnancyAsync(int id, CancellationToken ct = default);

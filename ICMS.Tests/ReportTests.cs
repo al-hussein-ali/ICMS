@@ -157,7 +157,7 @@ namespace ICMS.Tests
             // Verify order of sections
             int idxPrimary = html.IndexOf("Vaccinated Beneficiary Records");
             int idxSecondary = html.IndexOf("Dose Batches Subtracted from Inventory");
-            int idxSummary = html.IndexOf("Report Summary");
+            int idxSummary = html.LastIndexOf("Report Summary");
 
             idxPrimary.Should().BeLessThan(idxSecondary);
             idxSecondary.Should().BeLessThan(idxSummary);

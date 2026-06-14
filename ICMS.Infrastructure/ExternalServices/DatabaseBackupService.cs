@@ -27,7 +27,25 @@ namespace ICMS.Infrastructure.ExternalServices
 
         public async Task SaveBackupPathAsync(string path)
         {
-            await _systemSettingService.UpdateSettingAsync("Backup.DefaultPath", path);
+            if (string.IsNullOrWhiteSpace(path))
+            {
+                throw new ArgumentException("Backup path cannot be empty.");
+            }
+
+            // Strip double quotes, quotes, and command/shell control characters
+            var sanitizedPath = path.Replace("\"", "").Replace("'", "").Replace(";", "").Replace("&", "").Replace("|", "").Replace("`", "").Replace("$", "");
+            
+            var allowedRoot = _configuration["BackupSettings:RootPath"] ?? @"C:\ICMSBackups";
+            allowedRoot = Path.GetFullPath(allowedRoot);
+
+            var resolvedPath = Path.GetFullPath(sanitizedPath);
+
+            if (!resolvedPath.StartsWith(allowedRoot, StringComparison.OrdinalIgnoreCase))
+            {
+                throw new UnauthorizedAccessException($"Access denied. Backup path must be within {allowedRoot}.");
+            }
+
+            await _systemSettingService.UpdateSettingAsync("Backup.DefaultPath", resolvedPath);
         }
 
         public async Task<BackupResultDto> RunBackupAsync(string? customPath = null)
@@ -45,10 +63,23 @@ namespace ICMS.Infrastructure.ExternalServices
                     return new BackupResultDto(string.Empty, string.Empty, false, "Backup path is not set.");
                 }
 
-                // Ensure target directory exists
-                if (!Directory.Exists(targetPath))
+                // Strip double quotes, quotes, and command/shell control characters
+                var sanitizedPath = targetPath.Replace("\"", "").Replace("'", "").Replace(";", "").Replace("&", "").Replace("|", "").Replace("`", "").Replace("$", "");
+                
+                var allowedRoot = _configuration["BackupSettings:RootPath"] ?? @"C:\ICMSBackups";
+                allowedRoot = Path.GetFullPath(allowedRoot);
+
+                var resolvedPath = Path.GetFullPath(sanitizedPath);
+
+                if (!resolvedPath.StartsWith(allowedRoot, StringComparison.OrdinalIgnoreCase))
                 {
-                    Directory.CreateDirectory(targetPath);
+                    return new BackupResultDto(string.Empty, string.Empty, false, $"Access denied. Backup path must be within {allowedRoot}.");
+                }
+
+                // Ensure target directory exists
+                if (!Directory.Exists(resolvedPath))
+                {
+                    Directory.CreateDirectory(resolvedPath);
                 }
 
                 // Get DB connection parameters
@@ -67,7 +98,7 @@ namespace ICMS.Infrastructure.ExternalServices
 
                 var timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
                 var fileName = $"icms_backup_{timestamp}.sql";
-                var fullPath = Path.Combine(targetPath, fileName);
+                var fullPath = Path.Combine(resolvedPath, fileName);
 
                 var pgDumpPath = GetPgDumpPath();
 

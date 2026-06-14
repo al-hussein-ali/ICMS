@@ -118,4 +118,13 @@
   <data name="AccountAlreadyExists" xml:space="preserve">
     <value>يوجد حساب مسبقًا لهذا الشخص.</value>
   </data>
+  <data name="ConcurrencyError" xml:space="preserve">
+    <value>تم تعديل السجل الذي تحاول تعديله بواسطة مستخدم آخر. يرجى إعادة التحميل والمحاولة مجددًا.</value>
+  </data>
+  <data name="InvalidField" xml:space="preserve">
+    <value>الحقل '{0}' غير صالح.</value>
+  </data>
+  <data name="PasswordTooShort" xml:space="preserve">
+    <value>يجب أن تتكون كلمة المرور من {0} أحرف على الأقل.</value>
+  </data>
 </root>

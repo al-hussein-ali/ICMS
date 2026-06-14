@@ -25,7 +25,7 @@ namespace ICMS.Tests.Controllers
         [Fact]
         public async Task GetAll_ReturnsOk()
         {
-            var response = await _client.GetAsync("/api/People");
+            var response = await _client.GetAsync("/api/people?PageNumber=1&PageSize=10");
             response.StatusCode.Should().Be(HttpStatusCode.OK);
         }
 
@@ -33,12 +33,12 @@ namespace ICMS.Tests.Controllers
         public async Task GetById_Existing_ReturnsOk()
         {
             // Arrange
-            var listResponse = await _client.GetAsync("/api/People?PageNumber=1&PageSize=1");
+            var listResponse = await _client.GetAsync("/api/people?PageNumber=1&PageSize=1");
             var list = await listResponse.Content.ReadFromJsonAsync<PagedResult<PersonReadDto>>();
             var testId = list.Items[0].Id;
 
             // Act
-            var response = await _client.GetAsync($"/api/People/{testId}");
+            var response = await _client.GetAsync($"/api/people/{testId}");
 
             // Assert
             response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -51,7 +51,7 @@ namespace ICMS.Tests.Controllers
         public async Task Add_Valid_ReturnsCreated()
         {
             var dto = new PersonCreateDto("John", "Middle", "Doe", "ICMS", "Male", new DateOnly(1990, 1, 1), "9988776655");
-            var response = await _client.PostAsJsonAsync("/api/People", dto);
+            var response = await _client.PostAsJsonAsync("/api/people/create", dto);
             response.StatusCode.Should().Be(HttpStatusCode.Created);
         }
     }
@@ -68,7 +68,7 @@ namespace ICMS.Tests.Controllers
         [Fact]
         public async Task GetAll_ReturnsOk()
         {
-            var response = await _client.GetAsync("/api/ImmunizationRecords");
+            var response = await _client.GetAsync("/api/immunization-records?PageNumber=1&PageSize=10");
             response.StatusCode.Should().Be(HttpStatusCode.OK);
         }
     }

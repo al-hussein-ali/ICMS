@@ -56,7 +56,9 @@ namespace ICMS.API.Controllers
         [Authorize(Roles = Roles.Admin + "," + Roles.ReproductiveHealthManager + "," + Roles.PregnantWoman)]
         public async Task<IActionResult> GetPregnantWomanById(int id, CancellationToken ct)
         {
-            var result = await reproductiveHealthService.GetPregnantWomanByIdAsync(id, ct);
+            var userId = ClaimsPrincipalExtensions.GetUserId(User);
+            var role = User.IsInRole(Roles.PregnantWoman) ? Roles.PregnantWoman : null;
+            var result = await reproductiveHealthService.GetPregnantWomanByIdAsync(id, userId, role, ct);
             return Ok(result);
         }
 
@@ -64,7 +66,9 @@ namespace ICMS.API.Controllers
         [Authorize(Roles = Roles.Admin + "," + Roles.ReproductiveHealthManager + "," + Roles.PregnantWoman)]
         public async Task<IActionResult> GetPregnantWomanDetails(int id, CancellationToken ct)
         {
-            var result = await reproductiveHealthService.GetPregnantWomanDetailsAsync(id, ct);
+            var userId = ClaimsPrincipalExtensions.GetUserId(User);
+            var role = User.IsInRole(Roles.PregnantWoman) ? Roles.PregnantWoman : null;
+            var result = await reproductiveHealthService.GetPregnantWomanDetailsAsync(id, userId, role, ct);
             return Ok(result);
         }
 
@@ -72,7 +76,9 @@ namespace ICMS.API.Controllers
         [Authorize(Roles = Roles.Admin + "," + Roles.ReproductiveHealthManager + "," + Roles.PregnantWoman)]
         public async Task<IActionResult> GetPregnancyHistory([FromRoute] int id, CancellationToken ct)
         {
-            var result = await reproductiveHealthService.GetPregnancyHistoryAsync(id, ct);
+            var userId = ClaimsPrincipalExtensions.GetUserId(User);
+            var role = User.IsInRole(Roles.PregnantWoman) ? Roles.PregnantWoman : null;
+            var result = await reproductiveHealthService.GetPregnancyHistoryAsync(id, userId, role, ct);
             return Ok(result);
         }
 
@@ -80,7 +86,9 @@ namespace ICMS.API.Controllers
         [Authorize(Roles = Roles.Admin + "," + Roles.ReproductiveHealthManager + "," + Roles.PregnantWoman)]
         public async Task<IActionResult> GetPregnancyById([FromRoute] int id, CancellationToken ct)
         {
-            var result = await reproductiveHealthService.GetPregnancyByIdAsync(id, ct);
+            var userId = ClaimsPrincipalExtensions.GetUserId(User);
+            var role = User.IsInRole(Roles.PregnantWoman) ? Roles.PregnantWoman : null;
+            var result = await reproductiveHealthService.GetPregnancyByIdAsync(id, userId, role, ct);
             return Ok(result);
         }
 
@@ -88,7 +96,9 @@ namespace ICMS.API.Controllers
         [Authorize(Roles = Roles.Admin + "," + Roles.ReproductiveHealthManager + "," + Roles.PregnantWoman)]
         public async Task<IActionResult> GetVisits([FromRoute] int pregnancyId, CancellationToken ct)
         {
-            var result = await reproductiveHealthService.GetVisitsAsync(pregnancyId, ct);
+            var userId = ClaimsPrincipalExtensions.GetUserId(User);
+            var role = User.IsInRole(Roles.PregnantWoman) ? Roles.PregnantWoman : null;
+            var result = await reproductiveHealthService.GetVisitsAsync(pregnancyId, userId, role, ct);
             return Ok(result);
         }
 
@@ -96,7 +106,9 @@ namespace ICMS.API.Controllers
         [Authorize(Roles = Roles.Admin + "," + Roles.ReproductiveHealthManager + "," + Roles.PregnantWoman)]
         public async Task<IActionResult> GetVisitById([FromRoute] int id, CancellationToken ct)
         {
-            var result = await reproductiveHealthService.GetVisitByIdAsync(id, ct);
+            var userId = ClaimsPrincipalExtensions.GetUserId(User);
+            var role = User.IsInRole(Roles.PregnantWoman) ? Roles.PregnantWoman : null;
+            var result = await reproductiveHealthService.GetVisitByIdAsync(id, userId, role, ct);
             return Ok(result);
         }
 

@@ -7,15 +7,19 @@ using ICMS.Domain.Entites.Visits;
 using ICMS.Domain.Exceptions;
 using ICMS.Domain.ValueObjects;
 
+using FluentValidation;
+
 namespace ICMS.Application.Services
 {
     public class FieldVisitService : IFieldVisitService
     {
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IValidator<FieldVisitCreateDto> _validator;
 
-        public FieldVisitService(IUnitOfWork unitOfWork)
+        public FieldVisitService(IUnitOfWork unitOfWork, IValidator<FieldVisitCreateDto> validator)
         {
             _unitOfWork = unitOfWork;
+            _validator = validator;
         }
 
         public async Task<PagedResult<FieldVisitReadDto>> GetAllAsync(PaginationParams paginationParams,
@@ -43,6 +47,7 @@ namespace ICMS.Application.Services
 
         public async Task<FieldVisitReadDto> AddAsync(FieldVisitCreateDto dto, CancellationToken ct = default)
         {
+            await _validator.ValidateAndThrowAsync(dto, ct);
             var fieldVisit = FieldVisit.Create(
                 dto.CampaignName,
                 dto.VisitDate,
@@ -59,6 +64,7 @@ namespace ICMS.Application.Services
 
         public async Task<bool> UpdateAsync(int id, FieldVisitCreateDto dto, CancellationToken ct = default)
         {
+            await _validator.ValidateAndThrowAsync(dto, ct);
             var fieldVisit = await _unitOfWork.FieldVisitRepository.GetByIdAsync(id, ct);
 
             if (fieldVisit == null)

@@ -50,9 +50,15 @@ namespace ICMS.Application.Services
                 return;
             }
 
+            var deviceTokensCache = new Dictionary<AdviceTarget, System.Collections.Generic.List<string>>();
+
             foreach (var advisory in pendingAdvisories)
             {
-                var deviceTokens = GetDeviceTokensForTarget(advisory.Target);
+                if (!deviceTokensCache.TryGetValue(advisory.Target, out var deviceTokens))
+                {
+                    deviceTokens = GetDeviceTokensForTarget(advisory.Target);
+                    deviceTokensCache[advisory.Target] = deviceTokens;
+                }
 
                 if (deviceTokens.Any())
                 {
@@ -97,6 +103,12 @@ namespace ICMS.Application.Services
                         foreach (var dev in unregisteredDevices)
                         {
                             await _unitOfWork.UserDeviceRepository.DeleteAsync(dev, ct);
+                        }
+
+                        // Remove unregistered tokens from cache
+                        foreach (var key in deviceTokensCache.Keys.ToList())
+                        {
+                            deviceTokensCache[key] = deviceTokensCache[key].Except(result.UnregisteredTokens).ToList();
                         }
                     }
                 }

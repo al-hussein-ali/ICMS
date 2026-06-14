@@ -39,6 +39,9 @@ namespace ICMS.API.Handlers
                 UniqueConstraintException =>
                     (StatusCodes.Status409Conflict, "Conflict", localizer["Conflict"]),
 
+                Microsoft.EntityFrameworkCore.DbUpdateConcurrencyException =>
+                    (StatusCodes.Status409Conflict, "Conflict", localizer["ConcurrencyError"]),
+
                 ReferenceConstraintException =>
                     (StatusCodes.Status400BadRequest, "RelatedData", localizer["RelatedData"]),
 

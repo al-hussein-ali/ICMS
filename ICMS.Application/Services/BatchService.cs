@@ -1,3 +1,4 @@
+using FluentValidation;
 using ICMS.Application.DTOs.Batch;
 using ICMS.Application.DTOs.Pagination;
 using ICMS.Application.DTOs.Transaction;
@@ -14,7 +15,11 @@ using System.Linq;
 
 namespace ICMS.Application.Services
 {
-    public class BatchService(IUnitOfWork unitOfWork, ICacheService cacheService) : IBatchService
+    public class BatchService(
+        IUnitOfWork unitOfWork,
+        ICacheService cacheService,
+        IValidator<BatchCreateDto> batchCreateValidator,
+        IValidator<BatchUpdateDto> batchUpdateValidator) : IBatchService
     {
 
         public async Task<PagedResult<BatchReadDto>> GetAllAsync(BatchFilterDto filter,
@@ -48,6 +53,7 @@ namespace ICMS.Application.Services
 
         public async Task<BatchReadDto> AddAsync(BatchCreateDto dto, int userId, CancellationToken ct = default)
         {
+            await batchCreateValidator.ValidateAndThrowAsync(dto, ct);
             var batch = dto.ToDomain(userId);
             
             // 1. Add and save the batch first to generate its primary key (BatchId)
@@ -79,6 +85,7 @@ namespace ICMS.Application.Services
 
         public async Task<bool> UpdateAsync(int batchId, BatchUpdateDto dto, CancellationToken ct = default)
         {
+            await batchUpdateValidator.ValidateAndThrowAsync(dto, ct);
             var batch = await unitOfWork.BatchRepository.GetByIdAsync(batchId, ct);
             if (batch == null) throw new NotFoundException("NotFound");
 

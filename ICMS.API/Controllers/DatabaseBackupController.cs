@@ -33,8 +33,19 @@ namespace ICMS.API.Controllers
             {
                 return BadRequest("Path cannot be empty.");
             }
-            await _backupService.SaveBackupPathAsync(request.Path);
-            return Ok();
+            try
+            {
+                await _backupService.SaveBackupPathAsync(request.Path);
+                return Ok();
+            }
+            catch (System.ArgumentException ex)
+            {
+                return BadRequest(new { Message = ex.Message });
+            }
+            catch (System.UnauthorizedAccessException ex)
+            {
+                return StatusCode(StatusCodes.Status403Forbidden, new { Message = ex.Message });
+            }
         }
 
         [HttpPost("run")]

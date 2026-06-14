@@ -3,7 +3,9 @@ using ICMS.Application.Interfaces.Services;
 using ICMS.Domain.Entites.Identity;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Security.Cryptography;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -11,13 +13,22 @@ namespace ICMS.Application.Services
 {
     public class RefreshTokenService(IUnitOfWork unitOfWork) : IRefreshTokenService
     {
+        private static string HashToken(string token)
+        {
+            var bytes = Encoding.UTF8.GetBytes(token);
+            var hash = SHA256.HashData(bytes);
+            return Convert.ToBase64String(hash);
+        }
+
         public async Task<RefreshToken> GenerateRefreshTokenAsync(int userId, CancellationToken cancellationToken = default)
         {
+            var rawToken = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64));
             var refreshToken = new RefreshToken
             {
                 UserId = userId,
                 TokenId = Guid.CreateVersion7(),
-                Token = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64)),
+                Token = HashToken(rawToken),
+                RawToken = rawToken,
                 CreatedAt = DateTime.UtcNow,
                 IsRevoked = false
             };
@@ -51,12 +62,14 @@ namespace ICMS.Application.Services
 
         public async Task<RefreshToken?> GetRefreshTokenAsync(string token, CancellationToken cancellationToken = default)
         {
-            return await unitOfWork.RefreshTokenRepository.GetByTokenAsync(token, cancellationToken);
+            var hashedToken = HashToken(token);
+            return await unitOfWork.RefreshTokenRepository.GetByTokenAsync(hashedToken, cancellationToken);
         }
 
         public async Task<bool> IsValidRefreshTokenAsync(string token, CancellationToken cancellationToken = default)
         {
-            var refreshToken = await unitOfWork.RefreshTokenRepository.GetByTokenAsync(token, cancellationToken);
+            var hashedToken = HashToken(token);
+            var refreshToken = await unitOfWork.RefreshTokenRepository.GetByTokenAsync(hashedToken, cancellationToken);
 
             if (refreshToken is null) return false;
 

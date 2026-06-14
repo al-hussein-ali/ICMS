@@ -18,6 +18,8 @@ namespace ICMS.Application.Services
         IIdentityService identityService,
         IValidator<UserCreateDto> userCreateValidator,
         IValidator<UserReadDto> userUpdateValidator,
+        IValidator<ChangeOwnPasswordDto> changeOwnPasswordValidator,
+        IValidator<UserChangePasswordDto> userChangePasswordValidator,
         IRefreshTokenService refreshTokenService) : IUserService
     {
         public async Task<IReadOnlyList<UserReadDto>> GetAllAsync(PaginationParams paginationParams, CancellationToken ct = default)
@@ -215,29 +217,33 @@ namespace ICMS.Application.Services
             return true;
         }
 
-        public async Task<bool> ChangePasswordAsync(int id, string newPassword, CancellationToken ct = default)
+        public async Task<bool> ChangePasswordAsync(int id, UserChangePasswordDto changePasswordDto, CancellationToken ct = default)
         {
+            await userChangePasswordValidator.ValidateAndThrowAsync(changePasswordDto, ct);
+
             var user = await unitOfWork.UserRepository.GetByIdAsync(id, ct);
             if (user == null) return false;
 
-            user.ChangePassword(BCrypt.Net.BCrypt.HashPassword(newPassword));
+            user.ChangePassword(BCrypt.Net.BCrypt.HashPassword(changePasswordDto.NewPassword));
             await unitOfWork.UserRepository.UpdateAsync(user, ct);
             await refreshTokenService.InvalidateUserRefreshTokensAsync(id, ct);
             await unitOfWork.SaveChangesAsync(ct);
             return true;
         }
 
-        public async Task<bool> ChangeOwnPasswordAsync(int id, string oldPassword, string newPassword, CancellationToken ct = default)
+        public async Task<bool> ChangeOwnPasswordAsync(int id, ChangeOwnPasswordDto changeOwnPasswordDto, CancellationToken ct = default)
         {
+            await changeOwnPasswordValidator.ValidateAndThrowAsync(changeOwnPasswordDto, ct);
+
             var user = await unitOfWork.UserRepository.GetByIdAsync(id, ct);
             if (user == null) return false;
 
-            if (!ICMS.Application.Utilities.PasswordHasher.VerifyPassword(oldPassword, user.PasswordHash))
+            if (!ICMS.Application.Utilities.PasswordHasher.VerifyPassword(changeOwnPasswordDto.OldPassword, user.PasswordHash))
             {
                 throw new DomainException("IncorrectOldPassword");
             }
 
-            user.ChangePassword(BCrypt.Net.BCrypt.HashPassword(newPassword));
+            user.ChangePassword(BCrypt.Net.BCrypt.HashPassword(changeOwnPasswordDto.NewPassword));
             await unitOfWork.UserRepository.UpdateAsync(user, ct);
             await refreshTokenService.InvalidateUserRefreshTokensAsync(id, ct);
             await unitOfWork.SaveChangesAsync(ct);

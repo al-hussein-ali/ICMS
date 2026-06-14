@@ -79,7 +79,9 @@ namespace ICMS.Application.DTOs.Maternal
         string BirthLocationDetails,
         string IntrapartumComplications,
         string PostpartumComplications,
-        List<NewbornDto> Newborns
+        List<NewbornDto> Newborns,
+        string? FatherName = null,
+        string? GrandfatherName = null
     );
 
     public record PregnantWomanCreateDto(

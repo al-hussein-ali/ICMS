@@ -15,7 +15,9 @@ namespace ICMS.Application.Validators.Maternal
 
             RuleFor(x => x.LMP)
                 .NotEmpty()
-                .WithMessage(x => localizer["RequiredField", "This field"]);
+                .WithMessage(x => localizer["RequiredField", "This field"])
+                .Must(lmp => lmp <= DateOnly.FromDateTime(DateTime.Today))
+                .WithMessage(x => localizer["InvalidField", "LMP cannot be in the future."]);
 
             RuleFor(x => x.EDD)
                 .NotEmpty()

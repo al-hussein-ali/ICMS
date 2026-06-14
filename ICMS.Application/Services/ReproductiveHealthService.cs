@@ -25,19 +25,31 @@ namespace ICMS.Application.Services
         private readonly ICMS.Application.Interfaces.Services.ICacheService _cacheService;
         private readonly IValidator<PaginationParams> _paginationValidator;
         private readonly IIdentityService _identityService;
+        private readonly IValidator<PregnantWomanCreateDto> _pregnantWomanCreateValidator;
+        private readonly IValidator<StartPregnancyDto> _startPregnancyValidator;
+        private readonly IValidator<AddAncVisitDto> _addAncVisitValidator;
+        private readonly IValidator<ConcludePregnancyDto> _concludePregnancyValidator;
 
         public ReproductiveHealthService(
             IUnitOfWork unitOfWork,
             IImmunizationService immunizationService,
             ICMS.Application.Interfaces.Services.ICacheService cacheService,
             IValidator<PaginationParams> paginationValidator,
-            IIdentityService identityService)
+            IIdentityService identityService,
+            IValidator<PregnantWomanCreateDto> pregnantWomanCreateValidator,
+            IValidator<StartPregnancyDto> startPregnancyValidator,
+            IValidator<AddAncVisitDto> addAncVisitValidator,
+            IValidator<ConcludePregnancyDto> concludePregnancyValidator)
         {
             _unitOfWork = unitOfWork;
             _immunizationService = immunizationService;
             _cacheService = cacheService;
             _paginationValidator = paginationValidator;
             _identityService = identityService;
+            _pregnantWomanCreateValidator = pregnantWomanCreateValidator;
+            _startPregnancyValidator = startPregnancyValidator;
+            _addAncVisitValidator = addAncVisitValidator;
+            _concludePregnancyValidator = concludePregnancyValidator;
         }
 
         private void InvalidateCache(int id)
@@ -58,11 +70,17 @@ namespace ICMS.Application.Services
             return query.ApplyPagination(paginationParams.PageNumber, paginationParams.PageSize);
         }
 
-        public async Task<PregnantWomanReadDto> GetPregnantWomanByIdAsync(int id, CancellationToken ct = default)
+        public async Task<PregnantWomanReadDto> GetPregnantWomanByIdAsync(int id, int? authenticatedUserId = null, string? userRole = null, CancellationToken ct = default)
         {
             string cacheKey = $"pregnant_woman:{id}";
             if (_cacheService.TryGet(cacheKey, out PregnantWomanReadDto? cached) && cached != null)
+            {
+                if (userRole == Roles.PregnantWoman && cached.UserId != authenticatedUserId)
+                {
+                    throw new UnauthorizedException("UnauthorizedAccessToResource");
+                }
                 return cached;
+            }
 
             var pw = await _unitOfWork.PregnantWomanRepository.GetQueryable(true, ct)
                 .Include(pw => pw.Person)
@@ -70,6 +88,11 @@ namespace ICMS.Application.Services
                 .FirstOrDefaultAsync(x => x.Id == id, ct);
 
             if (pw == null) throw new NotFoundException("NotFound");
+
+            if (userRole == Roles.PregnantWoman && pw.UserId != authenticatedUserId)
+            {
+                throw new UnauthorizedException("UnauthorizedAccessToResource");
+            }
 
             if (pw.UserId == null)
             {
@@ -87,15 +110,26 @@ namespace ICMS.Application.Services
             return dto;
         }
 
-        public async Task<PregnantWomanDetailsDto> GetPregnantWomanDetailsAsync(int id, CancellationToken ct = default)
+        public async Task<PregnantWomanDetailsDto> GetPregnantWomanDetailsAsync(int id, int? authenticatedUserId = null, string? userRole = null, CancellationToken ct = default)
         {
             string cacheKey = $"pregnant_woman:details:{id}";
             if (_cacheService.TryGet(cacheKey, out PregnantWomanDetailsDto? cached) && cached != null)
+            {
+                if (userRole == Roles.PregnantWoman && cached.UserId != authenticatedUserId)
+                {
+                    throw new UnauthorizedException("UnauthorizedAccessToResource");
+                }
                 return cached;
+            }
 
             var pw = await _unitOfWork.PregnantWomanRepository.GetByIdWithDetailsAsync(id, ct);
 
             if (pw == null) throw new NotFoundException("NotFound");
+
+            if (userRole == Roles.PregnantWoman && pw.UserId != authenticatedUserId)
+            {
+                throw new UnauthorizedException("UnauthorizedAccessToResource");
+            }
 
             if (pw.UserId == null)
             {
@@ -116,6 +150,8 @@ namespace ICMS.Application.Services
         public async Task<PregnantWomanReadDto> CreatePregnantWomanAsync(PregnantWomanCreateDto request,
             CancellationToken ct = default)
         {
+            await _pregnantWomanCreateValidator.ValidateAndThrowAsync(request, ct);
+
             int selectedPersonId;
 
             if (request.PersonId.HasValue && request.PersonId.Value > 0)
@@ -157,12 +193,14 @@ namespace ICMS.Application.Services
                 await _unitOfWork.SaveChangesAsync(ct);
             }
 
-            return await GetPregnantWomanByIdAsync(pregnantWoman.Id, ct);
+            return await GetPregnantWomanByIdAsync(pregnantWoman.Id, ct: ct);
         }
 
         public async Task<bool> UpdatePregnantWomanAsync(int id, PregnantWomanCreateDto request,
             CancellationToken ct = default)
         {
+            await _pregnantWomanCreateValidator.ValidateAndThrowAsync(request, ct);
+
             var pw = await _unitOfWork.PregnantWomanRepository.GetQueryable(true, ct)
                 .Include(pw => pw.Person)
                 .FirstOrDefaultAsync(x => x.Id == id, ct);
@@ -206,6 +244,8 @@ namespace ICMS.Application.Services
 
         public async Task StartPregnancyAsync(StartPregnancyDto request, int userId, CancellationToken ct = default)
         {
+            await _startPregnancyValidator.ValidateAndThrowAsync(request, ct);
+
             var pregnantWoman =
                 await _unitOfWork.PregnantWomanRepository.GetByPersonIdWithDetailsAsync(request.PersonId, ct);
 
@@ -277,6 +317,8 @@ namespace ICMS.Application.Services
         public async Task AddAncVisitAsync(int pregnancyId, AddAncVisitDto request, int userId,
             CancellationToken ct = default)
         {
+            await _addAncVisitValidator.ValidateAndThrowAsync(request, ct);
+
             var pregnancy = await _unitOfWork.PregnancyDetailsRepository.GetPregnancyWithDetailsAsync(pregnancyId, ct);
 
             if (pregnancy == null)
@@ -315,36 +357,59 @@ namespace ICMS.Application.Services
         }
 
         public async Task<List<PregnancyDetailsReadDto>> GetPregnancyHistoryAsync(int pregnantWomanId,
-            CancellationToken ct = default)
+            int? authenticatedUserId = null, string? userRole = null, CancellationToken ct = default)
         {
             var pw = await _unitOfWork.PregnantWomanRepository.GetByIdWithDetailsAsync(pregnantWomanId, ct);
             if (pw == null) throw new NotFoundException("NotFound");
 
+            if (userRole == Roles.PregnantWoman && pw.UserId != authenticatedUserId)
+            {
+                throw new UnauthorizedException("UnauthorizedAccessToResource");
+            }
+
             return pw.PregnancyDetails.Select(p => p.ToReadDto()).ToList();
         }
 
-        public async Task<PregnancyDetailsReadDto> GetPregnancyByIdAsync(int id, CancellationToken ct = default)
+        public async Task<PregnancyDetailsReadDto> GetPregnancyByIdAsync(int id, int? authenticatedUserId = null, string? userRole = null, CancellationToken ct = default)
         {
             var pregnancy = await _unitOfWork.PregnancyDetailsRepository.GetPregnancyWithDetailsAsync(id, ct);
             if (pregnancy == null) throw new NotFoundException("PregnancyNotFound");
 
+            if (userRole == Roles.PregnantWoman && pregnancy.PregnantWoman != null && pregnancy.PregnantWoman.UserId != authenticatedUserId)
+            {
+                throw new UnauthorizedException("UnauthorizedAccessToResource");
+            }
+
             return pregnancy.ToReadDto();
         }
 
-        public async Task<List<AddAncVisitDto>> GetVisitsAsync(int pregnancyId, CancellationToken ct = default)
+        public async Task<List<AddAncVisitDto>> GetVisitsAsync(int pregnancyId, int? authenticatedUserId = null, string? userRole = null, CancellationToken ct = default)
         {
             var pregnancy = await _unitOfWork.PregnancyDetailsRepository.GetPregnancyWithDetailsAsync(pregnancyId, ct);
             if (pregnancy == null) throw new NotFoundException("NotFound");
 
+            if (userRole == Roles.PregnantWoman && pregnancy.PregnantWoman != null && pregnancy.PregnantWoman.UserId != authenticatedUserId)
+            {
+                throw new UnauthorizedException("UnauthorizedAccessToResource");
+            }
+
             return pregnancy.VisitDetails.Select(v => v.ToAncVisitDto()).ToList();
         }
 
-        public async Task<AddAncVisitDto> GetVisitByIdAsync(int visitId, CancellationToken ct = default)
+        public async Task<AddAncVisitDto> GetVisitByIdAsync(int visitId, int? authenticatedUserId = null, string? userRole = null, CancellationToken ct = default)
         {
             var visit = await _unitOfWork.VisitDetailsRepository.GetQueryable(false, ct)
                 .Include(v => v.FetalDetailsList)
                 .FirstOrDefaultAsync(v => v.Id == visitId, ct);
             if (visit == null) throw new NotFoundException("VisitNotFound");
+
+            var pregnancy = await _unitOfWork.PregnancyDetailsRepository.GetPregnancyWithDetailsAsync(visit.PregnancyDetailsId, ct);
+            if (pregnancy == null) throw new NotFoundException("PregnancyNotFound");
+
+            if (userRole == Roles.PregnantWoman && pregnancy.PregnantWoman != null && pregnancy.PregnantWoman.UserId != authenticatedUserId)
+            {
+                throw new UnauthorizedException("UnauthorizedAccessToResource");
+            }
 
             return visit.ToAncVisitDto();
         }
@@ -352,11 +417,41 @@ namespace ICMS.Application.Services
         public async Task ConcludePregnancyAsync(int pregnancyId, ConcludePregnancyDto request, int userId,
             CancellationToken ct = default)
         {
+            await _concludePregnancyValidator.ValidateAndThrowAsync(request, ct);
+
             var pregnancy = await _unitOfWork.PregnancyDetailsRepository.GetPregnancyWithDetailsAsync(pregnancyId, ct);
 
             if (pregnancy == null)
             {
                 throw new DomainException("MotherNotFound");
+            }
+
+            var motherPerson = await _unitOfWork.PersonRepository.GetByIdAsync(pregnancy.PregnantWoman.PersonId, ct);
+            if (motherPerson == null)
+            {
+                throw new DomainException("MotherPersonNotFound");
+            }
+
+            var motherIndividual = await _unitOfWork.VaccinatedIndividualRepository.GetQueryable(true, ct)
+                .FirstOrDefaultAsync(vi => vi.PersonId == pregnancy.PregnantWoman.PersonId, ct);
+
+            int directorateId = motherIndividual?.DirectorateId ?? 0;
+            int neighborhoodId = motherIndividual?.NeighborhoodId ?? 0;
+            int? subNeighborhoodId = motherIndividual?.SubNeighborhoodId;
+
+            if (directorateId == 0 || neighborhoodId == 0)
+            {
+                var defaultLoc = await _unitOfWork.VaccinatedIndividualRepository.GetQueryable(false, ct).FirstOrDefaultAsync(ct);
+                if (defaultLoc != null)
+                {
+                    directorateId = defaultLoc.DirectorateId;
+                    neighborhoodId = defaultLoc.NeighborhoodId;
+                    subNeighborhoodId = defaultLoc.SubNeighborhoodId;
+                }
+                else
+                {
+                    throw new DomainException("NoGeographicContextAvailable");
+                }
             }
 
             var newborns = request.Newborns?.Select(n => n.ToDomain(pregnancyId, userId)).ToList();
@@ -372,6 +467,50 @@ namespace ICMS.Application.Services
             );
 
             await _unitOfWork.SaveChangesAsync(ct);
+
+            if (request.Newborns != null && request.Newborns.Any())
+            {
+                var allDoses = await _unitOfWork.DoseRepository.GetAllAsync(false, ct, d => d.Vaccine);
+                int index = 1;
+                foreach (var newbornDto in request.Newborns)
+                {
+                    var gender = newbornDto.Gender;
+                    var placeholderFirstName = $"Baby {gender} {index}";
+                    
+                    var fatherName = request.FatherName ?? "Unknown";
+                    var grandfatherName = request.GrandfatherName ?? "Unknown";
+                    var lastName = motherPerson.LastName;
+
+                    var babyPerson = Person.Create(
+                        placeholderFirstName,
+                        fatherName,
+                        grandfatherName,
+                        lastName,
+                        gender,
+                        request.DeliveryDate,
+                        motherPerson.PhoneNumber
+                    );
+
+                    await _unitOfWork.PersonRepository.AddAsync(babyPerson, ct);
+                    await _unitOfWork.SaveChangesAsync(ct);
+
+                    var babyIndividual = VaccinatedIndividual.Create(
+                        directorateId,
+                        neighborhoodId,
+                        subNeighborhoodId,
+                        userId: null,
+                        registrationDate: request.DeliveryDate
+                    );
+                    babyIndividual.AssignPerson(babyPerson);
+
+                    babyIndividual.ScheduleInitialVaccines(allDoses, request.DeliveryDate, isPregnant: false);
+
+                    await _unitOfWork.VaccinatedIndividualRepository.AddAsync(babyIndividual, ct);
+                    index++;
+                }
+                await _unitOfWork.SaveChangesAsync(ct);
+            }
+
             InvalidateCache(pregnancy.PregnantWomanId);
         }
 
@@ -457,6 +596,8 @@ namespace ICMS.Application.Services
 
         public async Task UpdateVisitAsync(int id, AddAncVisitDto request, CancellationToken ct = default)
         {
+            await _addAncVisitValidator.ValidateAndThrowAsync(request, ct);
+
             var visit = await _unitOfWork.VisitDetailsRepository.GetQueryable(true, ct)
                             .Include(v => v.FetalDetailsList)
                             .FirstOrDefaultAsync(v => v.Id == id, ct)

@@ -55,7 +55,7 @@ public class TokenService(IRefreshTokenService refreshTokenService,JwtOptions jw
     {
         var newToken =  await refreshTokenService.GenerateRefreshTokenAsync(userId, cancellationToken);
         
-        return newToken.Token;
+        return newToken.RawToken ?? newToken.Token;
     }
 
   

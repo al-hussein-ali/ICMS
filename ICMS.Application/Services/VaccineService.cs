@@ -50,7 +50,7 @@ public class VaccineService(
 
     public async Task<VaccineReadDto> AddAsync(VaccineCreateDto entity, CancellationToken ct = default)
     {
-        await vaccineCreateValidator.ValidateAndThrowAsync(entity);
+        await vaccineCreateValidator.ValidateAndThrowAsync(entity, ct);
 
 
         var newVaccine = entity.ToDomain();
@@ -67,6 +67,8 @@ public class VaccineService(
 
     public async Task<bool> UpdateAsync(int id, VaccineCreateDto updatedEntity, CancellationToken ct = default)
     {
+        await vaccineCreateValidator.ValidateAndThrowAsync(updatedEntity, ct);
+
         var existingVaccine = await unitOfWork.VaccineRepository.GetByIdAsync(id, ct);
 
         if (existingVaccine == null)

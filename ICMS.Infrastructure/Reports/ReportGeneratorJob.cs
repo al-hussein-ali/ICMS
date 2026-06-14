@@ -68,6 +68,37 @@ namespace ICMS.Infrastructure.Reports
                 }
                 else
                 {
+                    // HTML-encode database values to prevent XSS / HTML injection in PDF reports
+                    if (reportData.Rows != null)
+                    {
+                        foreach (var row in reportData.Rows)
+                        {
+                            foreach (var key in row.Columns.Keys.ToList())
+                            {
+                                row.Columns[key] = System.Net.WebUtility.HtmlEncode(row.Columns[key]);
+                            }
+                        }
+                    }
+
+                    if (reportData.SecondaryRows != null)
+                    {
+                        foreach (var row in reportData.SecondaryRows)
+                        {
+                            foreach (var key in row.Columns.Keys.ToList())
+                            {
+                                row.Columns[key] = System.Net.WebUtility.HtmlEncode(row.Columns[key]);
+                            }
+                        }
+                    }
+
+                    if (reportData.SummaryStats != null)
+                    {
+                        foreach (var key in reportData.SummaryStats.Keys.ToList())
+                        {
+                            reportData.SummaryStats[key] = System.Net.WebUtility.HtmlEncode(reportData.SummaryStats[key]);
+                        }
+                    }
+
                     // 3b. Render HTML then PDF
                     var renderer = _renderers.FirstOrDefault(r => r.ReportType == request.ReportType)
                         ?? throw new InvalidOperationException($"No template renderer registered for report type: {request.ReportType}");
@@ -133,6 +164,20 @@ namespace ICMS.Infrastructure.Reports
             {
                 _logger.LogInformation("Creating new page...");
                 var page = await browser.NewPageAsync();
+
+                // Block local file scheme requests to prevent LFI / file leakage
+                await page.RouteAsync("**/*", async route =>
+                {
+                    if (route.Request.Url.StartsWith("file:", StringComparison.OrdinalIgnoreCase))
+                    {
+                        _logger.LogWarning("Blocking local file request: {Url}", route.Request.Url);
+                        await route.AbortAsync();
+                    }
+                    else
+                    {
+                        await route.ContinueAsync();
+                    }
+                });
 
                 _logger.LogInformation("Setting content (NetworkIdle)...");
                 await page.SetContentAsync(html, new PageSetContentOptions

@@ -83,6 +83,19 @@ namespace ICMS.Application.Services
                     var batch = await unitOfWork.BatchRepository.GetByIdAsync(entity.BatchId.Value, ct);
                     if (batch == null) throw new NotFoundException("BatchNotFound");
 
+                    if (batch.DoseId != dose.Id)
+                    {
+                        throw new DomainException("BatchDoseMismatch");
+                    }
+                    if (!batch.IsActive)
+                    {
+                        throw new DomainException("BatchInactive");
+                    }
+                    if (batch.ExpiryDate < entity.VaccinationDate)
+                    {
+                        throw new DomainException("BatchExpired");
+                    }
+
                     // Create subtraction transaction
                     batch.RemoveInventory(
                         1, 

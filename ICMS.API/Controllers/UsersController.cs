@@ -63,7 +63,7 @@ namespace ICMS.API.Controllers
         [HttpPut("change-password/{id}")]
         public async Task<IActionResult> ChangePasswordAsync([FromRoute] int id, [FromBody] UserChangePasswordDto changePasswordDto)
         {
-            var success = await userService.ChangePasswordAsync(id, changePasswordDto.NewPassword);
+            var success = await userService.ChangePasswordAsync(id, changePasswordDto);
             if (!success) return NotFound();
             return NoContent();
         }

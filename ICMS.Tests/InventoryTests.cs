@@ -17,6 +17,8 @@ using ICMS.Infrastructure.Repositories.Clinical;
 using Microsoft.EntityFrameworkCore;
 using Xunit;
 
+using FluentValidation;
+
 namespace ICMS.Tests
 {
     public class InventoryTests
@@ -53,9 +55,11 @@ namespace ICMS.Tests
             _context.SaveChanges();
 
             var unitOfWork = new UnitOfWork(_context);
-            _batchService = new BatchService(unitOfWork, new FakeCacheService());
-            _reportService = new DoseReportService(unitOfWork);
+            _batchService = new BatchService(unitOfWork, new FakeCacheService(), new FakeValidator<BatchCreateDto>(), new FakeValidator<BatchUpdateDto>());
+            _reportService = new DoseReportService(unitOfWork, new FakeValidator<DoseReportCreateDto>());
         }
+
+        private class FakeValidator<T> : AbstractValidator<T> { }
 
         private class FakeCacheService : ICMS.Application.Interfaces.Services.ICacheService
         {

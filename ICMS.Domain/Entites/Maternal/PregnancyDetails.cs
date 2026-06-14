@@ -259,6 +259,9 @@ namespace ICMS.Domain.Entites.Maternal
             if (deliveryDate < LastMenstrualPeriodDate)
                 throw new DomainException("Delivery date cannot be before last menstrual period date");
 
+            if (deliveryDate > DateOnly.FromDateTime(DateTime.Today))
+                throw new DomainException("DeliveryDateCannotBeInFuture");
+
             DeliveryDate = deliveryDate;
             BirthNature = birthNature;
             BirthLocationType = locationType;

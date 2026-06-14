@@ -75,6 +75,8 @@ namespace ICMS.Application.Services
 
         public async Task<bool> UpdateAsync(int id, PersonCreateDto updatedEntity, CancellationToken ct = default)
         {
+            await createDtoValidator.ValidateAndThrowAsync(updatedEntity, cancellationToken: ct);
+
             var oldRecord = await unitOfWork.PersonRepository.GetByIdAsync(id, ct);
 
             if (oldRecord is null)

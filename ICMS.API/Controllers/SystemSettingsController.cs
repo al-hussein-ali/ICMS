@@ -10,6 +10,7 @@ namespace ICMS.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize(Roles = Roles.StaffRoles)]
     public class SystemSettingsController : ControllerBase
     {
         private readonly ISystemSettingService _settingService;

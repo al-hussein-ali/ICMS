@@ -77,7 +77,7 @@ namespace ICMS.Infrastructure.Persistence.Config.Maternal
             builder.HasOne(pd => pd.PregnantWoman)
                 .WithMany(pw => pw.PregnancyDetails)
                 .HasForeignKey(pd => pd.PregnantWomanId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(DeleteBehavior.Restrict);
 
             builder.HasOne(pd => pd.PreviousPregnancyComplications)
                 .WithOne(ppc => ppc.PregnancyDetails)

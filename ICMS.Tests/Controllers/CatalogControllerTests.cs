@@ -24,7 +24,7 @@ namespace ICMS.Tests.Controllers
         [Fact]
         public async Task GetAll_ReturnsOk()
         {
-            var response = await _client.GetAsync("/api/Vaccines");
+            var response = await _client.GetAsync("/api/vaccines");
             response.StatusCode.Should().Be(HttpStatusCode.OK);
         }
 
@@ -32,7 +32,7 @@ namespace ICMS.Tests.Controllers
         public async Task Add_Valid_ReturnsCreated()
         {
             var dto = new VaccineCreateDto("Polio", "OPV-01", "Oral Polio Vaccine", true, 3, 0, 60, ICMS.Domain.Enums.TargetAudience.InfantRoutine);
-            var response = await _client.PostAsJsonAsync("/api/Vaccines", dto);
+            var response = await _client.PostAsJsonAsync("/api/vaccines/create", dto);
             response.StatusCode.Should().Be(HttpStatusCode.Created);
         }
     }
@@ -40,16 +40,19 @@ namespace ICMS.Tests.Controllers
     public class DosesControllerTests : IClassFixture<CustomWebApplicationFactory<Program>>
     {
         private readonly HttpClient _client;
+        private readonly System.Text.Json.JsonSerializerOptions _jsonOptions;
 
         public DosesControllerTests(CustomWebApplicationFactory<Program> factory)
         {
             _client = factory.CreateClient();
+            _jsonOptions = new System.Text.Json.JsonSerializerOptions(System.Text.Json.JsonSerializerDefaults.Web);
+            _jsonOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
         }
 
         [Fact]
         public async Task GetAll_ReturnsOk()
         {
-            var response = await _client.GetAsync("/api/Doses");
+            var response = await _client.GetAsync("/api/doses");
             response.StatusCode.Should().Be(HttpStatusCode.OK);
         }
 
@@ -57,12 +60,12 @@ namespace ICMS.Tests.Controllers
         public async Task Add_Valid_ReturnsCreated()
         {
             // Vaccine 1 is seeded, but let's fetch it for robustness
-            var vaccinesResponse = await _client.GetAsync("/api/Vaccines");
-            var vaccines = await vaccinesResponse.Content.ReadFromJsonAsync<IEnumerable<VaccineReadDto>>();
+            var vaccinesResponse = await _client.GetAsync("/api/vaccines");
+            var vaccines = await vaccinesResponse.Content.ReadFromJsonAsync<IEnumerable<VaccineReadDto>>(_jsonOptions);
             var testVaccine = vaccines.First();
 
             var dto = new DoseCreateDto(testVaccine.Id, "New Test Dose", 2, 8, "2 Months", true, "Maintenance");
-            var response = await _client.PostAsJsonAsync("/api/Doses", dto);
+            var response = await _client.PostAsJsonAsync("/api/doses/create", dto);
             response.StatusCode.Should().Be(HttpStatusCode.Created);
         }
     }

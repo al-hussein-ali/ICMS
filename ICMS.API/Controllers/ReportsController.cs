@@ -43,11 +43,15 @@ namespace ICMS.API.Controllers
 
         /// <summary>
         /// Polling fallback: check report status by jobId.
-        /// Returns status + download URL if ready.
         /// </summary>
         [HttpGet("{jobId}")]
         public async Task<ActionResult<ReportStatusDto>> GetStatus(string jobId, CancellationToken ct = default)
         {
+            if (string.IsNullOrWhiteSpace(jobId) || !System.Text.RegularExpressions.Regex.IsMatch(jobId, @"^[a-zA-Z0-9\-]+$"))
+            {
+                return BadRequest("Invalid Job ID.");
+            }
+
             var status = await reportService.GetStatusAsync(jobId, ct);
             if (status == null) return NotFound();
             return Ok(status);
@@ -59,9 +63,20 @@ namespace ICMS.API.Controllers
         [HttpGet("download/{jobId}")]
         public IActionResult Download(string jobId)
         {
-            var reportsDir = Path.Combine("wwwroot", "reports");
-            var pdfPath = Path.Combine(reportsDir, $"{jobId}.pdf");
-            var csvPath = Path.Combine(reportsDir, $"{jobId}.csv");
+            if (string.IsNullOrWhiteSpace(jobId) || !System.Text.RegularExpressions.Regex.IsMatch(jobId, @"^[a-zA-Z0-9\-]+$"))
+            {
+                return BadRequest("Invalid Job ID.");
+            }
+
+            var reportsDir = Path.GetFullPath(Path.Combine("wwwroot", "reports"));
+            var pdfPath = Path.GetFullPath(Path.Combine(reportsDir, $"{jobId}.pdf"));
+            var csvPath = Path.GetFullPath(Path.Combine(reportsDir, $"{jobId}.csv"));
+
+            if (!pdfPath.StartsWith(reportsDir, StringComparison.OrdinalIgnoreCase) ||
+                !csvPath.StartsWith(reportsDir, StringComparison.OrdinalIgnoreCase))
+            {
+                return BadRequest("Access denied.");
+            }
 
             if (System.IO.File.Exists(pdfPath))
             {
@@ -84,6 +99,11 @@ namespace ICMS.API.Controllers
         [HttpDelete("{jobId}")]
         public async Task<IActionResult> Cancel(string jobId, CancellationToken ct = default)
         {
+            if (string.IsNullOrWhiteSpace(jobId) || !System.Text.RegularExpressions.Regex.IsMatch(jobId, @"^[a-zA-Z0-9\-]+$"))
+            {
+                return BadRequest("Invalid Job ID.");
+            }
+
             var cancelled = await reportService.CancelJobAsync(jobId, ct);
             if (!cancelled) return NotFound("Job not found or already completed.");
             return NoContent();
