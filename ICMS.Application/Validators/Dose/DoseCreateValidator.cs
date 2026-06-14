@@ -29,7 +29,7 @@ namespace ICMS.Application.Validators.Dose
             RuleFor(x => x.RecommendedAgeInWeeks)
                 .NotNull()
                 .WithMessage(x => localizer["RequiredField", "This field"])
-                .GreaterThanOrEqualTo(0)
+                .InclusiveBetween(0, 5200)
                 .WithMessage(x => localizer["ValidationError", "The Recommended Age In Weeks is not valid."])
                 ;
 

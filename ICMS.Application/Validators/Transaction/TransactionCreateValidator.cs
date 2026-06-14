@@ -18,11 +18,13 @@ namespace ICMS.Application.Validators.Transaction
 
             RuleFor(x => x.TransactionDate)
                 .NotNull()
-                .WithMessage(x => localizer["RequiredField", "This field"]);
+                .WithMessage(x => localizer["RequiredField", "This field"])
+                .LessThanOrEqualTo(DateTime.Now)
+                .WithMessage(x => localizer["FutureDateNotAllowed"]);
 
             RuleFor(x => x.Quantity)
-                .GreaterThanOrEqualTo(0)
-                .WithMessage(x => localizer["InvalidField", "This field"]);
+                .GreaterThan(0)
+                .WithMessage(x => localizer["InvalidField", "Quantity"]);
 
             RuleFor(x => x.PermissionNumber)
                 .NotEmpty()

@@ -28,14 +28,16 @@ namespace ICMS.Application.Validators.Vaccine
             });
 
             RuleFor(x => x.TotalDosages)
-                .GreaterThanOrEqualTo((byte)0)
+                .InclusiveBetween((byte)0, (byte)20)
                 .WithMessage(x => localizer["InvalidField", "This field"]);
 
             RuleFor(x => x.MinEligibleAgeInMonths)
-                .GreaterThanOrEqualTo(0)
+                .InclusiveBetween(0, 1200)
                 .WithMessage(x => localizer["InvalidField", "This field"]);
 
             RuleFor(x => x.MaxEligibleAgeInMonths)
+                .InclusiveBetween(0, 1200)
+                .WithMessage(x => localizer["InvalidField", "This field"])
                 .GreaterThanOrEqualTo(x => x.MinEligibleAgeInMonths)
                 .WithMessage(x => localizer["InvalidField", "This field"]);
         }

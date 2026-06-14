@@ -10,13 +10,15 @@ namespace ICMS.Application.Validators.Maternal
         public AddAncVisitDtoValidator(ILocalizer localizer)
         {
             RuleFor(x => x.VisitDate)
-                .NotEmpty().WithMessage(x => localizer["RequiredField", "This field"]);
+                .NotEmpty().WithMessage(x => localizer["RequiredField", "This field"])
+                .LessThanOrEqualTo(DateOnly.FromDateTime(DateTime.Today))
+                .WithMessage(x => localizer["FutureDateNotAllowed"]);
 
             RuleFor(x => x.PregnancyDurationInWeeks)
                 .InclusiveBetween(1, 44).WithMessage(x => localizer["InvalidField", "This field"]);
 
             RuleFor(x => x.WeightInKilo)
-                .GreaterThan(0).WithMessage(x => localizer["InvalidField", "This field"]);
+                .InclusiveBetween(30m, 250m).WithMessage(x => localizer["InvalidField", "Weight"]);
 
             RuleFor(x => x.BloodPressure)
                 .NotEmpty().WithMessage(x => localizer["RequiredField", "This field"])

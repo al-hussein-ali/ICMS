@@ -9,7 +9,9 @@ namespace ICMS.Application.Validators.Maternal
         public ConcludePregnancyDtoValidator(ILocalizer localizer)
         {
             RuleFor(x => x.DeliveryDate)
-                .NotEmpty().WithMessage(x => localizer["RequiredField", "This field"]);
+                .NotEmpty().WithMessage(x => localizer["RequiredField", "This field"])
+                .LessThanOrEqualTo(DateOnly.FromDateTime(DateTime.Today))
+                .WithMessage(x => localizer["FutureDateNotAllowed"]);
 
             RuleFor(x => x.BirthNature)
                 .IsInEnum().WithMessage(x => localizer["InvalidField", "This field"]);

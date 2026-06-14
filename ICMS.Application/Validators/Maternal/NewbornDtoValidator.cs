@@ -12,8 +12,7 @@ namespace ICMS.Application.Validators.Maternal
                 .IsInEnum().WithMessage(x => localizer["InvalidField", "This field"]);
 
             RuleFor(x => x.Weight)
-                .GreaterThan(0).WithMessage(x => localizer["InvalidField", "This field"])
-                .LessThanOrEqualTo(10).WithMessage(x => localizer["ValidationError", "Weight is unusually high."]);
+                .InclusiveBetween(0.5m, 8.0m).WithMessage(x => localizer["InvalidField", "Newborn weight"]);
 
             RuleFor(x => x.Gender)
                 .IsInEnum().WithMessage(x => localizer["InvalidField", "This field"]);

@@ -28,7 +28,9 @@ namespace ICMS.Application.Validators.Batch
 
             RuleFor(x => x.ExpiryDate)
                 .Must(d => d != default)
-                .WithMessage(x => localizer["RequiredField", "Expiry Date"]);
+                .WithMessage(x => localizer["RequiredField", "Expiry Date"])
+                .GreaterThan(DateOnly.FromDateTime(DateTime.Today))
+                .WithMessage(x => localizer["InvalidField", "Expiry Date"]);
 
             When(x => !string.IsNullOrEmpty(x.Notes), () =>
             {

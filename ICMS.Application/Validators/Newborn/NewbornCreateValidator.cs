@@ -10,19 +10,19 @@ namespace ICMS.Application.Validators.Newborn
         {
             RuleFor(x => x.PregnancyDetailsId)
                 .GreaterThanOrEqualTo(1)
-                .WithMessage(x => localizer["RequiredField", "This field"]);
+                .WithMessage(localizer["RequiredField", "This field"]);
 
             RuleFor(x => x.NewbornWeightInGrams)
-                .GreaterThan(0)
-                .WithMessage(x => localizer["InvalidField", "This field"]);
+                .InclusiveBetween(500, 8000)
+                .WithMessage(localizer["InvalidField", "Newborn weight in grams"]);
 
             RuleFor(x => x.NewbornStatus)
                 .NotNull()
-                .WithMessage(x => localizer["RequiredField", "This field"]);
+                .WithMessage(localizer["RequiredField", "This field"]);
 
             RuleFor(x => x.NewbornGender)
                 .NotNull()
-                .WithMessage(x => localizer["RequiredField", "This field"]);
+                .WithMessage(localizer["RequiredField", "This field"]);
         }
     }
 }

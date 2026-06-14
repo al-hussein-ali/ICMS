@@ -32,7 +32,9 @@ namespace ICMS.Application.Validators.VaccinatedIndividual
 
             RuleFor(x => x.VaccinationDate)
                 .NotEmpty()
-                .WithMessage(x => localizer["RequiredField", "This field"]);
+                .WithMessage(x => localizer["RequiredField", "This field"])
+                .LessThanOrEqualTo(DateOnly.FromDateTime(DateTime.Today))
+                .WithMessage(x => localizer["FutureDateNotAllowed"]);
 
             RuleFor(x => x.TakenIn)
                 .NotEmpty()

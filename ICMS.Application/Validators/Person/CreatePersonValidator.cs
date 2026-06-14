@@ -36,11 +36,15 @@ namespace ICMS.Application.Validators.Person
 
             RuleFor(x => x.DateOfBirth)
                 .NotNull()
-                .WithMessage(x => localizer["RequiredField", "This field"]);
+                .WithMessage(x => localizer["RequiredField", "This field"])
+                .LessThanOrEqualTo(DateOnly.FromDateTime(DateTime.Today))
+                .WithMessage(x => localizer["FutureDateNotAllowed"]);
 
             RuleFor(x => x.PhoneNumber)
                 .NotEmpty()
-                .WithMessage(x => localizer["RequiredField", "This field"]);
+                .WithMessage(x => localizer["RequiredField", "This field"])
+                .Matches(@"^\d+$")
+                .WithMessage(x => localizer["InvalidField", "This field"]);
 
             RuleFor(x => x.Gender)
                 .NotEmpty()

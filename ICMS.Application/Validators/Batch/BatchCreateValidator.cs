@@ -20,7 +20,9 @@ namespace ICMS.Application.Validators.Batch
 
             RuleFor(x => x.CreationDate)
                 .Must(d => d != default)
-                .WithMessage(x => localizer["RequiredField", "Creation Date"]);
+                .WithMessage(x => localizer["RequiredField", "Creation Date"])
+                .LessThanOrEqualTo(DateOnly.FromDateTime(DateTime.Today))
+                .WithMessage(x => localizer["FutureDateNotAllowed"]);
 
             RuleFor(x => x.CountryOfOrigin)
                 .NotEmpty()
@@ -36,7 +38,11 @@ namespace ICMS.Application.Validators.Batch
 
             RuleFor(x => x.ExpiryDate)
                 .Must(d => d != default)
-                .WithMessage(x => localizer["RequiredField", "Expiry Date"]);
+                .WithMessage(x => localizer["RequiredField", "Expiry Date"])
+                .GreaterThan(x => x.CreationDate)
+                .WithMessage(x => localizer["InvalidField", "Expiry Date"])
+                .GreaterThan(DateOnly.FromDateTime(DateTime.Today))
+                .WithMessage(x => localizer["InvalidField", "Expiry Date"]);
 
             RuleFor(x => x.TotalQuantity)
                 .GreaterThanOrEqualTo(0)
