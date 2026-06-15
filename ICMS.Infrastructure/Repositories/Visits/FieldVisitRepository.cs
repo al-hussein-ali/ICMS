@@ -32,13 +32,18 @@ namespace ICMS.Infrastructure.Repositories.Visits
                 .FirstOrDefaultAsync(fv => fv.Id == id, ct);
         }
 
-        public async Task<ICMS.Domain.ValueObjects.PagedResult<FieldVisit>> GetPagedWithDetailsAsync(int pageNumber, int pageSize, bool? onlyUncompleted = null, CancellationToken ct = default)
+        public async Task<ICMS.Domain.ValueObjects.PagedResult<FieldVisit>> GetPagedWithDetailsAsync(int pageNumber, int pageSize, bool? onlyUncompleted = null, int? workerId = null, CancellationToken ct = default)
         {
             var query = _dbSet.AsQueryable();
 
             if (onlyUncompleted == true)
             {
                 query = query.Where(fv => !fv.IsCompleted);
+            }
+
+            if (workerId.HasValue)
+            {
+                query = query.Where(fv => fv.FieldVisitWorkers.Any(fvw => fvw.UserId == workerId.Value));
             }
 
             query = query
@@ -55,13 +60,22 @@ namespace ICMS.Infrastructure.Repositories.Visits
                 .Select(fv => new
                 {
                     FieldVisit = fv,
-                    TargetedCount = fv.FieldVisitIndividuals.Count()
+                    ExplicitCount = fv.FieldVisitIndividuals.Count(),
+                    FallbackCount = _context.VaccinationSchedules
+                        .Where(s => s.Status == ICMS.Domain.Enums.ScheduleStatus.Missed &&
+                                    s.ScheduledDate >= fv.FromDate &&
+                                    s.ScheduledDate <= fv.ToDate &&
+                                    s.VaccinatedIndividual.SubNeighborhoodId == fv.SubNeighborhoodId &&
+                                    s.VaccinatedIndividual.Person.DateOfBirth.AddMonths(s.Dose.Vaccine.MaxEligibleAgeInMonths) >= fv.ToDate)
+                        .Select(s => s.VaccinatedIndividualId)
+                        .Distinct()
+                        .Count()
                 })
                 .ToListAsync(ct);
 
             var items = itemsWithCounts.Select(x =>
             {
-                x.FieldVisit.TargetedCount = x.TargetedCount;
+                x.FieldVisit.TargetedCount = x.ExplicitCount > 0 ? x.ExplicitCount : x.FallbackCount;
                 return x.FieldVisit;
             }).ToList();
 

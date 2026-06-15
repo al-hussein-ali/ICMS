@@ -18,6 +18,7 @@ namespace ICMS.Tests.Infrastructure
             db.Vaccines.RemoveRange(db.Vaccines);
             db.VaccinatedIndividuals.RemoveRange(db.VaccinatedIndividuals);
             db.People.RemoveRange(db.People.Where(p => p.Id != 999));
+            db.SubNeighborhoods.RemoveRange(db.SubNeighborhoods);
             db.Neighborhoods.RemoveRange(db.Neighborhoods);
             db.Directorates.RemoveRange(db.Directorates);
             db.Governorates.RemoveRange(db.Governorates);
@@ -36,6 +37,10 @@ namespace ICMS.Tests.Infrastructure
             db.Neighborhoods.Add(neighborhood);
             db.SaveChanges();
 
+            var subNeighborhood = SubNeighborhood.Create("Test SubNeighborhood", neighborhood.Id);
+            db.SubNeighborhoods.Add(subNeighborhood);
+            db.SaveChanges();
+
             // Seed Clinical
             var vaccine = Vaccine.Create("BCG", "BCG-01", "Tuberculosis vaccine", true, 5, 0, 12, TargetAudience.InfantRoutine);
             db.Vaccines.Add(vaccine);
@@ -50,7 +55,7 @@ namespace ICMS.Tests.Infrastructure
             db.People.Add(person);
             db.SaveChanges();
 
-            var individual = VaccinatedIndividual.Create(dir.Id, neighborhood.Id);
+            var individual = VaccinatedIndividual.Create(dir.Id, neighborhood.Id, subNeighborhood.Id);
             individual.AssignPerson(person);
             
             // Generate initial schedules so AdministerDose has targets
