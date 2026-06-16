@@ -18,17 +18,20 @@ namespace ICMS.Application.Services
         private readonly IUnitOfWork _unitOfWork;
         private readonly IValidator<FieldVisitCreateDto> _validator;
         private readonly IPushNotificationService _pushNotificationService;
+        private readonly ILocalizer _localizer;
         private readonly ILogger<FieldVisitService> _logger;
 
         public FieldVisitService(
             IUnitOfWork unitOfWork,
             IValidator<FieldVisitCreateDto> validator,
             IPushNotificationService pushNotificationService,
+            ILocalizer localizer,
             ILogger<FieldVisitService> logger)
         {
             _unitOfWork = unitOfWork;
             _validator = validator;
             _pushNotificationService = pushNotificationService;
+            _localizer = localizer;
             _logger = logger;
         }
 
@@ -196,8 +199,8 @@ namespace ICMS.Application.Services
                         var placeName = subNeighborhood?.Name ?? "Unknown";
                         var dateStr = dto.VisitDate.ToString("yyyy-MM-dd");
 
-                        var title = "New Field Visit Assignment / تعيين زيارة ميدانية جديدة";
-                        var body = $"You are assigned to the field visit '{dto.CampaignName}' on {dateStr} in {placeName}. / تم تعيينك في الزيارة الميدانية '{dto.CampaignName}' بتاريخ {dateStr} في {placeName}.";
+                        var title = _localizer["NewFieldVisitAssignmentTitle"];
+                        var body = _localizer["NewFieldVisitAssignmentBody", dto.CampaignName, dateStr, placeName];
 
                         var data = new Dictionary<string, string>
                         {
@@ -356,8 +359,8 @@ namespace ICMS.Application.Services
             var placeName = subNeighborhood?.Name ?? "Unknown";
             var dateStr = fieldVisit.VisitDate.ToString("yyyy-MM-dd");
 
-            var title = "Field Visit Assignment / تعيين زيارة ميدانية جديدة";
-            var body = $"You are assigned to the field visit '{fieldVisit.CampaignName}' on {dateStr} in {placeName}. / تم تعيينك في الزيارة الميدانية '{fieldVisit.CampaignName}' بتاريخ {dateStr} في {placeName}.";
+            var title = _localizer["FieldVisitAssignmentTitle"];
+            var body = _localizer["FieldVisitAssignmentBody", fieldVisit.CampaignName, dateStr, placeName];
 
             var data = new Dictionary<string, string>
             {

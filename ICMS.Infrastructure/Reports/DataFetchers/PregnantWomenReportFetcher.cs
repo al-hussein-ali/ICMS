@@ -34,35 +34,69 @@ namespace ICMS.Infrastructure.Reports.DataFetchers
                           && DateOnly.FromDateTime(pw.Person.CreatedAt) >= startDate
                           && DateOnly.FromDateTime(pw.Person.CreatedAt) <= endDate);
 
+            var pills = new List<string>();
+
             if (parameters != null)
             {
                 if (parameters.TryGetValue("bloodGroup", out var bgStr) && Enum.TryParse<BloodGroup>(bgStr, true, out var bg))
+                {
                     query = query.Where(pw => pw.BloodGroup == bg);
+                    pills.Add($"<span class='filter-pill'>{(isAr ? "فصيلة الدم" : "Blood Group")}: {bg}</span>");
+                }
 
                 if (parameters.TryGetValue("rhFactor", out var rhStr) && Enum.TryParse<RhFactor>(rhStr, true, out var rh))
+                {
                     query = query.Where(pw => pw.RhFactor == rh);
+                    var rhLabel = rh == RhFactor.Positive ? "+" : "-";
+                    pills.Add($"<span class='filter-pill'>{(isAr ? "عامل الريسوس" : "Rh Factor")}: {rhLabel}</span>");
+                }
 
                 if (parameters.TryGetValue("isPregnancyDone", out var doneStr) && bool.TryParse(doneStr, out var isDone))
+                {
                     query = query.Where(pw => pw.PregnancyDetails.Any(pd => pd.IsPregnancyDone == isDone));
+                    var doneLabel = isAr
+                        ? (isDone ? "حمل منتهي" : "حمل جاري")
+                        : (isDone ? "Completed Pregnancy" : "Ongoing Pregnancy");
+                    pills.Add($"<span class='filter-pill'>{(isAr ? "الحالة" : "Status")}: {doneLabel}</span>");
+                }
 
                 if (parameters.TryGetValue("pregnancyType", out var ptStr) && Enum.TryParse<PregnancyType>(ptStr, true, out var pt))
+                {
                     query = query.Where(pw => pw.PregnancyDetails.Any(pd => pd.PregnancyType == pt));
+                    var ptLabel = isAr
+                        ? (pt == PregnancyType.Multiple ? "متعدد" : "مفرد")
+                        : pt.ToString();
+                    pills.Add($"<span class='filter-pill'>{(isAr ? "نوع الحمل" : "Pregnancy Type")}: {ptLabel}</span>");
+                }
 
                 if (parameters.TryGetValue("birthNature", out var bnStr) && Enum.TryParse<BirthNature>(bnStr, true, out var bn))
-                    query = query.Where(pw => pw.PregnancyDetails.Any(pd => pd.BirthNature == bn));
-
-                if (parameters.TryGetValue("riskLevel", out var riskStr))
                 {
-                    // Logic for HighRisk: typically having any complications or specific conditions
+                    query = query.Where(pw => pw.PregnancyDetails.Any(pd => pd.BirthNature == bn));
+                    var bnLabel = isAr
+                        ? (bn == BirthNature.Natural ? "طبيعية" : "قيصرية")
+                        : bn.ToString();
+                    pills.Add($"<span class='filter-pill'>{(isAr ? "طبيعة الولادة" : "Birth Nature")}: {bnLabel}</span>");
+                }
+
+                if (parameters.TryGetValue("riskLevel", out var riskStr) && !string.IsNullOrEmpty(riskStr))
+                {
                     if (riskStr == "HighRisk")
                     {
                         query = query.Where(pw => pw.PregnancyCount >= 5 || 
                             pw.PregnancyDetails.Any(pd => 
                                 pd.PreviousPregnancyComplicationsId != null || 
                                 pd.PregnancyType == PregnancyType.Multiple));
+                        pills.Add($"<span class='filter-pill'>{(isAr ? "الخطورة: عالية الخطورة" : "Risk: High Risk")}</span>");
                     }
                 }
             }
+
+            if (pills.Count == 0)
+            {
+                pills.Add($"<span class='filter-pill'>{(isAr ? "جميع السجلات" : "All Records")}</span>");
+            }
+
+            var subtitle = string.Join(" ", pills);
 
             // Retrieve period parameter
             string? period = null;
@@ -79,32 +113,18 @@ namespace ICMS.Infrastructure.Reports.DataFetchers
                     : (period == "daily" ? "Daily" : period == "weekly" ? "Weekly" : period == "monthly" ? "Monthly" : "Yearly");
             }
 
-            // ── Dynamic title ───────────────────────────────────────────────────
-            var titleParts = new List<string>();
-            if (parameters != null && parameters.TryGetValue("riskLevel", out var riskStr2) && !string.IsNullOrEmpty(riskStr2))
-                titleParts.Add(isAr
-                    ? (riskStr2 == "HighRisk" ? "حالات عالية الخطورة" : "حالات طبيعية")
-                    : (riskStr2 == "HighRisk" ? "High-Risk Cases" : "Normal Cases"));
-            if (parameters != null && parameters.TryGetValue("isPregnancyDone", out var doneStr2) && !string.IsNullOrEmpty(doneStr2))
-                titleParts.Add(isAr
-                    ? (doneStr2 == "true" ? "حمل منتهي" : "حمل جاري")
-                    : (doneStr2 == "true" ? "Completed Pregnancies" : "Ongoing Pregnancies"));
-
             string reportTitle;
-            string baseTitle = titleParts.Count > 0
-                ? string.Join(" — ", titleParts) + (isAr ? " — تقرير صحة الأم" : " — Maternal Health Report")
-                : (isAr ? "تقرير صحة الأم" : "Maternal Health Report");
-
             if (isAr)
             {
-                if (baseTitle == "تقرير صحة الأم")
-                    reportTitle = $"تقرير صحة الأم {periodPrefix}";
-                else
-                    reportTitle = $"{baseTitle} {periodPrefix}";
+                reportTitle = string.IsNullOrEmpty(periodPrefix)
+                    ? "تقرير صحة الأم والحوامل"
+                    : $"تقرير صحة الأم والحوامل {periodPrefix.Trim()}";
             }
             else
             {
-                reportTitle = string.IsNullOrEmpty(periodPrefix) ? baseTitle : $"{periodPrefix} {baseTitle}";
+                reportTitle = string.IsNullOrEmpty(periodPrefix)
+                    ? "Maternal Health & Pregnancy Report"
+                    : $"{periodPrefix} Maternal Health & Pregnancy Report";
             }
 
             var women = await query.ToListAsync(ct);
@@ -181,6 +201,7 @@ namespace ICMS.Infrastructure.Reports.DataFetchers
             {
                 ReportType    = ReportType,
                 ReportTitle   = reportTitle,
+                Subtitle      = subtitle,
                 StartDate     = startDate,
                 EndDate       = endDate,
                 Lang          = lang,

@@ -27,12 +27,18 @@ namespace ICMS.Infrastructure.Reports.DataFetchers
         {
             var isAr = lang.StartsWith("ar", StringComparison.OrdinalIgnoreCase);
 
+            var pills = new List<string>();
+
             // Parse optional filters
             ScheduleStatus? statusFilter = null;
             if (parameters != null && parameters.TryGetValue("status", out var statusStr) &&
                 Enum.TryParse<ScheduleStatus>(statusStr, true, out var parsedStatus))
             {
                 statusFilter = parsedStatus;
+                var statusLabel = isAr
+                    ? (parsedStatus == ScheduleStatus.Completed ? "مكتملة" : parsedStatus == ScheduleStatus.Missed ? "فائتة" : "معلقة")
+                    : parsedStatus.ToString();
+                pills.Add($"<span class='filter-pill'>{(isAr ? "الحالة" : "Status")}: {statusLabel}</span>");
             }
 
             Gender? genderFilter = null;
@@ -40,15 +46,42 @@ namespace ICMS.Infrastructure.Reports.DataFetchers
                 Enum.TryParse<Gender>(genderStr, true, out var parsedGender))
             {
                 genderFilter = parsedGender;
+                var genderLabel = isAr
+                    ? (parsedGender == Gender.Male ? "ذكور" : "إناث")
+                    : (parsedGender == Gender.Male ? "Males" : "Females");
+                pills.Add($"<span class='filter-pill'>{(isAr ? "الجنس" : "Gender")}: {genderLabel}</span>");
             }
 
             int? vaccineIdFilter = null;
             if (parameters != null && parameters.TryGetValue("vaccineId", out var vIdStr) && int.TryParse(vIdStr, out var vId))
+            {
                 vaccineIdFilter = vId;
+                var vaccine = await _unitOfWork.VaccineRepository.GetByIdAsync(vId, ct);
+                if (vaccine != null)
+                {
+                    var vName = LocalizationHelper.GetLocalizedValue(vaccine.VaccineName, lang);
+                    pills.Add($"<span class='filter-pill'>{(isAr ? "اللقاح" : "Vaccine")}: {vName}</span>");
+                }
+            }
 
             int? doseIdFilter = null;
             if (parameters != null && parameters.TryGetValue("doseId", out var dIdStr) && int.TryParse(dIdStr, out var dId))
+            {
                 doseIdFilter = dId;
+                var dose = await _unitOfWork.DoseRepository.GetByIdAsync(dId, ct);
+                if (dose != null)
+                {
+                    var dName = LocalizationHelper.GetLocalizedValue(dose.DoseName, lang);
+                    pills.Add($"<span class='filter-pill'>{(isAr ? "الجرعة" : "Dose")}: {dName}</span>");
+                }
+            }
+
+            if (pills.Count == 0)
+            {
+                pills.Add($"<span class='filter-pill'>{(isAr ? "جميع السجلات" : "All Records")}</span>");
+            }
+
+            var subtitle = string.Join(" ", pills);
 
             // Retrieve period parameter
             string? period = null;
@@ -92,11 +125,6 @@ namespace ICMS.Infrastructure.Reports.DataFetchers
             {
                 reportTitle = string.IsNullOrEmpty(periodPrefix) ? baseTitle : $"{periodPrefix} {baseTitle}";
             }
-
-            if (genderFilter.HasValue)
-                reportTitle += isAr
-                    ? (genderFilter.Value == Gender.Male ? " — ذكور" : " — إناث")
-                    : (genderFilter.Value == Gender.Male ? " — Males" : " — Females");
 
             // ── Column headers ──────────────────────────────────────────────
             var colDate     = isAr ? "التاريخ"             : "Date";
@@ -196,6 +224,7 @@ namespace ICMS.Infrastructure.Reports.DataFetchers
                 {
                     ReportType    = ReportType,
                     ReportTitle   = reportTitle,
+                    Subtitle      = subtitle,
                     StartDate     = startDate,
                     EndDate       = endDate,
                     Lang          = lang,
@@ -316,6 +345,7 @@ namespace ICMS.Infrastructure.Reports.DataFetchers
                 {
                     ReportType    = ReportType,
                     ReportTitle   = reportTitle,
+                    Subtitle      = subtitle,
                     StartDate     = startDate,
                     EndDate       = endDate,
                     Lang          = lang,

@@ -28,27 +28,56 @@ namespace ICMS.Infrastructure.Reports.DataFetchers
             if (queryable == null)
                 throw new InvalidOperationException("Failed to get queryable from repository.");
 
-            // ── Parse filters ─────────────────────────────────────────────────
+            // ── Parse filters & Build Subtitle ────────────────────────────────
+            var pills = new List<string>();
+
             var transactionType = (TransactionType?)null;
             if (parameters != null && parameters.TryGetValue("transactionType", out var typeStr) && !string.IsNullOrEmpty(typeStr))
             {
                 if (Enum.TryParse<TransactionType>(typeStr, true, out var tType))
+                {
                     transactionType = tType;
+                    var txLabel = isAr
+                        ? (tType == TransactionType.In ? "وارد" : tType == TransactionType.Out ? "صادر" : "تسوية")
+                        : tType.ToString();
+                    pills.Add($"<span class='filter-pill'>{(isAr ? "نوع الحركة" : "Transaction Type")}: {txLabel}</span>");
+                }
             }
 
             var vaccineId = (int?)null;
             if (parameters != null && parameters.TryGetValue("vaccineId", out var vIdStr) && int.TryParse(vIdStr, out var vId))
+            {
                 vaccineId = vId;
+                var vaccine = await unitOfWork.VaccineRepository.GetByIdAsync(vId, ct);
+                if (vaccine != null)
+                {
+                    var vName = ICMS.Application.Extensions.LocalizationHelper.GetLocalizedValue(vaccine.VaccineName, lang);
+                    pills.Add($"<span class='filter-pill'>{(isAr ? "اللقاح" : "Vaccine")}: {vName}</span>");
+                }
+            }
 
             // batchStatus filter: "Active" = not expired as of today, "Expired" = past expiry date
             bool? isExpiredFilter = null;
             if (parameters != null && parameters.TryGetValue("batchStatus", out var bsStr) && !string.IsNullOrEmpty(bsStr))
             {
                 if (bsStr.Equals("Expired", StringComparison.OrdinalIgnoreCase))
+                {
                     isExpiredFilter = true;
+                    pills.Add($"<span class='filter-pill'>{(isAr ? "حالة الدفعة: منتهية الصلاحية" : "Batch Status: Expired")}</span>");
+                }
                 else if (bsStr.Equals("Active", StringComparison.OrdinalIgnoreCase))
+                {
                     isExpiredFilter = false;
+                    pills.Add($"<span class='filter-pill'>{(isAr ? "حالة الدفعة: نشطة" : "Batch Status: Active")}</span>");
+                }
             }
+
+            if (pills.Count == 0)
+            {
+                pills.Add($"<span class='filter-pill'>{(isAr ? "جميع السجلات" : "All Records")}</span>");
+            }
+
+            var subtitle = string.Join(" ", pills);
 
             var today = DateOnly.FromDateTime(DateTime.UtcNow);
 
@@ -67,32 +96,18 @@ namespace ICMS.Infrastructure.Reports.DataFetchers
                     : (period == "daily" ? "Daily" : period == "weekly" ? "Weekly" : period == "monthly" ? "Monthly" : "Yearly");
             }
 
-            // ── Dynamic title ─────────────────────────────────────────────────
-            var titleParts = new List<string>();
-            if (transactionType.HasValue)
-                titleParts.Add(isAr
-                    ? (transactionType.Value == TransactionType.In ? "وارد" : transactionType.Value == TransactionType.Out ? "صادر" : "تسوية")
-                    : (transactionType.Value == TransactionType.In ? "Incoming" : transactionType.Value == TransactionType.Out ? "Outgoing" : "Adjustment"));
-            if (isExpiredFilter.HasValue)
-                titleParts.Add(isAr
-                    ? (isExpiredFilter.Value ? "منتهية الصلاحية" : "نشطة")
-                    : (isExpiredFilter.Value ? "Expired Batches" : "Active Batches"));
-
             string reportTitle;
-            string baseTitle = titleParts.Count > 0
-                ? string.Join(" — ", titleParts) + (isAr ? " — تقرير المخزون" : " — Inventory Report")
-                : (isAr ? "تقرير المخزون" : "Inventory Report");
-
             if (isAr)
             {
-                if (baseTitle == "تقرير المخزون")
-                    reportTitle = $"تقرير المخزون {periodPrefix}";
-                else
-                    reportTitle = $"{baseTitle} {periodPrefix}";
+                reportTitle = string.IsNullOrEmpty(periodPrefix)
+                    ? "تقرير مخزون اللقاحات"
+                    : $"تقرير مخزون اللقاحات {periodPrefix.Trim()}";
             }
             else
             {
-                reportTitle = string.IsNullOrEmpty(periodPrefix) ? baseTitle : $"{periodPrefix} {baseTitle}";
+                reportTitle = string.IsNullOrEmpty(periodPrefix)
+                    ? "Vaccine Inventory Report"
+                    : $"{periodPrefix} Vaccine Inventory Report";
             }
 
             // ── Fetch data ────────────────────────────────────────────────────
@@ -152,6 +167,7 @@ namespace ICMS.Infrastructure.Reports.DataFetchers
             {
                 ReportType    = ReportType,
                 ReportTitle   = reportTitle,
+                Subtitle      = subtitle,
                 StartDate     = startDate,
                 EndDate       = endDate,
                 Lang          = lang,

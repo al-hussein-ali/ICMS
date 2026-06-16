@@ -1,5 +1,5 @@
 using ICMS.Application.Interfaces.Services;
-using ICMS.Application.Resources;
+using ICMS.Application;
 using Microsoft.Extensions.Localization;
 
 namespace ICMS.Infrastructure.ExternalServices

@@ -41,7 +41,7 @@ namespace ICMS.Infrastructure.Reports.Templates
 <head>
 <meta charset='UTF-8'>
 <meta name='viewport' content='width=device-width, initial-scale=1.0'>
-<title>{reportTitle} — ICMS Report</title>
+<title>{System.Text.RegularExpressions.Regex.Replace(reportTitle, "<.*?>", "")} — ICMS Report</title>
 <style>
   @import url('{fontUrl}');
 
@@ -89,6 +89,51 @@ namespace ICMS.Infrastructure.Reports.Templates
   .summary-block-table tbody tr {{ background: transparent !important; }}
   .summary-block-table tbody tr:nth-child(even) {{ background: transparent !important; }}
 
+  /* ── Active Filters Bar ── */
+  .filters-summary-bar {{
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 10px 14px;
+    margin-bottom: 25px;
+    font-size: 11px;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+    line-height: 1.4;
+    direction: ltr;
+  }}
+  html[dir='rtl'] .filters-summary-bar {{
+    direction: rtl;
+  }}
+  .filters-label {{
+    font-weight: 700;
+    color: #475569;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-size: 10px;
+    flex-shrink: 0;
+  }}
+  .filters-value {{
+    color: #1e293b;
+    font-weight: 500;
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    align-items: center;
+  }}
+  .filter-pill {{
+    display: inline-block;
+    background: #f1f5f9;
+    color: #334155;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 600;
+    border: 1px solid #e2e8f0;
+  }}
+
   /* ── Footer ── */
   .footer {{ text-align: center; color: #94a3b8; font-size: 10px; padding-top: 30px; margin-top: 50px; border-top: 1px dotted #e2e8f0; letter-spacing: 0.5px; }}
 
@@ -123,6 +168,12 @@ namespace ICMS.Infrastructure.Reports.Templates
       <span class='info-value'>{data.GeneratedAt}</span>
     </div>
   </div>
+
+  {(!string.IsNullOrEmpty(data.Subtitle) ? $@"
+  <div class='filters-summary-bar'>
+    <span class='filters-label'>{(isAr ? "الفلاتر النشطة:" : "Active Filters:")}</span>
+    <span class='filters-value'>{data.Subtitle}</span>
+  </div>" : "")}
 
   {bodyContent}
 

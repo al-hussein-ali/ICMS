@@ -1,1 +1,1 @@
-namespace ICMS.Application.Resources { public class ExceptionsResource { } }
+namespace ICMS.Application { public class ExceptionsResource { } }

@@ -98,10 +98,9 @@ namespace ICMS.Application.Services
                 var deviceTokens = await GetDeviceTokensAsync(individualIds, ct);
                 if (!deviceTokens.Any()) continue;
 
-                // For automated background job, send a bilingual notification to cover both English and Arabic readers
                 var dateStr = fv.VisitDate.ToString("yyyy-MM-dd");
-                var title = "Vaccination Visit Reminder / تذكير بزيارة التحصين";
-                var body = $"A vaccination visit '{fv.CampaignName}' is scheduled for your area tomorrow on {dateStr}. / زيارة تحصين '{fv.CampaignName}' مجدولة لمنطقتكم غداً بتاريخ {dateStr}.";
+                var title = _localizer["ScheduledFieldVisitReminderTitle"];
+                var body = _localizer["ScheduledFieldVisitReminderBody", fv.CampaignName, dateStr];
 
                 var result = await SendNotificationsAsync(deviceTokens, title, body, fv.Id, ct);
                 if (result)

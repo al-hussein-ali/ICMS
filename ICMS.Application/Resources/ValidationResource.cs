@@ -1,1 +1,1 @@
-namespace ICMS.Application.Resources { public class ValidationResource { } }
+namespace ICMS.Application { public class ValidationResource { } }

@@ -37,4 +37,22 @@
   <data name="FieldVisitReminderBody" xml:space="preserve">
     <value>سيقوم المركز الصحي بتنفيذ نزول ميداني ({0}) في منطقتكم بتاريخ {1}. يرجى التكرم بالحضور.</value>
   </data>
+  <data name="NewFieldVisitAssignmentTitle" xml:space="preserve">
+    <value>تعيين زيارة ميدانية جديدة</value>
+  </data>
+  <data name="NewFieldVisitAssignmentBody" xml:space="preserve">
+    <value>تم تعيينك في الزيارة الميدانية '{0}' بتاريخ {1} في {2}.</value>
+  </data>
+  <data name="FieldVisitAssignmentTitle" xml:space="preserve">
+    <value>تعيين زيارة ميدانية</value>
+  </data>
+  <data name="FieldVisitAssignmentBody" xml:space="preserve">
+    <value>تم تعيينك في الزيارة الميدانية '{0}' بتاريخ {1} في {2}.</value>
+  </data>
+  <data name="ScheduledFieldVisitReminderTitle" xml:space="preserve">
+    <value>تذكير بزيارة التحصين</value>
+  </data>
+  <data name="ScheduledFieldVisitReminderBody" xml:space="preserve">
+    <value>زيارة تحصين '{0}' مجدولة لمنطقتكم غداً بتاريخ {1}.</value>
+  </data>
 </root>

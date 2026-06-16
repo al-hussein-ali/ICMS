@@ -1,1 +1,1 @@
-namespace ICMS.Application.Resources { public class MessagesResource { } }
+namespace ICMS.Application { public class MessagesResource { } }

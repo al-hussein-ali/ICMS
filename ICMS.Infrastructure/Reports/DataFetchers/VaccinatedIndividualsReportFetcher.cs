@@ -2,6 +2,7 @@ using ICMS.Application.DTOs.Reports;
 using ICMS.Application.Enums;
 using ICMS.Application.Interfaces;
 using ICMS.Application.Interfaces.Reports;
+using ICMS.Application.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -29,26 +30,106 @@ namespace ICMS.Infrastructure.Reports.DataFetchers
                 .Where(vi => DateOnly.FromDateTime(vi.Person.CreatedAt) >= startDate
                           && DateOnly.FromDateTime(vi.Person.CreatedAt) <= endDate);
 
+            // Retrieve period parameter
+            string? period = null;
+            if (parameters != null && parameters.TryGetValue("period", out var pStr))
+            {
+                period = pStr;
+            }
+
+            string periodPrefix = "";
+            if (!string.IsNullOrEmpty(period))
+            {
+                periodPrefix = isAr
+                    ? (period == "daily" ? "اليومي" : period == "weekly" ? "الأسبوعي" : period == "monthly" ? "الشهري" : "السنوي")
+                    : (period == "daily" ? "Daily" : period == "weekly" ? "Weekly" : period == "monthly" ? "Monthly" : "Yearly");
+            }
+
+            string reportTitle;
+            if (isAr)
+            {
+                reportTitle = string.IsNullOrEmpty(periodPrefix) 
+                    ? "تقرير الأفراد الملقحين" 
+                    : $"تقرير الأفراد الملقحين {periodPrefix.Trim()}";
+            }
+            else
+            {
+                reportTitle = string.IsNullOrEmpty(periodPrefix) 
+                    ? "Vaccinated Individuals Report" 
+                    : $"{periodPrefix} Vaccinated Individuals Report";
+            }
+
+            var pills = new List<string>();
+
             if (parameters != null)
             {
                 if (parameters.TryGetValue("gender", out var genderStr) && Enum.TryParse<Gender>(genderStr, true, out var gender))
+                {
                     query = query.Where(vi => vi.Person.Gender == gender);
+                    var genderLabel = isAr
+                        ? (gender == Gender.Male ? "ذكور" : "إناث")
+                        : (gender == Gender.Male ? "Males" : "Females");
+                    pills.Add($"<span class='filter-pill'>{(isAr ? "الجنس" : "Gender")}: {genderLabel}</span>");
+                }
 
                 if (parameters.TryGetValue("status", out var statusStr) && Enum.TryParse<ScheduleStatus>(statusStr, true, out var status))
+                {
                     query = query.Where(vi => vi.Schedules.Any(s => s.Status == status));
+                    var statusLabel = isAr
+                        ? (status == ScheduleStatus.Completed ? "مكتملة" : status == ScheduleStatus.Missed ? "فائتة" : "معلقة")
+                        : status.ToString();
+                    pills.Add($"<span class='filter-pill'>{(isAr ? "الحالة" : "Status")}: {statusLabel}</span>");
+                }
 
                 if (parameters.TryGetValue("vaccineId", out var vIdStr) && int.TryParse(vIdStr, out var vId))
+                {
                     query = query.Where(vi => vi.Schedules.Any(s => s.Dose.VaccineId == vId));
+                    var vaccine = await _unitOfWork.VaccineRepository.GetByIdAsync(vId, ct);
+                    if (vaccine != null)
+                    {
+                        var vName = LocalizationHelper.GetLocalizedValue(vaccine.VaccineName, lang);
+                        pills.Add($"<span class='filter-pill'>{(isAr ? "اللقاح" : "Vaccine")}: {vName}</span>");
+                    }
+                }
 
                 if (parameters.TryGetValue("doseId", out var dIdStr) && int.TryParse(dIdStr, out var dId))
+                {
                     query = query.Where(vi => vi.Schedules.Any(s => s.DoseId == dId));
+                    var dose = await _unitOfWork.DoseRepository.GetByIdAsync(dId, ct);
+                    if (dose != null)
+                    {
+                        var dName = LocalizationHelper.GetLocalizedValue(dose.DoseName, lang);
+                        pills.Add($"<span class='filter-pill'>{(isAr ? "الجرعة" : "Dose")}: {dName}</span>");
+                    }
+                }
 
                 if (parameters.TryGetValue("neighborhoodId", out var nIdStr) && int.TryParse(nIdStr, out var nId))
+                {
                     query = query.Where(vi => vi.NeighborhoodId == nId);
+                    var neighborhood = await _unitOfWork.NeighborhoodRepository.GetByIdAsync(nId, ct);
+                    if (neighborhood != null)
+                    {
+                        pills.Add($"<span class='filter-pill'>{(isAr ? "الحي" : "Neighborhood")}: {neighborhood.Name}</span>");
+                    }
+                }
 
                 if (parameters.TryGetValue("subNeighborhoodId", out var snIdStr) && int.TryParse(snIdStr, out var snId))
+                {
                     query = query.Where(vi => vi.SubNeighborhoodId == snId);
+                    var subNeighborhood = await _unitOfWork.SubNeighborhoodRepository.GetByIdAsync(snId, ct);
+                    if (subNeighborhood != null)
+                    {
+                        pills.Add($"<span class='filter-pill'>{(isAr ? "الحي الفرعي" : "Sub-Neighborhood")}: {subNeighborhood.Name}</span>");
+                    }
+                }
             }
+
+            if (pills.Count == 0)
+            {
+                pills.Add($"<span class='filter-pill'>{(isAr ? "جميع السجلات" : "All Records")}</span>");
+            }
+
+            var subtitle = string.Join(" ", pills);
 
             var individuals = await query
                 .Include(vi => vi.Schedules)
@@ -90,6 +171,8 @@ namespace ICMS.Infrastructure.Reports.DataFetchers
             return new ReportData
             {
                 ReportType    = ReportType,
+                ReportTitle   = reportTitle,
+                Subtitle      = subtitle,
                 StartDate     = startDate,
                 EndDate       = endDate,
                 Lang          = lang,

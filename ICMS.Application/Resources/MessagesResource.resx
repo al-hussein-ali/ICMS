@@ -37,4 +37,22 @@
   <data name="FieldVisitReminderBody" xml:space="preserve">
     <value>The health center will perform a field visit ({0}) in your area on {1}. Please make sure to attend.</value>
   </data>
+  <data name="NewFieldVisitAssignmentTitle" xml:space="preserve">
+    <value>New Field Visit Assignment</value>
+  </data>
+  <data name="NewFieldVisitAssignmentBody" xml:space="preserve">
+    <value>You are assigned to the field visit '{0}' on {1} in {2}.</value>
+  </data>
+  <data name="FieldVisitAssignmentTitle" xml:space="preserve">
+    <value>Field Visit Assignment</value>
+  </data>
+  <data name="FieldVisitAssignmentBody" xml:space="preserve">
+    <value>You are assigned to the field visit '{0}' on {1} in {2}.</value>
+  </data>
+  <data name="ScheduledFieldVisitReminderTitle" xml:space="preserve">
+    <value>Vaccination Visit Reminder</value>
+  </data>
+  <data name="ScheduledFieldVisitReminderBody" xml:space="preserve">
+    <value>A vaccination visit '{0}' is scheduled for your area tomorrow on {1}.</value>
+  </data>
 </root>

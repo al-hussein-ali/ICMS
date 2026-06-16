@@ -29,7 +29,7 @@ namespace ICMS.Infrastructure.Extensions
                         .UseExceptionProcessor();
                 });
             }
-            services.AddLocalization(options => options.ResourcesPath = "Resources");
+            services.AddLocalization();
             services.AddScoped<ILocalizer, ResourceLocalizer>();
 
             services.AddMemoryCache();
