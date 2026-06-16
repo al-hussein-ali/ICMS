@@ -15,7 +15,7 @@ namespace ICMS.Infrastructure.Reports.Templates
             var tableTitle = isAr ? "بيانات المخزون" : "Inventory Data";
             var reportTitle = isAr ? "تقرير المخزون" : "Inventory Report";
 
-            var accentColor = "#1e3a8a";
+            var accentColor = "#0f766e"; // teal — matches Inventory UI card color
             var table = ReportHtmlBase.BuildDataTable(data.ColumnHeaders, data.Rows, tableTitle, accentColor, data.SummaryStats, isAr);
             
             return ReportHtmlBase.Wrap(

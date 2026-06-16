@@ -15,7 +15,7 @@ namespace ICMS.Infrastructure.Reports.Templates
             var tableTitle = isAr ? "بيانات الحوامل" : "Pregnant Women Data";
             var reportTitle = isAr ? "تقرير الحوامل" : "Pregnant Women Report";
 
-            var accentColor = "#1e3a8a";
+            var accentColor = "#be185d"; // pink/rose — matches Maternal UI card color
             var table = ReportHtmlBase.BuildDataTable(data.ColumnHeaders, data.Rows, tableTitle, accentColor, data.SummaryStats, isAr);
             
             return ReportHtmlBase.Wrap(
