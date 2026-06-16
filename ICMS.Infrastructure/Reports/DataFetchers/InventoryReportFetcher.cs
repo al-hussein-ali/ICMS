@@ -78,6 +78,18 @@ namespace ICMS.Infrastructure.Reports.DataFetchers
                 }
             }
 
+            int? doseIdFilter = null;
+            if (safeParams.TryGetValue("doseId", out var dIdStr) && int.TryParse(dIdStr, out var dId))
+            {
+                doseIdFilter = dId;
+                var dose = await unitOfWork.DoseRepository.GetByIdAsync(dId, ct);
+                if (dose != null)
+                {
+                    var dName = ICMS.Application.Extensions.LocalizationHelper.GetLocalizedValue(dose.DoseName, lang);
+                    pills.Add($"<span class='filter-pill'>{(isAr ? "الجرعة" : "Dose")}: {dName}</span>");
+                }
+            }
+
             if (pills.Count == 0)
             {
                 pills.Add($"<span class='filter-pill'>{(isAr ? "جميع السجلات" : "All Records")}</span>");
