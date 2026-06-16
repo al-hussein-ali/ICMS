@@ -32,9 +32,9 @@
     <value>Operation completed successfully.</value>
   </data>
   <data name="FieldVisitReminderTitle" xml:space="preserve">
-    <value>Vaccination Visit Scheduled</value>
+    <value>Upcoming Field Visit</value>
   </data>
   <data name="FieldVisitReminderBody" xml:space="preserve">
-    <value>A vaccination visit ({0}) is scheduled for your area on {1}.</value>
+    <value>The health center will perform a field visit ({0}) in your area on {1}. Please make sure to attend.</value>
   </data>
 </root>

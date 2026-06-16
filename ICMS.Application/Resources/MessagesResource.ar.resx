@@ -32,9 +32,9 @@
     <value>تمت العملية بنجاح.</value>
   </data>
   <data name="FieldVisitReminderTitle" xml:space="preserve">
-    <value>زيارة تحصين مجدولة</value>
+    <value>نزول ميداني قادم</value>
   </data>
   <data name="FieldVisitReminderBody" xml:space="preserve">
-    <value>زيارة تحصين ({0}) مجدولة لمنطقتكم بتاريخ {1}.</value>
+    <value>سيقوم المركز الصحي بتنفيذ نزول ميداني ({0}) في منطقتكم بتاريخ {1}. يرجى التكرم بالحضور.</value>
   </data>
 </root>

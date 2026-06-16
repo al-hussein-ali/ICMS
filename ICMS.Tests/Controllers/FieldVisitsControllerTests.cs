@@ -13,6 +13,7 @@ using ICMS.Domain.Entites.Visits;
 using ICMS.Domain.Enums;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Microsoft.EntityFrameworkCore;
 
 namespace ICMS.Tests.Controllers
 {
@@ -183,6 +184,146 @@ namespace ICMS.Tests.Controllers
                 var updatedVisit = db.FieldVisits.Find(visitId);
                 updatedVisit.Should().NotBeNull();
                 updatedVisit!.ReminderSent.Should().BeTrue();
+            }
+        }
+
+        [Fact]
+        public async Task CreateFieldVisit_WithWorkers_SucceedsAndLinksWorkers()
+        {
+            // Arrange
+            int subNeighborhoodId;
+            int workerUserId;
+
+            using (var scope = _factory.Services.CreateScope())
+            {
+                var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+                var subNeigh = db.SubNeighborhoods.First();
+                subNeighborhoodId = subNeigh.Id;
+
+                var dob = DateOnly.FromDateTime(DateTime.UtcNow.AddYears(-25));
+                var person = Person.Create("Worker", "Test", "User", "ICMS", Gender.Male, dob, "9998881234");
+                db.People.Add(person);
+                db.SaveChanges();
+
+                var user = User.Create("workeruser1", "Worker@123", person.Id);
+                db.Users.Add(user);
+                db.SaveChanges();
+
+                user.AddDevice("worker-fcm-token-555");
+                db.SaveChanges();
+
+                workerUserId = user.Id;
+            }
+
+            await AuthenticateAsync();
+
+            var createDto = new FieldVisitCreateDto(
+                CampaignName: "Worker Campaign Notification Test",
+                VisitDate: DateOnly.FromDateTime(DateTime.UtcNow.AddDays(2)),
+                SubNeighborhoodId: subNeighborhoodId,
+                FromDate: DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-1)),
+                ToDate: DateOnly.FromDateTime(DateTime.UtcNow.AddDays(5)),
+                SelectedIndividualIds: new List<int>(),
+                SelectedWorkerIds: new List<int> { workerUserId }
+            );
+
+            // Act
+            var createResponse = await _client.PostAsJsonAsync("/api/field-visits/create", createDto);
+
+            // Assert
+            createResponse.StatusCode.Should().Be(HttpStatusCode.Created);
+
+            using (var scope = _factory.Services.CreateScope())
+            {
+                var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                var createdVisit = db.FieldVisits
+                    .Include(fv => fv.FieldVisitWorkers)
+                    .FirstOrDefault(fv => fv.CampaignName == "Worker Campaign Notification Test");
+
+                createdVisit.Should().NotBeNull();
+                createdVisit!.FieldVisitWorkers.Should().ContainSingle(w => w.UserId == workerUserId);
+            }
+        }
+
+        [Fact]
+        public async Task CloseExpiredVisits_OnlyClosesVisitsExpiredMoreThan3Days()
+        {
+            // Arrange
+            int subNeighborhoodId;
+            int expiredId;
+            int notExpiredId;
+            int alreadyCompletedId;
+
+            using (var scope = _factory.Services.CreateScope())
+            {
+                var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+                var subNeigh = db.SubNeighborhoods.First();
+                subNeighborhoodId = subNeigh.Id;
+
+                // 1. Uncompleted, expired 4 days ago (should be closed)
+                var expiredVisit = FieldVisit.Create(
+                    "Expired Campaign 4 Days",
+                    DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-5)),
+                    subNeighborhoodId,
+                    DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-10)),
+                    DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-4))
+                );
+                db.FieldVisits.Add(expiredVisit);
+
+                // 2. Uncompleted, expired 2 days ago (should not be closed)
+                var notExpiredVisit = FieldVisit.Create(
+                    "Expired Campaign 2 Days",
+                    DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-3)),
+                    subNeighborhoodId,
+                    DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-5)),
+                    DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-2))
+                );
+                db.FieldVisits.Add(notExpiredVisit);
+
+                // 3. Completed, expired 4 days ago (should remain unchanged)
+                var alreadyCompletedVisit = FieldVisit.Create(
+                    "Completed Campaign 4 Days",
+                    DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-5)),
+                    subNeighborhoodId,
+                    DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-10)),
+                    DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-4))
+                );
+                alreadyCompletedVisit.MarkCompleted();
+                db.FieldVisits.Add(alreadyCompletedVisit);
+
+                db.SaveChanges();
+
+                expiredId = expiredVisit.Id;
+                notExpiredId = notExpiredVisit.Id;
+                alreadyCompletedId = alreadyCompletedVisit.Id;
+            }
+
+            // Act
+            using (var scope = _factory.Services.CreateScope())
+            {
+                var service = scope.ServiceProvider.GetRequiredService<ICMS.Application.Interfaces.Services.IFieldVisitService>();
+                var closedCount = await service.CloseExpiredVisitsAsync(default);
+                closedCount.Should().BeGreaterThan(0);
+            }
+
+            // Assert
+            using (var scope = _factory.Services.CreateScope())
+            {
+                var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+                var expiredVisit = db.FieldVisits.Find(expiredId);
+                expiredVisit.Should().NotBeNull();
+                expiredVisit!.IsCompleted.Should().BeTrue();
+
+                var notExpiredVisit = db.FieldVisits.Find(notExpiredId);
+                notExpiredVisit.Should().NotBeNull();
+                notExpiredVisit!.IsCompleted.Should().BeFalse();
+
+                var alreadyCompletedVisit = db.FieldVisits.Find(alreadyCompletedId);
+                alreadyCompletedVisit.Should().NotBeNull();
+                alreadyCompletedVisit!.IsCompleted.Should().BeTrue();
             }
         }
     }

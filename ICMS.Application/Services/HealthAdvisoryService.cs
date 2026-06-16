@@ -57,7 +57,9 @@ namespace ICMS.Application.Services
         public async Task<HealthAdvisoryDetailsDto> CreateAndSendNowAsync(HealthAdvisoryCreateDto dto,
             int currentUserId, CancellationToken ct = default)
         {
-            await _healthAdvisoryCreateValidator.ValidateAndThrowAsync(dto, ct);
+            // Null out ScheduledDate in the validation DTO since immediate sending does not require a future scheduled date
+            var validationDto = dto with { ScheduledDate = null };
+            await _healthAdvisoryCreateValidator.ValidateAndThrowAsync(validationDto, ct);
 
             string? imageUrl = null;
             if (!string.IsNullOrEmpty(dto.ImageBase64))
@@ -257,7 +259,9 @@ namespace ICMS.Application.Services
         public async Task<HealthAdvisoryDetailsDto> UpdateAndSendNowAsync(int id, HealthAdvisoryCreateDto dto,
             CancellationToken ct = default)
         {
-            await _healthAdvisoryCreateValidator.ValidateAndThrowAsync(dto, ct);
+            // Null out ScheduledDate in the validation DTO since immediate sending does not require a future scheduled date
+            var validationDto = dto with { ScheduledDate = null };
+            await _healthAdvisoryCreateValidator.ValidateAndThrowAsync(validationDto, ct);
 
             var advisory = await _unitOfWork.HealthAdvisoryRepository.GetByIdAsync(id, ct);
             if (advisory == null)

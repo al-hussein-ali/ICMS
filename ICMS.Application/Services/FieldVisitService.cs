@@ -9,6 +9,7 @@ using ICMS.Domain.ValueObjects;
 
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace ICMS.Application.Services
 {
@@ -16,11 +17,19 @@ namespace ICMS.Application.Services
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IValidator<FieldVisitCreateDto> _validator;
+        private readonly IPushNotificationService _pushNotificationService;
+        private readonly ILogger<FieldVisitService> _logger;
 
-        public FieldVisitService(IUnitOfWork unitOfWork, IValidator<FieldVisitCreateDto> validator)
+        public FieldVisitService(
+            IUnitOfWork unitOfWork,
+            IValidator<FieldVisitCreateDto> validator,
+            IPushNotificationService pushNotificationService,
+            ILogger<FieldVisitService> logger)
         {
             _unitOfWork = unitOfWork;
             _validator = validator;
+            _pushNotificationService = pushNotificationService;
+            _logger = logger;
         }
 
         public async Task<PagedResult<FieldVisitReadDto>> GetAllAsync(PaginationParams paginationParams,
@@ -169,6 +178,67 @@ namespace ICMS.Application.Services
             await _unitOfWork.FieldVisitRepository.AddAsync(fieldVisit, ct);
             await _unitOfWork.SaveChangesAsync(ct);
 
+            // Notify workers who are assigned to contribute to the field visit
+            try
+            {
+                var workerUserIds = dto.SelectedWorkerIds ?? new List<int>();
+                if (workerUserIds.Any())
+                {
+                    var deviceTokens = await _unitOfWork.UserDeviceRepository.GetQueryable()
+                        .Where(ud => workerUserIds.Contains(ud.UserId))
+                        .Select(ud => ud.FcmToken)
+                        .Distinct()
+                        .ToListAsync(ct);
+
+                    if (deviceTokens.Any())
+                    {
+                        var subNeighborhood = await _unitOfWork.SubNeighborhoodRepository.GetByIdAsync(dto.SubNeighborhoodId, ct);
+                        var placeName = subNeighborhood?.Name ?? "Unknown";
+                        var dateStr = dto.VisitDate.ToString("yyyy-MM-dd");
+
+                        var title = "New Field Visit Assignment / تعيين زيارة ميدانية جديدة";
+                        var body = $"You are assigned to the field visit '{dto.CampaignName}' on {dateStr} in {placeName}. / تم تعيينك في الزيارة الميدانية '{dto.CampaignName}' بتاريخ {dateStr} في {placeName}.";
+
+                        var data = new Dictionary<string, string>
+                        {
+                            { "type", "field_visit_assignment" },
+                            { "visitId", fieldVisit.Id.ToString() }
+                        };
+
+                        _logger.LogInformation("Sending push notifications to {Count} worker devices for FieldVisit ID {Id}", deviceTokens.Count, fieldVisit.Id);
+                        var pushResult = await _pushNotificationService.SendMulticastNotificationAsync(
+                            deviceTokens,
+                            title,
+                            body,
+                            null,
+                            data,
+                            ct);
+
+                        if (pushResult.UnregisteredTokens.Any())
+                        {
+                            _logger.LogInformation("Cleaning up {Count} expired worker FCM tokens.", pushResult.UnregisteredTokens.Count);
+                            var expiredDevices = await _unitOfWork.UserDeviceRepository.GetQueryable()
+                                .Where(ud => pushResult.UnregisteredTokens.Contains(ud.FcmToken))
+                                .ToListAsync(ct);
+
+                            foreach (var device in expiredDevices)
+                            {
+                                await _unitOfWork.UserDeviceRepository.DeleteAsync(device, ct);
+                            }
+                            await _unitOfWork.SaveChangesAsync(ct);
+                        }
+                    }
+                    else
+                    {
+                        _logger.LogWarning("No registered devices found for assigned workers of FieldVisit ID {Id}", fieldVisit.Id);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to send notifications to workers for FieldVisit ID {Id}. Custom notification failure was caught and swallowed.", fieldVisit.Id);
+            }
+
             return fieldVisit.ToReadDto();
         }
 
@@ -226,6 +296,35 @@ namespace ICMS.Application.Services
 
             var result = await _unitOfWork.SaveChangesAsync(ct);
             return result >= 0;
+        }
+
+        public async Task<int> CloseExpiredVisitsAsync(CancellationToken ct = default)
+        {
+            _logger.LogInformation("Starting expired field visits auto-closure job at {Time} (UTC)", DateTime.UtcNow);
+            
+            var threeDaysAgo = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-3));
+            var expiredVisits = await _unitOfWork.FieldVisitRepository.GetQueryable(track: true, cancellationToken: ct)
+                .Where(fv => !fv.IsCompleted && fv.ToDate < threeDaysAgo)
+                .ToListAsync(ct);
+
+            if (!expiredVisits.Any())
+            {
+                _logger.LogInformation("No uncompleted field visits found that have been expired for more than 3 days.");
+                return 0;
+            }
+
+            _logger.LogInformation("Found {Count} expired field visits to close.", expiredVisits.Count);
+
+            foreach (var visit in expiredVisits)
+            {
+                _logger.LogInformation("Closing expired field visit ID {Id} ('{CampaignName}') - Expiration date was {ToDate}", visit.Id, visit.CampaignName, visit.ToDate);
+                visit.MarkCompleted();
+                await _unitOfWork.FieldVisitRepository.UpdateAsync(visit, ct);
+            }
+
+            var result = await _unitOfWork.SaveChangesAsync(ct);
+            _logger.LogInformation("Successfully closed {Count} expired field visits.", result);
+            return result;
         }
     }
 }

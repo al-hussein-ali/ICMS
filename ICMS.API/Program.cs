@@ -4,6 +4,9 @@ using Hangfire.PostgreSql;
 using ICMS.API.Handlers;
 using FirebaseAdmin;
 using Google.Apis.Auth.OAuth2;
+using Google.Apis.Http;
+using System.Net;
+using System.Net.Sockets;
 using ICMS.Application.Validators;
 using ICMS.Infrastructure.Extensions;
 // using Scalar.AspNetCore;
@@ -155,7 +158,8 @@ if (File.Exists(firebaseCredentialsPath))
     {
         FirebaseApp.Create(new AppOptions
         {
-            Credential = GoogleCredential.FromFile(firebaseCredentialsPath)
+            Credential = GoogleCredential.FromFile(firebaseCredentialsPath),
+            HttpClientFactory = new IPv4HttpClientFactory()
         });
         Console.WriteLine(">>> Firebase Admin SDK initialized successfully.");
     }
@@ -275,6 +279,12 @@ using (var scope = app.Services.CreateScope())
         "DailyFieldVisitReminder",
         service => service.SendScheduledRemindersAsync(default),
         Cron.Daily);
+
+    // Register Field Visit auto closer to run daily
+    recurringJobManager.AddOrUpdate<ICMS.Application.Interfaces.Services.IFieldVisitService>(
+        "DailyFieldVisitAutoCloser",
+        service => service.CloseExpiredVisitsAsync(default),
+        Cron.Daily);
 }
 
 // Ensure reports output directory exists
@@ -287,4 +297,39 @@ app.Run();
 
 public partial class Program
 {
+}
+
+public class IPv4HttpClientFactory : Google.Apis.Http.HttpClientFactory
+{
+    protected override HttpMessageHandler CreateHandler(CreateHttpClientArgs args)
+    {
+        var handler = new SocketsHttpHandler
+        {
+            ConnectCallback = async (context, cancellationToken) =>
+            {
+                var ips = await System.Net.Dns.GetHostAddressesAsync(context.DnsEndPoint.Host, cancellationToken);
+                var ipv4 = ips.FirstOrDefault(ip => ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork);
+                
+                var socket = new System.Net.Sockets.Socket(System.Net.Sockets.SocketType.Stream, System.Net.Sockets.ProtocolType.Tcp);
+                try
+                {
+                    if (ipv4 != null)
+                    {
+                        await socket.ConnectAsync(new System.Net.IPEndPoint(ipv4, context.DnsEndPoint.Port), cancellationToken);
+                    }
+                    else
+                    {
+                        await socket.ConnectAsync(context.DnsEndPoint, cancellationToken);
+                    }
+                    return new System.Net.Sockets.NetworkStream(socket, ownsSocket: true);
+                }
+                catch
+                {
+                    socket.Dispose();
+                    throw;
+                }
+            }
+        };
+        return handler;
+    }
 }
