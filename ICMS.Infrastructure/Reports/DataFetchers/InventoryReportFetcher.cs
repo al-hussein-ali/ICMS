@@ -28,6 +28,7 @@ namespace ICMS.Infrastructure.Reports.DataFetchers
             if (queryable == null)
                 throw new InvalidOperationException("Failed to get queryable from repository.");
 
+            // ── Parse filters ─────────────────────────────────────────────────
             var transactionType = (TransactionType?)null;
             if (parameters != null && parameters.TryGetValue("transactionType", out var typeStr) && !string.IsNullOrEmpty(typeStr))
             {
@@ -39,14 +40,44 @@ namespace ICMS.Infrastructure.Reports.DataFetchers
             if (parameters != null && parameters.TryGetValue("vaccineId", out var vIdStr) && int.TryParse(vIdStr, out var vId))
                 vaccineId = vId;
 
+            // batchStatus filter: "Active" = not expired as of today, "Expired" = past expiry date
+            bool? isExpiredFilter = null;
+            if (parameters != null && parameters.TryGetValue("batchStatus", out var bsStr) && !string.IsNullOrEmpty(bsStr))
+            {
+                if (bsStr.Equals("Expired", StringComparison.OrdinalIgnoreCase))
+                    isExpiredFilter = true;
+                else if (bsStr.Equals("Active", StringComparison.OrdinalIgnoreCase))
+                    isExpiredFilter = false;
+            }
+
+            var today = DateOnly.FromDateTime(DateTime.UtcNow);
+
+            // ── Dynamic title ─────────────────────────────────────────────────
+            var titleParts = new List<string>();
+            if (transactionType.HasValue)
+                titleParts.Add(isAr
+                    ? (transactionType.Value == TransactionType.In ? "وارد" : transactionType.Value == TransactionType.Out ? "صادر" : "تسوية")
+                    : (transactionType.Value == TransactionType.In ? "Incoming" : transactionType.Value == TransactionType.Out ? "Outgoing" : "Adjustment"));
+            if (isExpiredFilter.HasValue)
+                titleParts.Add(isAr
+                    ? (isExpiredFilter.Value ? "منتهية الصلاحية" : "نشطة")
+                    : (isExpiredFilter.Value ? "Expired Batches" : "Active Batches"));
+
+            var reportTitle = titleParts.Count > 0
+                ? string.Join(" — ", titleParts) + (isAr ? " — تقرير المخزون" : " — Inventory Report")
+                : (isAr ? "تقرير المخزون" : "Inventory Report");
+
+            // ── Fetch data ────────────────────────────────────────────────────
             var batches = await queryable
                 .Where(b => b.Transactions.Any(t =>
                     t.TransactionDate >= startDateTime && t.TransactionDate < endDateTime &&
                     (!transactionType.HasValue || t.TransactionType == transactionType.Value))
-                    && (!vaccineId.HasValue || b.Dose.VaccineId == vaccineId.Value))
+                    && (!vaccineId.HasValue || b.Dose.VaccineId == vaccineId.Value)
+                    && (!isExpiredFilter.HasValue ||
+                        (isExpiredFilter.Value ? b.ExpiryDate < today : b.ExpiryDate >= today)))
                 .ToListAsync(ct);
 
-            // ── Labels ───────────────────────────────────────────────────
+            // ── Labels ────────────────────────────────────────────────────────
             var colCook      = isAr ? "رقم الطبخة"           : "Cook Number";
             var colDose      = isAr ? "الجرعة"               : "Dose";
             var colOrigin    = isAr ? "بلد المنشأ"           : "Country of Origin";
@@ -92,6 +123,7 @@ namespace ICMS.Infrastructure.Reports.DataFetchers
             return new ReportData
             {
                 ReportType    = ReportType,
+                ReportTitle   = reportTitle,
                 StartDate     = startDate,
                 EndDate       = endDate,
                 Lang          = lang,

@@ -304,7 +304,7 @@ namespace ICMS.Application.Services
             
             var threeDaysAgo = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-3));
             var expiredVisits = await _unitOfWork.FieldVisitRepository.GetQueryable(track: true, cancellationToken: ct)
-                .Where(fv => !fv.IsCompleted && fv.ToDate < threeDaysAgo)
+                .Where(fv => !fv.IsCompleted && fv.ToDate <= threeDaysAgo)
                 .ToListAsync(ct);
 
             if (!expiredVisits.Any())
@@ -325,6 +325,70 @@ namespace ICMS.Application.Services
             var result = await _unitOfWork.SaveChangesAsync(ct);
             _logger.LogInformation("Successfully closed {Count} expired field visits.", result);
             return result;
+        }
+
+        public async Task<bool> SendWorkerNotificationsAsync(int id, CancellationToken ct = default)
+        {
+            var fieldVisit = await _unitOfWork.FieldVisitRepository.GetByIdWithDetailsAsync(id, ct);
+            if (fieldVisit == null)
+                throw new NotFoundException("Field Visit Not Found");
+
+            var workerUserIds = fieldVisit.FieldVisitWorkers.Select(w => w.UserId).ToList();
+            if (!workerUserIds.Any())
+            {
+                _logger.LogWarning("No workers assigned to FieldVisit ID {Id}", fieldVisit.Id);
+                return false;
+            }
+
+            var deviceTokens = await _unitOfWork.UserDeviceRepository.GetQueryable()
+                .Where(ud => workerUserIds.Contains(ud.UserId))
+                .Select(ud => ud.FcmToken)
+                .Distinct()
+                .ToListAsync(ct);
+
+            if (!deviceTokens.Any())
+            {
+                _logger.LogWarning("No registered devices found for assigned workers of FieldVisit ID {Id}", fieldVisit.Id);
+                return false;
+            }
+
+            var subNeighborhood = await _unitOfWork.SubNeighborhoodRepository.GetByIdAsync(fieldVisit.SubNeighborhoodId, ct);
+            var placeName = subNeighborhood?.Name ?? "Unknown";
+            var dateStr = fieldVisit.VisitDate.ToString("yyyy-MM-dd");
+
+            var title = "Field Visit Assignment / تعيين زيارة ميدانية جديدة";
+            var body = $"You are assigned to the field visit '{fieldVisit.CampaignName}' on {dateStr} in {placeName}. / تم تعيينك في الزيارة الميدانية '{fieldVisit.CampaignName}' بتاريخ {dateStr} في {placeName}.";
+
+            var data = new Dictionary<string, string>
+            {
+                { "type", "field_visit_assignment" },
+                { "visitId", fieldVisit.Id.ToString() }
+            };
+
+            _logger.LogInformation("Sending push notifications to {Count} worker devices for FieldVisit ID {Id}", deviceTokens.Count, fieldVisit.Id);
+            var pushResult = await _pushNotificationService.SendMulticastNotificationAsync(
+                deviceTokens,
+                title,
+                body,
+                null,
+                data,
+                ct);
+
+            if (pushResult.UnregisteredTokens.Any())
+            {
+                _logger.LogInformation("Cleaning up {Count} expired worker FCM tokens.", pushResult.UnregisteredTokens.Count);
+                var expiredDevices = await _unitOfWork.UserDeviceRepository.GetQueryable()
+                    .Where(ud => pushResult.UnregisteredTokens.Contains(ud.FcmToken))
+                    .ToListAsync(ct);
+
+                foreach (var device in expiredDevices)
+                {
+                    await _unitOfWork.UserDeviceRepository.DeleteAsync(device, ct);
+                }
+                await _unitOfWork.SaveChangesAsync(ct);
+            }
+
+            return pushResult.IsSuccess;
         }
     }
 }

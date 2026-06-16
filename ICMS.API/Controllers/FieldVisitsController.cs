@@ -73,6 +73,15 @@ namespace ICMS.Api.Controllers
         public async Task<ActionResult<PagedResult<FieldVisitReadDto>>> GetAllAsync(
             [FromQuery] PaginationParams paginationParams, [FromQuery] bool? onlyUncompleted, CancellationToken ct)
         {
+            try
+            {
+                await fieldVisitService.CloseExpiredVisitsAsync(ct);
+            }
+            catch (Exception)
+            {
+                // Log and continue so the API list load doesn't crash on DB transient errors
+            }
+
             int? workerId = null;
             if (User.IsInRole(Roles.FieldVisitWorker) && 
                 !User.IsInRole(Roles.Admin) && 
@@ -162,6 +171,18 @@ namespace ICMS.Api.Controllers
                 return BadRequest(new { Message = "Failed to send reminders. No targeted users with active devices, or reminders already sent." });
             }
             return Ok(new { Message = "Reminders sent successfully." });
+        }
+
+        [HttpPost("{id}/send-worker-notifications")]
+        public async Task<IActionResult> SendWorkerNotificationsAsync(
+            [FromRoute] int id, CancellationToken ct)
+        {
+            var success = await fieldVisitService.SendWorkerNotificationsAsync(id, ct);
+            if (!success)
+            {
+                return BadRequest(new { Message = "Failed to send notifications. No workers assigned or no active devices registered." });
+            }
+            return Ok(new { Message = "Worker notifications sent successfully." });
         }
     }
 }

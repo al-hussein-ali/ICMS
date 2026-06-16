@@ -13,7 +13,7 @@ namespace ICMS.Infrastructure.Reports.Templates
         {
             var isAr = data.Lang.StartsWith("ar", StringComparison.OrdinalIgnoreCase);
             var tableTitle = isAr ? "بيانات الحوامل" : "Pregnant Women Data";
-            var reportTitle = isAr ? "تقرير الحوامل" : "Pregnant Women Report";
+            var reportTitle = data.ReportTitle ?? (isAr ? "تقرير الحوامل" : "Pregnant Women Report");
 
             var accentColor = "#be185d"; // pink/rose — matches Maternal UI card color
             var table = ReportHtmlBase.BuildDataTable(data.ColumnHeaders, data.Rows, tableTitle, accentColor, data.SummaryStats, isAr);

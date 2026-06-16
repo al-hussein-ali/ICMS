@@ -89,7 +89,11 @@ namespace ICMS.Infrastructure.ExternalServices
                                 var errMsg = res.Exception?.Message ?? "Unknown Firebase error";
                                 var isUnregistered = errMsg.Contains("Requested entity was not found") ||
                                                      errMsg.Contains("unregistered") ||
-                                                     errMsg.Contains("NotFound");
+                                                     errMsg.Contains("NotFound") ||
+                                                     errMsg.Contains("not a valid FCM registration token") ||
+                                                     errMsg.Contains("invalid") ||
+                                                     errMsg.Contains("Invalid") ||
+                                                     errMsg.Contains("INVALID");
 
                                 if (isUnregistered)
                                 {

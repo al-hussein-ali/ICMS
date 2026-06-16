@@ -31,6 +31,8 @@ namespace ICMS.Application.DTOs.Reports
         public string GeneratedAt { get; set; } = string.Empty;
         public int TotalRecords { get; set; }
         public string Lang { get; set; } = "en";
+        /// <summary>Dynamic title computed by the fetcher based on active filters. Overrides the template default.</summary>
+        public string? ReportTitle { get; set; }
         public Dictionary<string, string> SummaryStats { get; set; } = new();
         public List<string> ColumnHeaders { get; set; } = new();
         public List<ReportRow> Rows { get; set; } = new();

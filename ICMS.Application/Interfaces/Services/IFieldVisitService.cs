@@ -21,5 +21,7 @@ namespace ICMS.Application.Interfaces.Services
         Task<bool> MarkCompletedAsync(int id, CancellationToken ct = default);
 
         Task<int> CloseExpiredVisitsAsync(CancellationToken ct = default);
+
+        Task<bool> SendWorkerNotificationsAsync(int id, CancellationToken ct = default);
     }
 }

@@ -64,6 +64,21 @@ namespace ICMS.Infrastructure.Reports.DataFetchers
                 }
             }
 
+            // ── Dynamic title ───────────────────────────────────────────────────
+            var titleParts = new List<string>();
+            if (parameters != null && parameters.TryGetValue("riskLevel", out var riskStr2) && !string.IsNullOrEmpty(riskStr2))
+                titleParts.Add(isAr
+                    ? (riskStr2 == "HighRisk" ? "حالات عالية الخطورة" : "حالات طبيعية")
+                    : (riskStr2 == "HighRisk" ? "High-Risk Cases" : "Normal Cases"));
+            if (parameters != null && parameters.TryGetValue("isPregnancyDone", out var doneStr2) && !string.IsNullOrEmpty(doneStr2))
+                titleParts.Add(isAr
+                    ? (doneStr2 == "true" ? "حمل منتهي" : "حمل جاري")
+                    : (doneStr2 == "true" ? "Completed Pregnancies" : "Ongoing Pregnancies"));
+
+            var reportTitle = titleParts.Count > 0
+                ? string.Join(" — ", titleParts) + (isAr ? " — تقرير صحة الأم" : " — Maternal Health Report")
+                : (isAr ? "تقرير صحة الأم" : "Maternal Health Report");
+
             var women = await query.ToListAsync(ct);
 
             // ── Labels ───────────────────────────────────────────────────
@@ -137,6 +152,7 @@ namespace ICMS.Infrastructure.Reports.DataFetchers
             return new ReportData
             {
                 ReportType    = ReportType,
+                ReportTitle   = reportTitle,
                 StartDate     = startDate,
                 EndDate       = endDate,
                 Lang          = lang,

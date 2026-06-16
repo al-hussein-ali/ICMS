@@ -9,7 +9,7 @@ namespace ICMS.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize(Roles = Roles.VaccinatedIndividual + "," + Roles.PregnantWoman)]
+    [Authorize(Roles = Roles.VaccinatedIndividual + "," + Roles.PregnantWoman + ", " + Roles.FieldVisitWorker)]
     [EnableRateLimiting("fixed")]
     public class UserDevicesController(IUserDeviceService userDeviceService) : ControllerBase
     {

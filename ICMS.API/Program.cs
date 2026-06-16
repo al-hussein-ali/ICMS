@@ -21,6 +21,7 @@ using System.Threading.RateLimiting;
 
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -285,6 +286,42 @@ using (var scope = app.Services.CreateScope())
         "DailyFieldVisitAutoCloser",
         service => service.CloseExpiredVisitsAsync(default),
         Cron.Daily);
+
+    // Run the expired field visits auto closer immediately on startup to ensure old visits are closed
+    try
+    {
+        var fieldVisitService = scope.ServiceProvider.GetRequiredService<ICMS.Application.Interfaces.Services.IFieldVisitService>();
+        await fieldVisitService.CloseExpiredVisitsAsync(default);
+
+        // Also clean up any mock/invalid tokens in the DB if real sending is enabled
+        var config = scope.ServiceProvider.GetRequiredService<IConfiguration>();
+        var isMock = bool.TryParse(config["Firebase:Mock"], out var mock) && mock;
+        if (!isMock)
+        {
+            var dbContext = scope.ServiceProvider.GetRequiredService<ICMS.Infrastructure.Persistence.Data.AppDbContext>();
+            var invalidDevices = await dbContext.UserDevices
+                .Where(ud => ud.FcmToken.Length < 100 || 
+                             ud.FcmToken.ToLower().Contains("mock") || 
+                             ud.FcmToken.ToLower().Contains("dummy") || 
+                             ud.FcmToken.ToLower().Contains("test") || 
+                             ud.FcmToken.ToLower().Contains("fake") || 
+                             ud.FcmToken.ToLower().Contains("temp"))
+                .ToListAsync();
+
+            if (invalidDevices.Any())
+            {
+                var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+                logger.LogInformation("Startup cleanup: Removing {Count} pre-existing invalid/mock FCM tokens from database.", invalidDevices.Count);
+                dbContext.UserDevices.RemoveRange(invalidDevices);
+                await dbContext.SaveChangesAsync();
+            }
+        }
+    }
+    catch (Exception ex)
+    {
+        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "Failed to run CloseExpiredVisitsAsync or startup token cleanup on application startup.");
+    }
 }
 
 // Ensure reports output directory exists

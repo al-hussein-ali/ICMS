@@ -14,7 +14,7 @@ namespace ICMS.Infrastructure.Reports.Templates
             var body = new StringBuilder();
             var isAr = data.Lang.StartsWith("ar", StringComparison.OrdinalIgnoreCase);
             var tableTitle = isAr ? "سجلات المستفيدين المطعّمين" : "Vaccinated Beneficiary Records";
-            var reportTitle = isAr ? "تقرير التطعيم اليومي" : "Daily Immunization Report";
+            var reportTitle = data.ReportTitle ?? (isAr ? "تقرير التطعيم اليومي" : "Daily Immunization Report");
 
             var accentColor = "#1e3a8a";
 
