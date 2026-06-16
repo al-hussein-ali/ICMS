@@ -120,7 +120,19 @@ namespace ICMS.Infrastructure.Reports
                 // 5. Create Persistent Notification
                 var downloadUrl = $"/api/Reports/download/{jobId}";
                 var title = "common.notifications.report_ready_title";
-                var message = $"{{\"key\":\"common.notifications.report_ready_msg\",\"params\":{{\"reportType\":\"{request.ReportType}\",\"month\":\"{DateTime.UtcNow.Month}\",\"year\":\"{DateTime.UtcNow.Year}\"}}}}";
+                
+                // Map internal enum to translatable report key
+                var reportTypeKey = request.ReportType switch {
+                    ReportType.VaccinatedIndividuals => "common.beneficiary_vacc",
+                    ReportType.PregnantWomen => "common.beneficiary_preg",
+                    ReportType.Inventory => "common.inventory",
+                    ReportType.DailyVaccination => "common.immunization",
+                    _ => request.ReportType.ToString()
+                };
+
+                // Create a robust message that allows UI translation.
+                // Using nested params: reportType is another translation key that the UI will resolve.
+                var message = $"{{\"key\":\"common.notifications.report_ready_msg\",\"params\":{{\"reportType\":\"$t({reportTypeKey})\",\"startDate\":\"{request.StartDate:yyyy-MM-dd}\",\"endDate\":\"{request.EndDate:yyyy-MM-dd}\"}}}}";
 
                 await _notificationService.CreateNotificationAsync(userId, title, message, downloadUrl, jobId, ct);
                 

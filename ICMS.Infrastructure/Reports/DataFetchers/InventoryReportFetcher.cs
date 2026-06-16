@@ -28,24 +28,30 @@ namespace ICMS.Infrastructure.Reports.DataFetchers
             if (queryable == null)
                 throw new InvalidOperationException("Failed to get queryable from repository.");
 
+            var safeParams = parameters != null 
+                ? new Dictionary<string, string>(parameters, StringComparer.OrdinalIgnoreCase) 
+                : new Dictionary<string, string>();
+
             // ── Parse filters & Build Subtitle ────────────────────────────────
             var pills = new List<string>();
 
             var transactionType = (TransactionType?)null;
-            if (parameters != null && parameters.TryGetValue("transactionType", out var typeStr) && !string.IsNullOrEmpty(typeStr))
+            if (safeParams.TryGetValue("transactionType", out var typeStr) && !string.IsNullOrEmpty(typeStr))
             {
-                if (Enum.TryParse<TransactionType>(typeStr, true, out var tType))
+                if (typeStr.Equals("Incoming", StringComparison.OrdinalIgnoreCase))
                 {
-                    transactionType = tType;
-                    var txLabel = isAr
-                        ? (tType == TransactionType.In ? "وارد" : tType == TransactionType.Out ? "صادر" : "تسوية")
-                        : tType.ToString();
-                    pills.Add($"<span class='filter-pill'>{(isAr ? "نوع الحركة" : "Transaction Type")}: {txLabel}</span>");
+                    transactionType = TransactionType.In;
+                    pills.Add($"<span class='filter-pill'>{(isAr ? "نوع الحركة: وارد" : "Transaction Type: Incoming")}</span>");
+                }
+                else if (typeStr.Equals("Outgoing", StringComparison.OrdinalIgnoreCase))
+                {
+                    transactionType = TransactionType.Out;
+                    pills.Add($"<span class='filter-pill'>{(isAr ? "نوع الحركة: صادر" : "Transaction Type: Outgoing")}</span>");
                 }
             }
 
             var vaccineId = (int?)null;
-            if (parameters != null && parameters.TryGetValue("vaccineId", out var vIdStr) && int.TryParse(vIdStr, out var vId))
+            if (safeParams.TryGetValue("vaccineId", out var vIdStr) && int.TryParse(vIdStr, out var vId))
             {
                 vaccineId = vId;
                 var vaccine = await unitOfWork.VaccineRepository.GetByIdAsync(vId, ct);
@@ -58,7 +64,7 @@ namespace ICMS.Infrastructure.Reports.DataFetchers
 
             // batchStatus filter: "Active" = not expired as of today, "Expired" = past expiry date
             bool? isExpiredFilter = null;
-            if (parameters != null && parameters.TryGetValue("batchStatus", out var bsStr) && !string.IsNullOrEmpty(bsStr))
+            if (safeParams.TryGetValue("batchStatus", out var bsStr) && !string.IsNullOrEmpty(bsStr))
             {
                 if (bsStr.Equals("Expired", StringComparison.OrdinalIgnoreCase))
                 {
@@ -83,10 +89,7 @@ namespace ICMS.Infrastructure.Reports.DataFetchers
 
             // Retrieve period parameter
             string? period = null;
-            if (parameters != null && parameters.TryGetValue("period", out var pStr))
-            {
-                period = pStr;
-            }
+            safeParams.TryGetValue("period", out period);
 
             string periodPrefix = "";
             if (!string.IsNullOrEmpty(period))
@@ -100,22 +103,23 @@ namespace ICMS.Infrastructure.Reports.DataFetchers
             if (isAr)
             {
                 reportTitle = string.IsNullOrEmpty(periodPrefix)
-                    ? "تقرير مخزون اللقاحات"
-                    : $"تقرير مخزون اللقاحات {periodPrefix.Trim()}";
+                    ? $"تقرير مخزون اللقاحات ({startDate:yyyy-MM-dd} - {endDate:yyyy-MM-dd})"
+                    : $"تقرير مخزون اللقاحات {periodPrefix.Trim()} ({startDate:yyyy-MM-dd} - {endDate:yyyy-MM-dd})";
             }
             else
             {
                 reportTitle = string.IsNullOrEmpty(periodPrefix)
-                    ? "Vaccine Inventory Report"
-                    : $"{periodPrefix} Vaccine Inventory Report";
+                    ? $"Vaccine Inventory Report ({startDate:yyyy-MM-dd} to {endDate:yyyy-MM-dd})"
+                    : $"{periodPrefix} Vaccine Inventory Report ({startDate:yyyy-MM-dd} to {endDate:yyyy-MM-dd})";
             }
 
             // ── Fetch data ────────────────────────────────────────────────────
             var batches = await queryable
-                .Where(b => b.Transactions.Any(t =>
-                    t.TransactionDate >= startDateTime && t.TransactionDate < endDateTime &&
-                    (!transactionType.HasValue || t.TransactionType == transactionType.Value))
+                .Where(b => 
+                    ((transactionType.HasValue && b.Transactions.Any(t => t.TransactionType == transactionType.Value && t.TransactionDate >= startDateTime && t.TransactionDate < endDateTime)) ||
+                     (!transactionType.HasValue && b.CreationDate <= endDate))
                     && (!vaccineId.HasValue || b.Dose.VaccineId == vaccineId.Value)
+                    && (!doseIdFilter.HasValue || b.DoseId == doseIdFilter.Value)
                     && (!isExpiredFilter.HasValue ||
                         (isExpiredFilter.Value ? b.ExpiryDate < today : b.ExpiryDate >= today)))
                 .ToListAsync(ct);

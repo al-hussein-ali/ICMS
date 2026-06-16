@@ -30,12 +30,12 @@ namespace ICMS.Infrastructure.Reports.DataFetchers
                 .Where(vi => DateOnly.FromDateTime(vi.Person.CreatedAt) >= startDate
                           && DateOnly.FromDateTime(vi.Person.CreatedAt) <= endDate);
 
-            // Retrieve period parameter
+            var safeParams = parameters != null 
+                ? new Dictionary<string, string>(parameters, StringComparer.OrdinalIgnoreCase) 
+                : new Dictionary<string, string>();
+
             string? period = null;
-            if (parameters != null && parameters.TryGetValue("period", out var pStr))
-            {
-                period = pStr;
-            }
+            safeParams.TryGetValue("period", out period);
 
             string periodPrefix = "";
             if (!string.IsNullOrEmpty(period))
@@ -49,21 +49,21 @@ namespace ICMS.Infrastructure.Reports.DataFetchers
             if (isAr)
             {
                 reportTitle = string.IsNullOrEmpty(periodPrefix) 
-                    ? "تقرير الأفراد الملقحين" 
-                    : $"تقرير الأفراد الملقحين {periodPrefix.Trim()}";
+                    ? $"تقرير الأفراد الملقحين ({startDate:yyyy-MM-dd} - {endDate:yyyy-MM-dd})" 
+                    : $"تقرير الأفراد الملقحين {periodPrefix.Trim()} ({startDate:yyyy-MM-dd} - {endDate:yyyy-MM-dd})";
             }
             else
             {
                 reportTitle = string.IsNullOrEmpty(periodPrefix) 
-                    ? "Vaccinated Individuals Report" 
-                    : $"{periodPrefix} Vaccinated Individuals Report";
+                    ? $"Vaccinated Individuals Report ({startDate:yyyy-MM-dd} to {endDate:yyyy-MM-dd})" 
+                    : $"{periodPrefix} Vaccinated Individuals Report ({startDate:yyyy-MM-dd} to {endDate:yyyy-MM-dd})";
             }
 
             var pills = new List<string>();
 
-            if (parameters != null)
+            if (safeParams.Count > 0)
             {
-                if (parameters.TryGetValue("gender", out var genderStr) && Enum.TryParse<Gender>(genderStr, true, out var gender))
+                if (safeParams.TryGetValue("gender", out var genderStr) && Enum.TryParse<Gender>(genderStr, true, out var gender))
                 {
                     query = query.Where(vi => vi.Person.Gender == gender);
                     var genderLabel = isAr
@@ -72,7 +72,7 @@ namespace ICMS.Infrastructure.Reports.DataFetchers
                     pills.Add($"<span class='filter-pill'>{(isAr ? "الجنس" : "Gender")}: {genderLabel}</span>");
                 }
 
-                if (parameters.TryGetValue("status", out var statusStr) && Enum.TryParse<ScheduleStatus>(statusStr, true, out var status))
+                if (safeParams.TryGetValue("status", out var statusStr) && Enum.TryParse<ScheduleStatus>(statusStr, true, out var status))
                 {
                     query = query.Where(vi => vi.Schedules.Any(s => s.Status == status));
                     var statusLabel = isAr
@@ -81,7 +81,7 @@ namespace ICMS.Infrastructure.Reports.DataFetchers
                     pills.Add($"<span class='filter-pill'>{(isAr ? "الحالة" : "Status")}: {statusLabel}</span>");
                 }
 
-                if (parameters.TryGetValue("vaccineId", out var vIdStr) && int.TryParse(vIdStr, out var vId))
+                if (safeParams.TryGetValue("vaccineId", out var vIdStr) && int.TryParse(vIdStr, out var vId))
                 {
                     query = query.Where(vi => vi.Schedules.Any(s => s.Dose.VaccineId == vId));
                     var vaccine = await _unitOfWork.VaccineRepository.GetByIdAsync(vId, ct);
@@ -92,7 +92,7 @@ namespace ICMS.Infrastructure.Reports.DataFetchers
                     }
                 }
 
-                if (parameters.TryGetValue("doseId", out var dIdStr) && int.TryParse(dIdStr, out var dId))
+                if (safeParams.TryGetValue("doseId", out var dIdStr) && int.TryParse(dIdStr, out var dId))
                 {
                     query = query.Where(vi => vi.Schedules.Any(s => s.DoseId == dId));
                     var dose = await _unitOfWork.DoseRepository.GetByIdAsync(dId, ct);
@@ -103,7 +103,7 @@ namespace ICMS.Infrastructure.Reports.DataFetchers
                     }
                 }
 
-                if (parameters.TryGetValue("neighborhoodId", out var nIdStr) && int.TryParse(nIdStr, out var nId))
+                if (safeParams.TryGetValue("neighborhoodId", out var nIdStr) && int.TryParse(nIdStr, out var nId))
                 {
                     query = query.Where(vi => vi.NeighborhoodId == nId);
                     var neighborhood = await _unitOfWork.NeighborhoodRepository.GetByIdAsync(nId, ct);
@@ -113,7 +113,7 @@ namespace ICMS.Infrastructure.Reports.DataFetchers
                     }
                 }
 
-                if (parameters.TryGetValue("subNeighborhoodId", out var snIdStr) && int.TryParse(snIdStr, out var snId))
+                if (safeParams.TryGetValue("subNeighborhoodId", out var snIdStr) && int.TryParse(snIdStr, out var snId))
                 {
                     query = query.Where(vi => vi.SubNeighborhoodId == snId);
                     var subNeighborhood = await _unitOfWork.SubNeighborhoodRepository.GetByIdAsync(snId, ct);

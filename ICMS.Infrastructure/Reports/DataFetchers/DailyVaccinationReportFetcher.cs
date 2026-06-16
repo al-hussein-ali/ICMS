@@ -29,6 +29,11 @@ namespace ICMS.Infrastructure.Reports.DataFetchers
 
             var pills = new List<string>();
 
+            if (parameters != null)
+            {
+                parameters = new Dictionary<string, string>(parameters, StringComparer.OrdinalIgnoreCase);
+            }
+
             // Parse optional filters
             ScheduleStatus? statusFilter = null;
             if (parameters != null && parameters.TryGetValue("status", out var statusStr) &&
@@ -144,21 +149,20 @@ namespace ICMS.Infrastructure.Reports.DataFetchers
             string txTableTitle = string.Empty;
             List<string> txColumnHeaders = new();
 
-            // ── Determine which data source to use based on status filter ──────────
-            // ImmunizationRecord only contains COMPLETED vaccinations.
-            // Missed and Pending entries live exclusively in VaccinationSchedule.
-            bool querySchedules = statusFilter.HasValue && statusFilter.Value != ScheduleStatus.Completed;
+            bool fetchSchedules = !statusFilter.HasValue || statusFilter.Value != ScheduleStatus.Completed;
+            bool fetchCompleted = !statusFilter.HasValue || statusFilter.Value == ScheduleStatus.Completed;
 
-            if (querySchedules)
+            if (fetchSchedules)
             {
-                // ── Path A: Missed / Pending → query VaccinationSchedule ─────────────
                 var scheduleQuery = _unitOfWork.VaccinationScheduleRepository
                     .GetQueryable(false, ct, s => s.VaccinatedIndividual, s => s.Dose)
-                    .Where(s => s.Status == statusFilter!.Value
-                             && s.ScheduledDate >= startDate
-                             && s.ScheduledDate <= endDate);
+                    .Where(s => s.ScheduledDate >= startDate && s.ScheduledDate <= endDate);
 
-                // Include navigations needed for filters and columns
+                if (statusFilter.HasValue)
+                    scheduleQuery = scheduleQuery.Where(s => s.Status == statusFilter.Value);
+                else
+                    scheduleQuery = scheduleQuery.Where(s => s.Status != ScheduleStatus.Completed);
+
                 scheduleQuery = scheduleQuery
                     .Include(s => s.VaccinatedIndividual)
                         .ThenInclude(vi => vi.Person)
@@ -176,12 +180,12 @@ namespace ICMS.Infrastructure.Reports.DataFetchers
 
                 var schedules = await scheduleQuery.ToListAsync(ct);
 
-                var statusLabel = statusFilter!.Value == ScheduleStatus.Missed
-                    ? (isAr ? "فائتة" : "Missed")
-                    : (isAr ? "معلقة" : "Pending");
-
-                rows = schedules.Select(s =>
+                var schedRows = schedules.Select(s =>
                 {
+                    var statusLabel = s.Status == ScheduleStatus.Missed
+                        ? (isAr ? "فائتة" : "Missed")
+                        : (isAr ? "معلقة" : "Pending");
+
                     var dob = s.VaccinatedIndividual.Person.DateOfBirth;
                     var refDate = s.ScheduledDate;
                     var totalDays = (refDate.ToDateTime(TimeOnly.MinValue) - dob.ToDateTime(TimeOnly.MinValue)).TotalDays;
@@ -217,30 +221,16 @@ namespace ICMS.Infrastructure.Reports.DataFetchers
                             [colStatus]   = statusLabel
                         }
                     };
-                }).OrderBy(r => r.Columns[colDate]).ToList();
-
-                // No secondary inventory table for missed/pending
-                return new ReportData
-                {
-                    ReportType    = ReportType,
-                    ReportTitle   = reportTitle,
-                    Subtitle      = subtitle,
-                    StartDate     = startDate,
-                    EndDate       = endDate,
-                    Lang          = lang,
-                    GeneratedAt   = DateTime.UtcNow.AddHours(3).ToString("yyyy-MM-dd HH:mm"),
-                    TotalRecords  = rows.Count,
-                    SummaryStats  = stats.ToDictionary(k => k.Key, v => v.Value.ToString()),
-                    ColumnHeaders = [colDate, colCard, colName, colAgeW, colAgeY, colVaccine, colDose, colDoseNum, colStatus],
-                    Rows          = rows
-                };
+                });
+                
+                rows.AddRange(schedRows);
             }
-            else
+
+            if (fetchCompleted)
             {
-                // ── Path B: Completed (or no status filter) → query ImmunizationRecord ──
                 var query = _unitOfWork.ImmunizationRecordRepository
                     .GetQueryable(false, ct, ir => ir.VaccinatedIndividual, ir => ir.Dose)
-                    .Where(ir => ir.VaccinationDate >= startDate && ir.VaccinationDate <= endDate);
+                    .Where(ir => DateOnly.FromDateTime(ir.VaccinationDate) >= startDate && DateOnly.FromDateTime(ir.VaccinationDate) <= endDate);
 
                 // Apply remaining filters
                 if (genderFilter.HasValue)
@@ -279,6 +269,8 @@ namespace ICMS.Infrastructure.Reports.DataFetchers
                     if (!string.IsNullOrEmpty(vacName))
                         stats[vacName] = stats.GetValueOrDefault(vacName) + 1;
 
+                    var completedStatusLabel = isAr ? "مكتملة" : "Completed";
+
                     return new ReportRow
                     {
                         Columns = new Dictionary<string, string?>
@@ -291,11 +283,21 @@ namespace ICMS.Infrastructure.Reports.DataFetchers
                             [colVaccine]  = vacName,
                             [colDose]     = LocalizationHelper.GetLocalizedValue(ir.Dose.DoseName, lang),
                             [colDoseNum]  = doseNumberStr,
-                            [colLocation] = NormalizeLocation(ir.TakenIn, isAr)
+                            [colLocation] = NormalizeLocation(ir.TakenIn, isAr),
+                            [colStatus]   = completedStatusLabel
                         }
                     };
-                }).OrderBy(r => r.Columns[colDate]).ToList();
+                });
+                
+                rows.AddRange(compRows);
+            }
 
+            rows = rows.OrderBy(r => r.Columns[colDate]).ToList();
+
+            // Additional logic for secondary table (inventory transactions) 
+            // Only query transactions if we fetched completed records
+            if (fetchCompleted)
+            {
                 // ── Secondary Table: Inventory Transactions ────────────────────
                 var startDateTime = DateTime.SpecifyKind(startDate.ToDateTime(TimeOnly.MinValue), DateTimeKind.Utc);
                 var endDateTime   = DateTime.SpecifyKind(endDate.ToDateTime(TimeOnly.MinValue), DateTimeKind.Utc).AddDays(1);
@@ -340,25 +342,26 @@ namespace ICMS.Infrastructure.Reports.DataFetchers
                     }
                 }).OrderBy(r => r.Columns[txColDate]).ToList();
 
-                // Completed path: 9 columns (no Status column — location is shown instead)
-                return new ReportData
-                {
-                    ReportType    = ReportType,
-                    ReportTitle   = reportTitle,
-                    Subtitle      = subtitle,
-                    StartDate     = startDate,
-                    EndDate       = endDate,
-                    Lang          = lang,
-                    GeneratedAt   = DateTime.UtcNow.AddHours(3).ToString("yyyy-MM-dd HH:mm"),
-                    TotalRecords  = records.Count,
-                    SummaryStats  = stats.ToDictionary(k => k.Key, v => v.Value.ToString()),
-                    ColumnHeaders = [colDate, colCard, colName, colAgeW, colAgeY, colVaccine, colDose, colDoseNum, colLocation],
-                    Rows          = rows,
-                    SecondaryTableTitle = txTableTitle,
-                    SecondaryColumnHeaders = txColumnHeaders,
-                    SecondaryRows = secondaryRows
-                };
             }
+
+            // Completed path has location column, schedules path does not, so if fetchSchedules is true we include colStatus
+            return new ReportData
+            {
+                ReportType    = ReportType,
+                ReportTitle   = reportTitle,
+                Subtitle      = subtitle,
+                StartDate     = startDate,
+                EndDate       = endDate,
+                Lang          = lang,
+                GeneratedAt   = DateTime.UtcNow.AddHours(3).ToString("yyyy-MM-dd HH:mm"),
+                TotalRecords  = rows.Count,
+                SummaryStats  = stats.ToDictionary(k => k.Key, v => v.Value.ToString()),
+                ColumnHeaders = [colDate, colCard, colName, colAgeW, colAgeY, colVaccine, colDose, colDoseNum, colLocation, colStatus],
+                Rows          = rows,
+                SecondaryTableTitle = secondaryRows.Any() ? txTableTitle : null,
+                SecondaryColumnHeaders = secondaryRows.Any() ? txColumnHeaders : null,
+                SecondaryRows = secondaryRows.Any() ? secondaryRows : null
+            };
         }
 
         /// <summary>

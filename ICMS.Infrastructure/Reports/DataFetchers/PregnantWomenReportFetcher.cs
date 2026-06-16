@@ -34,24 +34,28 @@ namespace ICMS.Infrastructure.Reports.DataFetchers
                           && DateOnly.FromDateTime(pw.Person.CreatedAt) >= startDate
                           && DateOnly.FromDateTime(pw.Person.CreatedAt) <= endDate);
 
+            var safeParams = parameters != null 
+                ? new Dictionary<string, string>(parameters, StringComparer.OrdinalIgnoreCase) 
+                : new Dictionary<string, string>();
+
             var pills = new List<string>();
 
-            if (parameters != null)
+            if (safeParams.Count > 0)
             {
-                if (parameters.TryGetValue("bloodGroup", out var bgStr) && Enum.TryParse<BloodGroup>(bgStr, true, out var bg))
+                if (safeParams.TryGetValue("bloodGroup", out var bgStr) && Enum.TryParse<BloodGroup>(bgStr, true, out var bg))
                 {
                     query = query.Where(pw => pw.BloodGroup == bg);
                     pills.Add($"<span class='filter-pill'>{(isAr ? "فصيلة الدم" : "Blood Group")}: {bg}</span>");
                 }
 
-                if (parameters.TryGetValue("rhFactor", out var rhStr) && Enum.TryParse<RhFactor>(rhStr, true, out var rh))
+                if (safeParams.TryGetValue("rhFactor", out var rhStr) && Enum.TryParse<RhFactor>(rhStr, true, out var rh))
                 {
                     query = query.Where(pw => pw.RhFactor == rh);
                     var rhLabel = rh == RhFactor.Positive ? "+" : "-";
                     pills.Add($"<span class='filter-pill'>{(isAr ? "عامل الريسوس" : "Rh Factor")}: {rhLabel}</span>");
                 }
 
-                if (parameters.TryGetValue("isPregnancyDone", out var doneStr) && bool.TryParse(doneStr, out var isDone))
+                if (safeParams.TryGetValue("isPregnancyDone", out var doneStr) && bool.TryParse(doneStr, out var isDone))
                 {
                     query = query.Where(pw => pw.PregnancyDetails.Any(pd => pd.IsPregnancyDone == isDone));
                     var doneLabel = isAr
@@ -60,7 +64,7 @@ namespace ICMS.Infrastructure.Reports.DataFetchers
                     pills.Add($"<span class='filter-pill'>{(isAr ? "الحالة" : "Status")}: {doneLabel}</span>");
                 }
 
-                if (parameters.TryGetValue("pregnancyType", out var ptStr) && Enum.TryParse<PregnancyType>(ptStr, true, out var pt))
+                if (safeParams.TryGetValue("pregnancyType", out var ptStr) && Enum.TryParse<PregnancyType>(ptStr, true, out var pt))
                 {
                     query = query.Where(pw => pw.PregnancyDetails.Any(pd => pd.PregnancyType == pt));
                     var ptLabel = isAr
@@ -69,16 +73,24 @@ namespace ICMS.Infrastructure.Reports.DataFetchers
                     pills.Add($"<span class='filter-pill'>{(isAr ? "نوع الحمل" : "Pregnancy Type")}: {ptLabel}</span>");
                 }
 
-                if (parameters.TryGetValue("birthNature", out var bnStr) && Enum.TryParse<BirthNature>(bnStr, true, out var bn))
+                if (safeParams.TryGetValue("birthNature", out var bnStr) && !string.IsNullOrEmpty(bnStr))
                 {
-                    query = query.Where(pw => pw.PregnancyDetails.Any(pd => pd.BirthNature == bn));
-                    var bnLabel = isAr
-                        ? (bn == BirthNature.Natural ? "طبيعية" : "قيصرية")
-                        : bn.ToString();
-                    pills.Add($"<span class='filter-pill'>{(isAr ? "طبيعة الولادة" : "Birth Nature")}: {bnLabel}</span>");
+                    BirthNature? bn = null;
+                    if (bnStr.Equals("Natural", StringComparison.OrdinalIgnoreCase)) bn = BirthNature.Natural;
+                    else if (bnStr.Equals("Cesarean", StringComparison.OrdinalIgnoreCase)) bn = BirthNature.CesareanSection;
+                    else if (bnStr.Equals("Assisted", StringComparison.OrdinalIgnoreCase)) bn = BirthNature.VacuumExtraction;
+                    
+                    if (bn.HasValue)
+                    {
+                        query = query.Where(pw => pw.PregnancyDetails.Any(pd => pd.BirthNature == bn.Value));
+                        var bnLabel = isAr
+                            ? (bn == BirthNature.Natural ? "طبيعية" : "قيصرية/أخرى")
+                            : bnStr;
+                        pills.Add($"<span class='filter-pill'>{(isAr ? "طبيعة الولادة" : "Birth Nature")}: {bnLabel}</span>");
+                    }
                 }
 
-                if (parameters.TryGetValue("riskLevel", out var riskStr) && !string.IsNullOrEmpty(riskStr))
+                if (safeParams.TryGetValue("riskLevel", out var riskStr) && !string.IsNullOrEmpty(riskStr))
                 {
                     if (riskStr == "HighRisk")
                     {
@@ -100,10 +112,7 @@ namespace ICMS.Infrastructure.Reports.DataFetchers
 
             // Retrieve period parameter
             string? period = null;
-            if (parameters != null && parameters.TryGetValue("period", out var pStr))
-            {
-                period = pStr;
-            }
+            safeParams.TryGetValue("period", out period);
 
             string periodPrefix = "";
             if (!string.IsNullOrEmpty(period))
@@ -117,14 +126,14 @@ namespace ICMS.Infrastructure.Reports.DataFetchers
             if (isAr)
             {
                 reportTitle = string.IsNullOrEmpty(periodPrefix)
-                    ? "تقرير صحة الأم والحوامل"
-                    : $"تقرير صحة الأم والحوامل {periodPrefix.Trim()}";
+                    ? $"تقرير صحة الأم والحوامل ({startDate:yyyy-MM-dd} - {endDate:yyyy-MM-dd})"
+                    : $"تقرير صحة الأم والحوامل {periodPrefix.Trim()} ({startDate:yyyy-MM-dd} - {endDate:yyyy-MM-dd})";
             }
             else
             {
                 reportTitle = string.IsNullOrEmpty(periodPrefix)
-                    ? "Maternal Health & Pregnancy Report"
-                    : $"{periodPrefix} Maternal Health & Pregnancy Report";
+                    ? $"Maternal Health & Pregnancy Report ({startDate:yyyy-MM-dd} to {endDate:yyyy-MM-dd})"
+                    : $"{periodPrefix} Maternal Health & Pregnancy Report ({startDate:yyyy-MM-dd} to {endDate:yyyy-MM-dd})";
             }
 
             var women = await query.ToListAsync(ct);
