@@ -9,6 +9,7 @@ using Microsoft.Extensions.DependencyInjection;
 using ICMS.Infrastructure.Persistence.Data;
 using ICMS.Domain.Entites.Identity;
 using ICMS.Domain.Entites.Clinical;
+using ICMS.Domain.Entites.Visits;
 using ICMS.Domain.Enums;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -103,6 +104,86 @@ namespace ICMS.Tests.Controllers
             var addedVisit = list.Items.FirstOrDefault(v => v.CampaignName == "Test Campaign Fallback");
             addedVisit.Should().NotBeNull();
             addedVisit.TargetedCount.Should().Be(1); // Should fall back to the 1 missed schedule individual in that sub-neighborhood
+        }
+
+        [Fact]
+        public async Task SendReminders_ShouldDeliverNotifications_And_MarkReminderSent()
+        {
+            // Arrange
+            int subNeighborhoodId;
+            int dirId;
+            int neighborhoodId;
+            Dose dose;
+            int individualId;
+            int userId;
+            int visitId;
+
+            using (var scope = _factory.Services.CreateScope())
+            {
+                var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+                var subNeigh = db.SubNeighborhoods.First();
+                subNeighborhoodId = subNeigh.Id;
+                neighborhoodId = subNeigh.NeighborhoodId;
+                dirId = db.Neighborhoods.First(n => n.Id == neighborhoodId).DirectorateId;
+                dose = db.Doses.First();
+
+                var dob = DateOnly.FromDateTime(DateTime.UtcNow.AddMonths(-6));
+                var person = Person.Create("ReminderTarget", "Child", "Test", "ICMS", Gender.Male, dob, "9998887771");
+                db.People.Add(person);
+                db.SaveChanges();
+
+                var user = User.Create("remindertargetuser", "Target@123", person.Id);
+                db.Users.Add(user);
+                db.SaveChanges();
+
+                user.AddDevice("fcm-token-test-12345");
+                db.SaveChanges();
+
+                userId = user.Id;
+
+                var individual = VaccinatedIndividual.Create(dirId, neighborhoodId, subNeighborhoodId, userId: userId, registrationDate: dob);
+                individual.AssignPerson(person);
+                individual.ScheduleInitialVaccines(new List<Dose> { dose }, person.DateOfBirth);
+
+                var schedule = individual.Schedules.First();
+                schedule.MarkAsMissed();
+
+                db.VaccinatedIndividuals.Add(individual);
+                db.SaveChanges();
+
+                individualId = individual.Id;
+
+                var visit = FieldVisit.Create(
+                    "Test Campaign Reminders",
+                    DateOnly.FromDateTime(DateTime.UtcNow.AddDays(1)),
+                    subNeighborhoodId,
+                    DateOnly.FromDateTime(DateTime.UtcNow.AddMonths(-12)),
+                    DateOnly.FromDateTime(DateTime.UtcNow.AddDays(7))
+                );
+                visit.AddIndividual(individualId);
+
+                db.FieldVisits.Add(visit);
+                db.SaveChanges();
+
+                visitId = visit.Id;
+            }
+
+            await AuthenticateAsync();
+
+            // Act
+            var response = await _client.PostAsync($"/api/field-visits/{visitId}/send-reminders", null);
+
+            // Assert
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+            using (var scope = _factory.Services.CreateScope())
+            {
+                var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                var updatedVisit = db.FieldVisits.Find(visitId);
+                updatedVisit.Should().NotBeNull();
+                updatedVisit!.ReminderSent.Should().BeTrue();
+            }
         }
     }
 }

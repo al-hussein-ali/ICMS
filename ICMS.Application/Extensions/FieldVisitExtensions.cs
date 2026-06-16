@@ -32,7 +32,8 @@ namespace ICMS.Application.Extensions
                 fv.SubNeighborhood?.Name,
                 location,
                 fv.TargetedCount, 
-                fv.IsCompleted
+                fv.IsCompleted,
+                fv.ReminderSent
             );
         }
 
@@ -81,6 +82,7 @@ namespace ICMS.Application.Extensions
                 fv.FromDate,
                 fv.ToDate,
                 fv.IsCompleted,
+                fv.ReminderSent,
                 fv.ImmunizationRecords.Count,
                 selectedInds,
                 selectedIds,

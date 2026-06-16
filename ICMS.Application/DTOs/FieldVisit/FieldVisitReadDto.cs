@@ -12,5 +12,6 @@ namespace ICMS.Application.DTOs.FieldVisit
         string? SubNeighborhoodName,
         string TargetedLocation,
         int TargetedCount,
-        bool IsCompleted);
+        bool IsCompleted,
+        bool ReminderSent);
 }

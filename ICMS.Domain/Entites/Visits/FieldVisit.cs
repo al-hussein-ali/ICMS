@@ -23,12 +23,18 @@ namespace ICMS.Domain.Entites.Visits
         public DateOnly FromDate { get; private set; }
         public DateOnly ToDate { get; private set; }
         public bool IsCompleted { get; private set; }
+        public bool ReminderSent { get; private set; } = false;
         [NotMapped]
         public int TargetedCount { get; set; } // Added to carry the count from repository
 
 
         private FieldVisit()
         {
+        }
+
+        public void MarkReminderSent()
+        {
+            ReminderSent = true;
         }
 
         public static FieldVisit Create(

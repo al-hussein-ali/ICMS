@@ -48,6 +48,7 @@ namespace ICMS.Infrastructure.Extensions
             services.AddScoped<IImmunizationRecordService, ImmunizationRecordService>();
             services.AddScoped<IImmunizationService, ImmunizationService>();
             services.AddScoped<IFieldVisitService, FieldVisitService>();
+            services.AddScoped<IFieldVisitReminderService, FieldVisitReminderService>();
             services.AddScoped<ILocationService, LocationService>();
             services.AddScoped<IReproductiveHealthService, ReproductiveHealthService>();
             services.AddScoped<ISchedulesService, SchedulesService>();

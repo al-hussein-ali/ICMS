@@ -269,6 +269,12 @@ using (var scope = app.Services.CreateScope())
         "DailyBatchExpirationTracker",
         service => service.TrackExpiringBatchesAsync(default),
         "*/5 * * * *");
+
+    // Register Field Visit reminder to run daily
+    recurringJobManager.AddOrUpdate<ICMS.Application.Interfaces.Services.IFieldVisitReminderService>(
+        "DailyFieldVisitReminder",
+        service => service.SendScheduledRemindersAsync(default),
+        Cron.Daily);
 }
 
 // Ensure reports output directory exists

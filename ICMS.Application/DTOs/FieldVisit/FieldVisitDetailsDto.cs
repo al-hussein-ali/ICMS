@@ -16,6 +16,7 @@ namespace ICMS.Application.DTOs.FieldVisit
         DateOnly FromDate,
         DateOnly ToDate,
         bool IsCompleted,
+        bool ReminderSent,
         int ImmunizationRecordsCount,
         List<FieldVisitTargetedIndividualDto> SelectedIndividuals,
         List<int> SelectedIndividualIds,

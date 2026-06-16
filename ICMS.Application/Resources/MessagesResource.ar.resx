@@ -31,4 +31,10 @@
   <data name="Success" xml:space="preserve">
     <value>تمت العملية بنجاح.</value>
   </data>
+  <data name="FieldVisitReminderTitle" xml:space="preserve">
+    <value>زيارة تحصين مجدولة</value>
+  </data>
+  <data name="FieldVisitReminderBody" xml:space="preserve">
+    <value>زيارة تحصين ({0}) مجدولة لمنطقتكم بتاريخ {1}.</value>
+  </data>
 </root>

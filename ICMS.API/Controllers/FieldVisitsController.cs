@@ -16,6 +16,7 @@ namespace ICMS.Api.Controllers
     public class FieldVisitsController(
         IFieldVisitService fieldVisitService, 
         IUserService userService,
+        IFieldVisitReminderService fieldVisitReminderService,
         ICMS.Infrastructure.Persistence.Data.AppDbContext dbContext) : ControllerBase
     {
         [HttpGet("diagnostic-db")]
@@ -149,6 +150,18 @@ namespace ICMS.Api.Controllers
         {
             await fieldVisitService.MarkCompletedAsync(id, ct);
             return NoContent();
+        }
+
+        [HttpPost("{id}/send-reminders")]
+        public async Task<IActionResult> SendRemindersAsync(
+            [FromRoute] int id, CancellationToken ct)
+        {
+            var success = await fieldVisitReminderService.SendRemindersForVisitAsync(id, ct);
+            if (!success)
+            {
+                return BadRequest(new { Message = "Failed to send reminders. No targeted users with active devices, or reminders already sent." });
+            }
+            return Ok(new { Message = "Reminders sent successfully." });
         }
     }
 }

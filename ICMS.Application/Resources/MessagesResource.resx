@@ -31,4 +31,10 @@
   <data name="Success" xml:space="preserve">
     <value>Operation completed successfully.</value>
   </data>
+  <data name="FieldVisitReminderTitle" xml:space="preserve">
+    <value>Vaccination Visit Scheduled</value>
+  </data>
+  <data name="FieldVisitReminderBody" xml:space="preserve">
+    <value>A vaccination visit ({0}) is scheduled for your area on {1}.</value>
+  </data>
 </root>

@@ -35,6 +35,14 @@ namespace ICMS.Tests.Infrastructure
                     options.EnableSensitiveDataLogging();
                 });
 
+                // Mock IPushNotificationService to avoid Firebase calls in tests
+                var pushDescriptor = services.FirstOrDefault(d => d.ServiceType == typeof(ICMS.Application.Interfaces.Services.IPushNotificationService));
+                if (pushDescriptor != null)
+                {
+                    services.Remove(pushDescriptor);
+                }
+                services.AddSingleton<ICMS.Application.Interfaces.Services.IPushNotificationService, FakePushNotificationService>();
+
                 // 3. Build the service provider
                 var sp = services.BuildServiceProvider();
 
