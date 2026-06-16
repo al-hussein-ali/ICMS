@@ -50,16 +50,48 @@ namespace ICMS.Infrastructure.Reports.DataFetchers
             if (parameters != null && parameters.TryGetValue("doseId", out var dIdStr) && int.TryParse(dIdStr, out var dId))
                 doseIdFilter = dId;
 
+            // Retrieve period parameter
+            string? period = null;
+            if (parameters != null && parameters.TryGetValue("period", out var pStr))
+            {
+                period = pStr;
+            }
+
+            string periodPrefix = "";
+            if (!string.IsNullOrEmpty(period))
+            {
+                periodPrefix = isAr
+                    ? (period == "daily" ? "اليومي" : period == "weekly" ? "الأسبوعي" : period == "monthly" ? "الشهري" : "السنوي")
+                    : (period == "daily" ? "Daily" : period == "weekly" ? "Weekly" : period == "monthly" ? "Monthly" : "Yearly");
+            }
+
             // ── Dynamic report title based on active filters ────────────────
             string reportTitle;
+            string baseTitle;
             if (!statusFilter.HasValue)
-                reportTitle = isAr ? "تقرير التطعيم" : "Immunization Report";
+                baseTitle = isAr ? "تقرير التطعيم" : "Immunization Report";
             else if (statusFilter.Value == ScheduleStatus.Completed)
-                reportTitle = isAr ? "تقرير الجرعات المكتملة" : "Completed Vaccinations Report";
+                baseTitle = isAr ? "تقرير الجرعات المكتملة" : "Completed Vaccinations Report";
             else if (statusFilter.Value == ScheduleStatus.Missed)
-                reportTitle = isAr ? "تقرير الجرعات الفائتة" : "Missed Doses Report";
+                baseTitle = isAr ? "تقرير الجرعات الفائتة" : "Missed Doses Report";
             else
-                reportTitle = isAr ? "تقرير الجرعات المعلقة" : "Pending Doses Report";
+                baseTitle = isAr ? "تقرير الجرعات المعلقة" : "Pending Doses Report";
+
+            if (isAr)
+            {
+                reportTitle = baseTitle;
+                if (!string.IsNullOrEmpty(periodPrefix))
+                {
+                    if (baseTitle == "تقرير التطعيم")
+                        reportTitle = $"تقرير التطعيم {periodPrefix}";
+                    else
+                        reportTitle = $"{baseTitle} {periodPrefix}";
+                }
+            }
+            else
+            {
+                reportTitle = string.IsNullOrEmpty(periodPrefix) ? baseTitle : $"{periodPrefix} {baseTitle}";
+            }
 
             if (genderFilter.HasValue)
                 reportTitle += isAr

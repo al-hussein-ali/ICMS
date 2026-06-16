@@ -52,6 +52,21 @@ namespace ICMS.Infrastructure.Reports.DataFetchers
 
             var today = DateOnly.FromDateTime(DateTime.UtcNow);
 
+            // Retrieve period parameter
+            string? period = null;
+            if (parameters != null && parameters.TryGetValue("period", out var pStr))
+            {
+                period = pStr;
+            }
+
+            string periodPrefix = "";
+            if (!string.IsNullOrEmpty(period))
+            {
+                periodPrefix = isAr
+                    ? (period == "daily" ? "اليومي" : period == "weekly" ? "الأسبوعي" : period == "monthly" ? "الشهري" : "السنوي")
+                    : (period == "daily" ? "Daily" : period == "weekly" ? "Weekly" : period == "monthly" ? "Monthly" : "Yearly");
+            }
+
             // ── Dynamic title ─────────────────────────────────────────────────
             var titleParts = new List<string>();
             if (transactionType.HasValue)
@@ -63,9 +78,22 @@ namespace ICMS.Infrastructure.Reports.DataFetchers
                     ? (isExpiredFilter.Value ? "منتهية الصلاحية" : "نشطة")
                     : (isExpiredFilter.Value ? "Expired Batches" : "Active Batches"));
 
-            var reportTitle = titleParts.Count > 0
+            string reportTitle;
+            string baseTitle = titleParts.Count > 0
                 ? string.Join(" — ", titleParts) + (isAr ? " — تقرير المخزون" : " — Inventory Report")
                 : (isAr ? "تقرير المخزون" : "Inventory Report");
+
+            if (isAr)
+            {
+                if (baseTitle == "تقرير المخزون")
+                    reportTitle = $"تقرير المخزون {periodPrefix}";
+                else
+                    reportTitle = $"{baseTitle} {periodPrefix}";
+            }
+            else
+            {
+                reportTitle = string.IsNullOrEmpty(periodPrefix) ? baseTitle : $"{periodPrefix} {baseTitle}";
+            }
 
             // ── Fetch data ────────────────────────────────────────────────────
             var batches = await queryable

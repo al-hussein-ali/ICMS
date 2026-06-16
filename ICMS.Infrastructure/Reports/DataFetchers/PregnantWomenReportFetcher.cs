@@ -64,6 +64,21 @@ namespace ICMS.Infrastructure.Reports.DataFetchers
                 }
             }
 
+            // Retrieve period parameter
+            string? period = null;
+            if (parameters != null && parameters.TryGetValue("period", out var pStr))
+            {
+                period = pStr;
+            }
+
+            string periodPrefix = "";
+            if (!string.IsNullOrEmpty(period))
+            {
+                periodPrefix = isAr
+                    ? (period == "daily" ? "اليومي" : period == "weekly" ? "الأسبوعي" : period == "monthly" ? "الشهري" : "السنوي")
+                    : (period == "daily" ? "Daily" : period == "weekly" ? "Weekly" : period == "monthly" ? "Monthly" : "Yearly");
+            }
+
             // ── Dynamic title ───────────────────────────────────────────────────
             var titleParts = new List<string>();
             if (parameters != null && parameters.TryGetValue("riskLevel", out var riskStr2) && !string.IsNullOrEmpty(riskStr2))
@@ -75,9 +90,22 @@ namespace ICMS.Infrastructure.Reports.DataFetchers
                     ? (doneStr2 == "true" ? "حمل منتهي" : "حمل جاري")
                     : (doneStr2 == "true" ? "Completed Pregnancies" : "Ongoing Pregnancies"));
 
-            var reportTitle = titleParts.Count > 0
+            string reportTitle;
+            string baseTitle = titleParts.Count > 0
                 ? string.Join(" — ", titleParts) + (isAr ? " — تقرير صحة الأم" : " — Maternal Health Report")
                 : (isAr ? "تقرير صحة الأم" : "Maternal Health Report");
+
+            if (isAr)
+            {
+                if (baseTitle == "تقرير صحة الأم")
+                    reportTitle = $"تقرير صحة الأم {periodPrefix}";
+                else
+                    reportTitle = $"{baseTitle} {periodPrefix}";
+            }
+            else
+            {
+                reportTitle = string.IsNullOrEmpty(periodPrefix) ? baseTitle : $"{periodPrefix} {baseTitle}";
+            }
 
             var women = await query.ToListAsync(ct);
 
