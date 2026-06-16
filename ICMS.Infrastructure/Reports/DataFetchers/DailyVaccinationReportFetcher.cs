@@ -143,7 +143,7 @@ namespace ICMS.Infrastructure.Reports.DataFetchers
             var colLocation = isAr ? "الموقع"             : "Location";
             var colStatus   = isAr ? "الحالة"             : "Status";
 
-            List<ReportRow> rows;
+            List<ReportRow> rows = new();
             var stats = new Dictionary<string, int>();
             List<ReportRow> secondaryRows = new();
             string txTableTitle = string.Empty;
@@ -230,7 +230,7 @@ namespace ICMS.Infrastructure.Reports.DataFetchers
             {
                 var query = _unitOfWork.ImmunizationRecordRepository
                     .GetQueryable(false, ct, ir => ir.VaccinatedIndividual, ir => ir.Dose)
-                    .Where(ir => DateOnly.FromDateTime(ir.VaccinationDate) >= startDate && DateOnly.FromDateTime(ir.VaccinationDate) <= endDate);
+                    .Where(ir => ir.VaccinationDate >= startDate && ir.VaccinationDate <= endDate);
 
                 // Apply remaining filters
                 if (genderFilter.HasValue)
@@ -247,7 +247,7 @@ namespace ICMS.Infrastructure.Reports.DataFetchers
                     .Include(ir => ir.Dose.Vaccine)
                     .ToListAsync(ct);
 
-                rows = records.Select(ir =>
+                var compRows = records.Select(ir =>
                 {
                     var dob = ir.VaccinatedIndividual.Person.DateOfBirth;
                     var adminDate = ir.VaccinationDate;
