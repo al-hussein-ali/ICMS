@@ -8,6 +8,7 @@ using ICMS.Domain.Exceptions;
 using ICMS.Domain.ValueObjects;
 
 using FluentValidation;
+using Microsoft.EntityFrameworkCore;
 
 namespace ICMS.Application.Services
 {
@@ -52,21 +53,54 @@ namespace ICMS.Application.Services
         /// </summary>
         public async Task<FieldVisitVaccinationsDto> GetVaccinationsAsync(int id, CancellationToken ct = default)
         {
-            var fieldVisit = await _unitOfWork.FieldVisitRepository.GetByIdWithDetailsAsync(id, ct);
+            var fieldVisit = await _unitOfWork.FieldVisitRepository.GetByIdAsync(id, ct);
 
             if (fieldVisit == null)
                 throw new NotFoundException("NotFound");
 
-            // Project vaccinated individuals
-            var vaccinatedPersons = (fieldVisit.FieldVisitIndividuals ?? Enumerable.Empty<FieldVisitIndividual>())
-                .Select(fvi =>
+            // Query immunization records for this field visit with all required details
+            var records = await _unitOfWork.ImmunizationRecordRepository.GetQueryable(track: false, cancellationToken: ct)
+                .Where(ir => ir.FieldVisitId == id)
+                .Include(ir => ir.VaccinatedIndividual)
+                    .ThenInclude(vi => vi.Person)
+                .Include(ir => ir.Dose)
+                .Include(ir => ir.User)
+                    .ThenInclude(u => u.Person)
+                .ToListAsync(ct);
+
+            // Group by vaccinated individual
+            var vaccinatedPersons = records
+                .GroupBy(ir => ir.IndividualId)
+                .Select(group =>
                 {
-                    var ind = fvi.VaccinatedIndividual;
+                    var firstRecord = group.First();
+                    var ind = firstRecord.VaccinatedIndividual;
                     if (ind == null) return null!;
 
-                    var doses = (ind.Schedules ?? Enumerable.Empty<ICMS.Domain.Entites.Clinical.VaccinationSchedule>())
-                        .Where(s => s.Status == ICMS.Domain.Enums.ScheduleStatus.Missed)
-                        .Select(s => s.Dose.DoseName)
+                    var doseNames = group
+                        .Select(ir => ir.Dose?.DoseName ?? string.Empty)
+                        .Where(name => !string.IsNullOrEmpty(name))
+                        .Distinct()
+                        .ToList();
+
+                    var individualAdministeredBy = group
+                        .Select(ir => ir.User)
+                        .Where(u => u != null)
+                        .GroupBy(u => u.Id)
+                        .Select(g => g.First())
+                        .Select(user =>
+                        {
+                            var firstName = user!.Person?.FirstName ?? string.Empty;
+                            var lastName  = user.Person?.LastName  ?? string.Empty;
+
+                            return new FieldVisitWorkerDto(
+                                user.Id,
+                                firstName,
+                                lastName,
+                                $"{firstName} {lastName}".Trim(),
+                                user.UserName
+                            );
+                        })
                         .ToList();
 
                     return new FieldVisitVaccinatedPersonDto(
@@ -74,20 +108,22 @@ namespace ICMS.Application.Services
                         ind.Person?.FullName ?? string.Empty,
                         ind.CardNumber,
                         ind.Person?.PhoneNumber ?? string.Empty,
-                        doses
+                        doseNames,
+                        individualAdministeredBy
                     );
                 })
                 .Where(x => x != null)
                 .ToList();
 
-            // Project field workers who administered vaccinations
-            var administeredBy = (fieldVisit.FieldVisitWorkers ?? Enumerable.Empty<FieldVisitWorker>())
-                .Select(fvw =>
+            // Project field workers who administered vaccinations in this visit
+            var administeredBy = records
+                .Select(ir => ir.User)
+                .Where(u => u != null)
+                .GroupBy(u => u.Id)
+                .Select(g => g.First())
+                .Select(user =>
                 {
-                    var user = fvw.User;
-                    if (user == null) return null!;
-
-                    var firstName = user.Person?.FirstName ?? string.Empty;
+                    var firstName = user!.Person?.FirstName ?? string.Empty;
                     var lastName  = user.Person?.LastName  ?? string.Empty;
 
                     return new FieldVisitWorkerDto(
@@ -98,7 +134,6 @@ namespace ICMS.Application.Services
                         user.UserName
                     );
                 })
-                .Where(x => x != null)
                 .ToList();
 
             return new FieldVisitVaccinationsDto(
