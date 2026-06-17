@@ -10,14 +10,18 @@ namespace ICMS.Domain.Entites.Visits
         public int VaccinatedIndividualId { get; set; }
         public VaccinatedIndividual VaccinatedIndividual { get; set; } = null!;
 
+        public int? AssignedWorkerId { get; set; }
+        public User? AssignedWorker { get; set; }
+
         private FieldVisitIndividual() { }
 
-        public static FieldVisitIndividual Create(int fieldVisitId, int vaccinatedIndividualId)
+        public static FieldVisitIndividual Create(int fieldVisitId, int vaccinatedIndividualId, int? assignedWorkerId = null)
         {
             return new FieldVisitIndividual
             {
                 FieldVisitId = fieldVisitId,
-                VaccinatedIndividualId = vaccinatedIndividualId
+                VaccinatedIndividualId = vaccinatedIndividualId,
+                AssignedWorkerId = assignedWorkerId
             };
         }
     }

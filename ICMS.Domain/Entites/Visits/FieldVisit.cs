@@ -74,11 +74,11 @@ namespace ICMS.Domain.Entites.Visits
 
         public void ClearIndividuals() => _fieldVisitIndividuals.Clear();
 
-        public void AddIndividual(int vaccinatedIndividualId)
+        public void AddIndividual(int vaccinatedIndividualId, int? assignedWorkerId = null)
         {
             if (_fieldVisitIndividuals.Any(x => x.VaccinatedIndividualId == vaccinatedIndividualId))
                 return;
-            _fieldVisitIndividuals.Add(FieldVisitIndividual.Create(this.Id, vaccinatedIndividualId));
+            _fieldVisitIndividuals.Add(FieldVisitIndividual.Create(this.Id, vaccinatedIndividualId, assignedWorkerId));
         }
 
         public void ClearWorkers() => _fieldVisitWorkers.Clear();

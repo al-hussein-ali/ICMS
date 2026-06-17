@@ -48,14 +48,30 @@ namespace ICMS.Application.Services
                 pagedResult.PageSize);
         }
 
-        public async Task<FieldVisitDetailsDto> GetByIdAsync(int id, CancellationToken ct = default)
+        public async Task<FieldVisitDetailsDto> GetByIdAsync(int id, int? workerId = null, CancellationToken ct = default)
         {
             var fieldVisit = await _unitOfWork.FieldVisitRepository.GetByIdWithDetailsAsync(id, ct);
 
             if (fieldVisit == null)
                 throw new NotFoundException("NotFound");
 
-            return fieldVisit.ToDetailsDto();
+            return fieldVisit.ToDetailsDto(workerId);
+        }
+
+        public async Task<bool> ToggleWorkerGoingAsync(int id, int workerId, CancellationToken ct = default)
+        {
+            var fieldVisit = await _unitOfWork.FieldVisitRepository.GetByIdWithDetailsAsync(id, ct);
+            if (fieldVisit == null)
+                throw new NotFoundException("Field Visit Not Found");
+
+            var worker = fieldVisit.FieldVisitWorkers.FirstOrDefault(w => w.UserId == workerId);
+            if (worker == null)
+                throw new NotFoundException("Worker not assigned to this field visit");
+
+            worker.IsGoing = !worker.IsGoing;
+
+            await _unitOfWork.FieldVisitRepository.UpdateAsync(fieldVisit, ct);
+            return await _unitOfWork.SaveChangesAsync(ct) > 0;
         }
 
         /// <summary>
@@ -168,9 +184,34 @@ namespace ICMS.Application.Services
                 dto.FromDate,
                 dto.ToDate);
 
-            foreach (var individualId in dto.SelectedIndividualIds ?? new List<int>())
+            var individuals = dto.SelectedIndividualIds ?? new List<int>();
+            var workers = dto.SelectedWorkerIds ?? new List<int>();
+            int n = individuals.Count;
+            int m = workers.Count;
+
+            if (m > 0 && n > 0)
             {
-                fieldVisit.AddIndividual(individualId);
+                int baseCount = n / m;
+                int remainder = n % m;
+                int start = 0;
+
+                for (int i = 0; i < m; i++)
+                {
+                    int count = baseCount + (i < remainder ? 1 : 0);
+                    var chunk = individuals.Skip(start).Take(count);
+                    foreach (var ind in chunk)
+                    {
+                        fieldVisit.AddIndividual(ind, workers[i]);
+                    }
+                    start += count;
+                }
+            }
+            else
+            {
+                foreach (var individualId in individuals)
+                {
+                    fieldVisit.AddIndividual(individualId);
+                }
             }
 
             foreach (var workerId in dto.SelectedWorkerIds ?? new List<int>())
@@ -261,9 +302,34 @@ namespace ICMS.Application.Services
                 dto.ToDate);
 
             fieldVisit.ClearIndividuals();
-            foreach (var individualId in dto.SelectedIndividualIds ?? new List<int>())
+            var individuals = dto.SelectedIndividualIds ?? new List<int>();
+            var workers = dto.SelectedWorkerIds ?? new List<int>();
+            int n = individuals.Count;
+            int m = workers.Count;
+
+            if (m > 0 && n > 0)
             {
-                fieldVisit.AddIndividual(individualId);
+                int baseCount = n / m;
+                int remainder = n % m;
+                int start = 0;
+
+                for (int i = 0; i < m; i++)
+                {
+                    int count = baseCount + (i < remainder ? 1 : 0);
+                    var chunk = individuals.Skip(start).Take(count);
+                    foreach (var ind in chunk)
+                    {
+                        fieldVisit.AddIndividual(ind, workers[i]);
+                    }
+                    start += count;
+                }
+            }
+            else
+            {
+                foreach (var individualId in individuals)
+                {
+                    fieldVisit.AddIndividual(individualId);
+                }
             }
 
             fieldVisit.ClearWorkers();
@@ -392,6 +458,98 @@ namespace ICMS.Application.Services
             }
 
             return pushResult.IsSuccess;
+        }
+
+        public async Task<bool> ShiftWorkerPeopleAsync(int fieldVisitId, int fromWorkerId, int toWorkerId, CancellationToken ct = default)
+        {
+            var fieldVisit = await _unitOfWork.FieldVisitRepository.GetByIdWithDetailsAsync(fieldVisitId, ct);
+            if (fieldVisit == null)
+                throw new NotFoundException("Field Visit Not Found");
+
+            var activeWorkers = fieldVisit.FieldVisitWorkers
+                .Where(w => w.IsGoing)
+                .OrderBy(w => w.UserId)
+                .ToList();
+
+            if (!activeWorkers.Any(w => w.UserId == toWorkerId))
+                throw new DomainException("Destination worker must be assigned and active.");
+
+            var allIndividuals = fieldVisit.FieldVisitIndividuals
+                .OrderBy(fvi => fvi.VaccinatedIndividualId)
+                .ToList();
+
+            // If none of the individuals have an assigned worker, we materialize the current dynamic partition first
+            if (allIndividuals.All(fvi => fvi.AssignedWorkerId == null))
+            {
+                int n = allIndividuals.Count;
+                int m = activeWorkers.Count;
+                if (m > 0 && n > 0)
+                {
+                    int baseCount = n / m;
+                    int remainder = n % m;
+                    int start = 0;
+                    for (int i = 0; i < m; i++)
+                    {
+                        int count = baseCount + (i < remainder ? 1 : 0);
+                        var chunk = allIndividuals.Skip(start).Take(count);
+                        foreach (var ind in chunk)
+                        {
+                            ind.AssignedWorkerId = activeWorkers[i].UserId;
+                        }
+                        start += count;
+                    }
+                }
+            }
+            else
+            {
+                // If some individuals are already assigned, but some are null (e.g. newly added individuals),
+                // we should materialize the null ones using the dynamic partition first so that all individuals have an AssignedWorkerId
+                // before we do the shift.
+                var workerAssignments = activeWorkers.ToDictionary(w => w.UserId, w => new List<FieldVisitIndividual>());
+                foreach (var ind in allIndividuals)
+                {
+                    if (ind.AssignedWorkerId.HasValue && workerAssignments.ContainsKey(ind.AssignedWorkerId.Value))
+                    {
+                        workerAssignments[ind.AssignedWorkerId.Value].Add(ind);
+                    }
+                }
+
+                var unassignedInds = allIndividuals
+                    .Where(ind => !ind.AssignedWorkerId.HasValue || !workerAssignments.ContainsKey(ind.AssignedWorkerId.Value))
+                    .OrderBy(ind => ind.VaccinatedIndividualId)
+                    .ToList();
+
+                int n = unassignedInds.Count;
+                int m = activeWorkers.Count;
+                if (m > 0 && n > 0)
+                {
+                    int baseCount = n / m;
+                    int remainder = n % m;
+                    int start = 0;
+                    for (int i = 0; i < m; i++)
+                    {
+                        int count = baseCount + (i < remainder ? 1 : 0);
+                        var chunk = unassignedInds.Skip(start).Take(count);
+                        foreach (var ind in chunk)
+                        {
+                            ind.AssignedWorkerId = activeWorkers[i].UserId;
+                        }
+                        start += count;
+                    }
+                }
+            }
+
+            // Now perform the shift
+            foreach (var ind in allIndividuals)
+            {
+                if (ind.AssignedWorkerId == fromWorkerId)
+                {
+                    ind.AssignedWorkerId = toWorkerId;
+                }
+            }
+
+            await _unitOfWork.FieldVisitRepository.UpdateAsync(fieldVisit, ct);
+            return await _unitOfWork.SaveChangesAsync(ct) > 0;
         }
     }
 }

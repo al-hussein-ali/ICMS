@@ -10,6 +10,8 @@ namespace ICMS.Domain.Entites.Visits
         public int UserId { get; set; }
         public User User { get; set; } = null!;
 
+        public bool IsGoing { get; set; } = true;
+
         private FieldVisitWorker() { }
 
         public static FieldVisitWorker Create(int fieldVisitId, int userId)
@@ -17,7 +19,8 @@ namespace ICMS.Domain.Entites.Visits
             return new FieldVisitWorker
             {
                 FieldVisitId = fieldVisitId,
-                UserId = userId
+                UserId = userId,
+                IsGoing = true
             };
         }
     }

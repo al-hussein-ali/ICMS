@@ -7,5 +7,6 @@ namespace ICMS.Application.DTOs.FieldVisit
         string FullName,
         string CardNumber,
         string PhoneNumber,
-        List<string> DelayedDoseNames);
+        List<string> DelayedDoseNames,
+        int? AssignedWorkerId = null);
 }

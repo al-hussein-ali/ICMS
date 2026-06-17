@@ -8,7 +8,9 @@ namespace ICMS.Application.Interfaces.Services
     {
         Task<PagedResult<FieldVisitReadDto>> GetAllAsync(PaginationParams paginationParams, bool? onlyUncompleted, int? workerId = null, CancellationToken ct = default);
 
-        Task<FieldVisitDetailsDto> GetByIdAsync(int id, CancellationToken ct = default);
+        Task<FieldVisitDetailsDto> GetByIdAsync(int id, int? workerId = null, CancellationToken ct = default);
+
+        Task<bool> ToggleWorkerGoingAsync(int id, int workerId, CancellationToken ct = default);
 
         Task<FieldVisitVaccinationsDto> GetVaccinationsAsync(int id, CancellationToken ct = default);
 
@@ -23,5 +25,7 @@ namespace ICMS.Application.Interfaces.Services
         Task<int> CloseExpiredVisitsAsync(CancellationToken ct = default);
 
         Task<bool> SendWorkerNotificationsAsync(int id, CancellationToken ct = default);
+
+        Task<bool> ShiftWorkerPeopleAsync(int fieldVisitId, int fromWorkerId, int toWorkerId, CancellationToken ct = default);
     }
 }

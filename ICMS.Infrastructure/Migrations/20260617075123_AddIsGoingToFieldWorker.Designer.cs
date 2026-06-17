@@ -3,6 +3,7 @@ using System;
 using ICMS.Infrastructure.Persistence.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace ICMS.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260617075123_AddIsGoingToFieldWorker")]
+    partial class AddIsGoingToFieldWorker
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -2185,12 +2188,7 @@ namespace ICMS.Infrastructure.Migrations
                     b.Property<int>("VaccinatedIndividualId")
                         .HasColumnType("integer");
 
-                    b.Property<int?>("AssignedWorkerId")
-                        .HasColumnType("integer");
-
                     b.HasKey("FieldVisitId", "VaccinatedIndividualId");
-
-                    b.HasIndex("AssignedWorkerId");
 
                     b.HasIndex("VaccinatedIndividualId");
 
@@ -2690,11 +2688,6 @@ namespace ICMS.Infrastructure.Migrations
 
             modelBuilder.Entity("ICMS.Domain.Entites.Visits.FieldVisitIndividual", b =>
                 {
-                    b.HasOne("ICMS.Domain.Entites.Identity.User", "AssignedWorker")
-                        .WithMany()
-                        .HasForeignKey("AssignedWorkerId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
                     b.HasOne("ICMS.Domain.Entites.Visits.FieldVisit", "FieldVisit")
                         .WithMany("FieldVisitIndividuals")
                         .HasForeignKey("FieldVisitId")
@@ -2706,8 +2699,6 @@ namespace ICMS.Infrastructure.Migrations
                         .HasForeignKey("VaccinatedIndividualId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
-
-                    b.Navigation("AssignedWorker");
 
                     b.Navigation("FieldVisit");
 

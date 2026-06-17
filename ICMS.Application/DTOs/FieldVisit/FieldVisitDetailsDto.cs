@@ -21,5 +21,6 @@ namespace ICMS.Application.DTOs.FieldVisit
         List<FieldVisitTargetedIndividualDto> SelectedIndividuals,
         List<int> SelectedIndividualIds,
         List<UserReadDto> SelectedWorkers,
-        List<int> SelectedWorkerIds);
+        List<int> SelectedWorkerIds,
+        List<int> NotGoingWorkerIds);
 }

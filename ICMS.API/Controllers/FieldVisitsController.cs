@@ -101,8 +101,30 @@ namespace ICMS.Api.Controllers
         public async Task<ActionResult<FieldVisitDetailsDto>> GetByIdAsync(
             [FromRoute] int id, CancellationToken ct)
         {
-            var fieldVisit = await fieldVisitService.GetByIdAsync(id, ct);
+            int? workerId = null;
+            if (User.IsInRole(Roles.FieldVisitWorker) && 
+                !User.IsInRole(Roles.Admin) && 
+                !User.IsInRole(Roles.VaccinationManager) && 
+                !User.IsInRole(Roles.InventoryManager) && 
+                !User.IsInRole(Roles.ReproductiveHealthManager))
+            {
+                workerId = User.GetUserId();
+            }
+
+            var fieldVisit = await fieldVisitService.GetByIdAsync(id, workerId, ct);
             return Ok(fieldVisit);
+        }
+
+        [HttpPut("{id}/workers/{workerId}/toggle-going")]
+        public async Task<IActionResult> ToggleWorkerGoingAsync(
+            [FromRoute] int id, [FromRoute] int workerId, CancellationToken ct)
+        {
+            var success = await fieldVisitService.ToggleWorkerGoingAsync(id, workerId, ct);
+            if (!success)
+            {
+                return BadRequest(new { Message = "Failed to toggle worker attendance status." });
+            }
+            return NoContent();
         }
 
         /// <summary>
@@ -183,6 +205,18 @@ namespace ICMS.Api.Controllers
                 return BadRequest(new { Message = "Failed to send notifications. No workers assigned or no active devices registered." });
             }
             return Ok(new { Message = "Worker notifications sent successfully." });
+        }
+
+        [HttpPut("{id}/workers/shift")]
+        public async Task<IActionResult> ShiftWorkerPeopleAsync(
+            [FromRoute] int id, [FromQuery] int fromWorkerId, [FromQuery] int toWorkerId, CancellationToken ct)
+        {
+            var success = await fieldVisitService.ShiftWorkerPeopleAsync(id, fromWorkerId, toWorkerId, ct);
+            if (!success)
+            {
+                return BadRequest(new { Message = "Failed to shift individuals between workers." });
+            }
+            return NoContent();
         }
     }
 }

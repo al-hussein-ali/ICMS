@@ -326,5 +326,156 @@ namespace ICMS.Tests.Controllers
                 alreadyCompletedVisit!.IsCompleted.Should().BeTrue();
             }
         }
+
+        [Fact]
+        public async Task GetFieldVisitById_WorkerPartitioning_DividesDelayedPeopleCorrectly()
+        {
+            // Arrange
+            int subNeighborhoodId;
+            int dirId;
+            int neighborhoodId;
+            Dose dose;
+            int worker1UserId;
+            int worker2UserId;
+            int visitId;
+            List<int> individualIds = new();
+
+            using (var scope = _factory.Services.CreateScope())
+            {
+                var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+                var subNeigh = db.SubNeighborhoods.First();
+                subNeighborhoodId = subNeigh.Id;
+                neighborhoodId = subNeigh.NeighborhoodId;
+                dirId = db.Neighborhoods.First(n => n.Id == neighborhoodId).DirectorateId;
+                dose = db.Doses.First();
+
+                // Create 5 people
+                for (int i = 1; i <= 5; i++)
+                {
+                    var dob = DateOnly.FromDateTime(DateTime.UtcNow.AddMonths(-6));
+                    var person = Person.Create($"Child{i}", "Test", "User", "ICMS", Gender.Male, dob, $"999000111{i}");
+                    db.People.Add(person);
+                    db.SaveChanges();
+
+                    var individual = VaccinatedIndividual.Create(dirId, neighborhoodId, subNeighborhoodId, registrationDate: dob);
+                    individual.AssignPerson(person);
+                    individual.ScheduleInitialVaccines(new List<Dose> { dose }, person.DateOfBirth);
+                    individual.Schedules.First().MarkAsMissed();
+                    db.VaccinatedIndividuals.Add(individual);
+                    db.SaveChanges();
+
+                    individualIds.Add(individual.Id);
+                }
+
+                // Create 2 workers
+                var worker1Person = Person.Create("WorkerOne", "Test", "User", "ICMS", Gender.Male, DateOnly.FromDateTime(DateTime.UtcNow.AddYears(-25)), "9991112221");
+                db.People.Add(worker1Person);
+                var worker2Person = Person.Create("WorkerTwo", "Test", "User", "ICMS", Gender.Male, DateOnly.FromDateTime(DateTime.UtcNow.AddYears(-25)), "9991112222");
+                db.People.Add(worker2Person);
+                db.SaveChanges();
+
+                var passwordHash = BCrypt.Net.BCrypt.HashPassword("Worker@123");
+                var worker1User = User.Create("workeroneuser", passwordHash, worker1Person.Id);
+                db.Users.Add(worker1User);
+                var worker2User = User.Create("workertwouser", passwordHash, worker2Person.Id);
+                db.Users.Add(worker2User);
+                db.SaveChanges();
+
+                var workerRole = db.Roles.First(r => r.RoleName == ICMS.Domain.Constants.Roles.FieldVisitWorker);
+                db.UserRoles.Add(UserRole.Create(worker1User.Id, workerRole.Id));
+                db.UserRoles.Add(UserRole.Create(worker2User.Id, workerRole.Id));
+                db.SaveChanges();
+
+                worker1UserId = worker1User.Id;
+                worker2UserId = worker2User.Id;
+
+                var visit = FieldVisit.Create(
+                    "Partitioning Campaign Test",
+                    DateOnly.FromDateTime(DateTime.UtcNow.AddDays(2)),
+                    subNeighborhoodId,
+                    DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-1)),
+                    DateOnly.FromDateTime(DateTime.UtcNow.AddDays(5))
+                );
+
+                // Add individuals sorted to match deterministic partition ordering
+                foreach (var indId in individualIds.OrderBy(id => id))
+                {
+                    visit.AddIndividual(indId);
+                }
+
+                // Add workers sorted
+                var sortedWorkerIds = new List<int> { worker1UserId, worker2UserId }.OrderBy(id => id).ToList();
+                visit.AddWorker(sortedWorkerIds[0]);
+                visit.AddWorker(sortedWorkerIds[1]);
+
+                db.FieldVisits.Add(visit);
+                db.SaveChanges();
+
+                visitId = visit.Id;
+            }
+
+            async Task AuthenticateAsUserAsync(string username, string password)
+            {
+                _client.DefaultRequestHeaders.Authorization = null;
+                var loginDto = new LoginDto(username, password);
+                var loginRes = await _client.PostAsJsonAsync("/api/auth/login", loginDto);
+                loginRes.StatusCode.Should().Be(HttpStatusCode.OK);
+                var authResult = await loginRes.Content.ReadFromJsonAsync<AuthResponseDto>(_jsonOptions);
+                _client.DefaultRequestHeaders.Authorization =
+                    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", authResult.AccessToken);
+            }
+
+            // Let's authenticate as Worker 1 (first worker in sorted list)
+            var sortedWorkers = new List<(string Username, int Id)> 
+            { 
+                ("workeroneuser", worker1UserId), 
+                ("workertwouser", worker2UserId) 
+            }.OrderBy(w => w.Id).ToList();
+
+            // Act & Assert for Worker 1
+            await AuthenticateAsUserAsync(sortedWorkers[0].Username, "Worker@123");
+            var response1 = await _client.GetAsync($"/api/field-visits/{visitId}");
+            response1.StatusCode.Should().Be(HttpStatusCode.OK);
+            var details1 = await response1.Content.ReadFromJsonAsync<FieldVisitDetailsDto>(_jsonOptions);
+            details1.Should().NotBeNull();
+            
+            // 5 people / 2 workers = 2 base. Remainder = 1.
+            // First worker (index 0) gets 2 + 1 = 3 people.
+            details1!.SelectedIndividuals.Should().HaveCount(3);
+
+            // Act & Assert for Worker 2
+            await AuthenticateAsUserAsync(sortedWorkers[1].Username, "Worker@123");
+            var response2 = await _client.GetAsync($"/api/field-visits/{visitId}");
+            response2.StatusCode.Should().Be(HttpStatusCode.OK);
+            var details2 = await response2.Content.ReadFromJsonAsync<FieldVisitDetailsDto>(_jsonOptions);
+            details2.Should().NotBeNull();
+            
+            // Second worker (index 1) gets 2 people.
+            details2!.SelectedIndividuals.Should().HaveCount(2);
+
+            // Now let's test toggle-going:
+            // Admin sets Worker 1 as not going.
+            await AuthenticateAsync(); // Admin
+            var toggleResponse = await _client.PutAsync($"/api/field-visits/{visitId}/workers/{sortedWorkers[0].Id}/toggle-going", null);
+            toggleResponse.StatusCode.Should().Be(HttpStatusCode.NoContent);
+
+            // Now log in as Worker 2 again. Since Worker 1 is not going, Worker 2 is the ONLY active worker!
+            // All 5 people should shift to Worker 2.
+            await AuthenticateAsUserAsync(sortedWorkers[1].Username, "Worker@123");
+            var response2AfterShift = await _client.GetAsync($"/api/field-visits/{visitId}");
+            response2AfterShift.StatusCode.Should().Be(HttpStatusCode.OK);
+            var details2AfterShift = await response2AfterShift.Content.ReadFromJsonAsync<FieldVisitDetailsDto>(_jsonOptions);
+            details2AfterShift.Should().NotBeNull();
+            details2AfterShift!.SelectedIndividuals.Should().HaveCount(5);
+
+            // Worker 1 is marked as not going, so if they load, they should get 0 people.
+            await AuthenticateAsUserAsync(sortedWorkers[0].Username, "Worker@123");
+            var response1AfterShift = await _client.GetAsync($"/api/field-visits/{visitId}");
+            response1AfterShift.StatusCode.Should().Be(HttpStatusCode.OK);
+            var details1AfterShift = await response1AfterShift.Content.ReadFromJsonAsync<FieldVisitDetailsDto>(_jsonOptions);
+            details1AfterShift.Should().NotBeNull();
+            details1AfterShift!.SelectedIndividuals.Should().HaveCount(0);
+        }
     }
 }

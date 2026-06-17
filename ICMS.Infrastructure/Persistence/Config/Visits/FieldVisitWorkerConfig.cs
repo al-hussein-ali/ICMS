@@ -12,6 +12,9 @@ namespace ICMS.Infrastructure.Persistence.Config.Visits
             
             builder.HasKey(fvw => new { fvw.FieldVisitId, fvw.UserId });
 
+            builder.Property(fvw => fvw.IsGoing)
+                .HasDefaultValue(true);
+
             builder.HasOne(fvw => fvw.FieldVisit)
                 .WithMany(fv => fv.FieldVisitWorkers)
                 .HasForeignKey(fvw => fvw.FieldVisitId)

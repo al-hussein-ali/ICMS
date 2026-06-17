@@ -37,9 +37,83 @@ namespace ICMS.Application.Extensions
             );
         }
 
-        public static FieldVisitDetailsDto ToDetailsDto(this FieldVisit fv)
+        public static FieldVisitDetailsDto ToDetailsDto(this FieldVisit fv, int? workerId = null)
         {
-            var selectedInds = (fv.FieldVisitIndividuals ?? Enumerable.Empty<FieldVisitIndividual>()).Select(fvi => {
+            var activeWorkers = (fv.FieldVisitWorkers ?? Enumerable.Empty<FieldVisitWorker>())
+                .Where(w => w.IsGoing)
+                .OrderBy(w => w.UserId)
+                .ToList();
+
+            var allIndividuals = (fv.FieldVisitIndividuals ?? Enumerable.Empty<FieldVisitIndividual>())
+                .OrderBy(fvi => fvi.VaccinatedIndividualId)
+                .ToList();
+
+            // Build worker-to-individuals dictionary for active workers
+            var workerAssignments = activeWorkers.ToDictionary(
+                w => w.UserId, 
+                w => new List<FieldVisitIndividual>());
+
+            // Put manually assigned individuals to their active worker
+            foreach (var ind in allIndividuals)
+            {
+                if (ind.AssignedWorkerId.HasValue && workerAssignments.ContainsKey(ind.AssignedWorkerId.Value))
+                {
+                    workerAssignments[ind.AssignedWorkerId.Value].Add(ind);
+                }
+            }
+
+            // Distribute unassigned individuals (those with null AssignedWorkerId, or assigned to inactive workers)
+            var unassignedInds = allIndividuals
+                .Where(ind => !ind.AssignedWorkerId.HasValue || !workerAssignments.ContainsKey(ind.AssignedWorkerId.Value))
+                .OrderBy(ind => ind.VaccinatedIndividualId)
+                .ToList();
+
+            int n = unassignedInds.Count;
+            int m = activeWorkers.Count;
+            if (m > 0 && n > 0)
+            {
+                int baseCount = n / m;
+                int remainder = n % m;
+                int start = 0;
+                for (int i = 0; i < m; i++)
+                {
+                    int count = baseCount + (i < remainder ? 1 : 0);
+                    var chunk = unassignedInds.Skip(start).Take(count);
+                    workerAssignments[activeWorkers[i].UserId].AddRange(chunk);
+                    start += count;
+                }
+            }
+
+            // Map every individual to their computed AssignedWorkerId
+            var computedAssignments = new Dictionary<int, int>(); // VaccinatedIndividualId -> WorkerUserId
+            foreach (var kvp in workerAssignments)
+            {
+                foreach (var ind in kvp.Value)
+                {
+                    computedAssignments[ind.VaccinatedIndividualId] = kvp.Key;
+                }
+            }
+
+            // If workerId is provided, filter list to show only this worker's portion.
+            // If workerId is null, show all individuals.
+            List<FieldVisitIndividual> selectedIndividualsToMap;
+            if (workerId.HasValue)
+            {
+                if (workerAssignments.ContainsKey(workerId.Value))
+                {
+                    selectedIndividualsToMap = workerAssignments[workerId.Value];
+                }
+                else
+                {
+                    selectedIndividualsToMap = new List<FieldVisitIndividual>();
+                }
+            }
+            else
+            {
+                selectedIndividualsToMap = allIndividuals;
+            }
+
+            var selectedInds = selectedIndividualsToMap.Select(fvi => {
                 var ind = fvi.VaccinatedIndividual;
                 if (ind == null) return null!;
                 var doses = (ind.Schedules ?? Enumerable.Empty<ICMS.Domain.Entites.Clinical.VaccinationSchedule>())
@@ -47,16 +121,19 @@ namespace ICMS.Application.Extensions
                     .Select(s => s.Dose.DoseName)
                     .ToList();
 
+                int? assignedWorkerId = computedAssignments.TryGetValue(fvi.VaccinatedIndividualId, out var wId) ? wId : null;
+
                 return new FieldVisitTargetedIndividualDto(
                     ind.Id,
                     ind.Person?.FullName ?? string.Empty,
                     ind.CardNumber,
                     ind.Person?.PhoneNumber ?? string.Empty,
-                    doses
+                    doses,
+                    assignedWorkerId
                 );
             }).Where(x => x != null).ToList();
 
-            var selectedIds = (fv.FieldVisitIndividuals ?? Enumerable.Empty<FieldVisitIndividual>())
+            var selectedIds = selectedIndividualsToMap
                 .Select(fvi => fvi.VaccinatedIndividualId)
                 .ToList();
 
@@ -67,6 +144,11 @@ namespace ICMS.Application.Extensions
             }).Where(x => x != null).ToList();
 
             var selectedWorkerIds = (fv.FieldVisitWorkers ?? Enumerable.Empty<FieldVisitWorker>())
+                .Select(fvw => fvw.UserId)
+                .ToList();
+
+            var notGoingWorkerIds = (fv.FieldVisitWorkers ?? Enumerable.Empty<FieldVisitWorker>())
+                .Where(fvw => !fvw.IsGoing)
                 .Select(fvw => fvw.UserId)
                 .ToList();
 
@@ -87,7 +169,8 @@ namespace ICMS.Application.Extensions
                 selectedInds,
                 selectedIds,
                 selectedWorkers,
-                selectedWorkerIds
+                selectedWorkerIds,
+                notGoingWorkerIds
             );
         }
     }
