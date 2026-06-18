@@ -27,5 +27,7 @@ namespace ICMS.Application.Interfaces.Services
         Task<bool> SendWorkerNotificationsAsync(int id, CancellationToken ct = default);
 
         Task<bool> ShiftWorkerPeopleAsync(int fieldVisitId, int fromWorkerId, int toWorkerId, CancellationToken ct = default);
+
+        Task<object> GetDiagnosticDbAsync(CancellationToken ct = default);
     }
 }

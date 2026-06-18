@@ -70,6 +70,50 @@ namespace ICMS.Application.Services
 
             worker.IsGoing = !worker.IsGoing;
 
+            var allIndividuals = fieldVisit.FieldVisitIndividuals.OrderBy(fvi => fvi.VaccinatedIndividualId).ToList();
+            var activeWorkers = fieldVisit.FieldVisitWorkers.Where(w => w.IsGoing).OrderBy(w => w.UserId).ToList();
+
+            if (!worker.IsGoing)
+            {
+                foreach (var ind in allIndividuals.Where(i => i.AssignedWorkerId == worker.UserId))
+                {
+                    ind.AssignedWorkerId = null;
+                }
+            }
+
+            var workerAssignments = activeWorkers.ToDictionary(w => w.UserId, w => new List<FieldVisitIndividual>());
+            foreach (var ind in allIndividuals)
+            {
+                if (ind.AssignedWorkerId.HasValue && workerAssignments.ContainsKey(ind.AssignedWorkerId.Value))
+                {
+                    workerAssignments[ind.AssignedWorkerId.Value].Add(ind);
+                }
+            }
+
+            var unassignedInds = allIndividuals
+                .Where(ind => !ind.AssignedWorkerId.HasValue || !workerAssignments.ContainsKey(ind.AssignedWorkerId.Value))
+                .OrderBy(ind => ind.VaccinatedIndividualId)
+                .ToList();
+
+            int n = unassignedInds.Count;
+            int m = activeWorkers.Count;
+            if (m > 0 && n > 0)
+            {
+                int baseCount = n / m;
+                int remainder = n % m;
+                int start = 0;
+                for (int i = 0; i < m; i++)
+                {
+                    int count = baseCount + (i < remainder ? 1 : 0);
+                    var chunk = unassignedInds.Skip(start).Take(count);
+                    foreach (var ind in chunk)
+                    {
+                        ind.AssignedWorkerId = activeWorkers[i].UserId;
+                    }
+                    start += count;
+                }
+            }
+
             await _unitOfWork.FieldVisitRepository.UpdateAsync(fieldVisit, ct);
             return await _unitOfWork.SaveChangesAsync(ct) > 0;
         }
@@ -550,6 +594,50 @@ namespace ICMS.Application.Services
 
             await _unitOfWork.FieldVisitRepository.UpdateAsync(fieldVisit, ct);
             return await _unitOfWork.SaveChangesAsync(ct) > 0;
+        }
+
+        public async Task<object> GetDiagnosticDbAsync(CancellationToken ct = default)
+        {
+            var visits = await _unitOfWork.FieldVisitRepository.GetQueryable(track: false, cancellationToken: ct)
+                .Select(fv => new {
+                    fv.Id,
+                    fv.CampaignName,
+                    fv.IsCompleted,
+                    IndividualsCount = fv.FieldVisitIndividuals.Count,
+                    WorkersCount = fv.FieldVisitWorkers.Count
+                })
+                .ToListAsync(ct);
+
+            var totalIndividuals = await _unitOfWork.FieldVisitRepository.GetQueryable(track: false, cancellationToken: ct)
+                .SelectMany(fv => fv.FieldVisitIndividuals).CountAsync(ct);
+                
+            var totalWorkers = await _unitOfWork.FieldVisitRepository.GetQueryable(track: false, cancellationToken: ct)
+                .SelectMany(fv => fv.FieldVisitWorkers).CountAsync(ct);
+
+            var individuals = await _unitOfWork.VaccinatedIndividualRepository.GetQueryable(track: false, cancellationToken: ct)
+                .Select(vi => new { vi.Id, vi.CardNumber })
+                .Take(5)
+                .ToListAsync(ct);
+
+            var subNeighborhoods = await _unitOfWork.SubNeighborhoodRepository.GetQueryable(track: false, cancellationToken: ct)
+                .Select(sn => new { sn.Id, sn.Name })
+                .Take(5)
+                .ToListAsync(ct);
+
+            var workers = await _unitOfWork.UserRepository.GetQueryable(track: false, cancellationToken: ct)
+                .Select(u => new { u.Id, u.UserName })
+                .Take(5)
+                .ToListAsync(ct);
+
+            return new {
+                TotalVisits = visits.Count,
+                TotalIndividualsInRelations = totalIndividuals,
+                TotalWorkersInRelations = totalWorkers,
+                Visits = visits,
+                SampleIndividuals = individuals,
+                SampleSubNeighborhoods = subNeighborhoods,
+                SampleWorkers = workers
+            };
         }
     }
 }

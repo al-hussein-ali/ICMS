@@ -16,50 +16,14 @@ namespace ICMS.Api.Controllers
     public class FieldVisitsController(
         IFieldVisitService fieldVisitService, 
         IUserService userService,
-        IFieldVisitReminderService fieldVisitReminderService,
-        ICMS.Infrastructure.Persistence.Data.AppDbContext dbContext) : ControllerBase
+        IFieldVisitReminderService fieldVisitReminderService) : ControllerBase
     {
         [HttpGet("diagnostic-db")]
         [AllowAnonymous]
         public async Task<IActionResult> DiagnosticDb(CancellationToken ct)
         {
-            var visits = await dbContext.FieldVisits
-                .Select(fv => new {
-                    fv.Id,
-                    fv.CampaignName,
-                    fv.IsCompleted,
-                    IndividualsCount = dbContext.FieldVisitIndividuals.Count(fvi => fvi.FieldVisitId == fv.Id),
-                    WorkersCount = dbContext.FieldVisitWorkers.Count(fvw => fvw.FieldVisitId == fv.Id)
-                })
-                .ToListAsync(ct);
-
-            var totalIndividuals = await dbContext.FieldVisitIndividuals.CountAsync(ct);
-            var totalWorkers = await dbContext.FieldVisitWorkers.CountAsync(ct);
-
-            var individuals = await dbContext.VaccinatedIndividuals
-                .Select(vi => new { vi.Id, vi.CardNumber })
-                .Take(5)
-                .ToListAsync(ct);
-
-            var subNeighborhoods = await dbContext.SubNeighborhoods
-                .Select(sn => new { sn.Id, sn.Name })
-                .Take(5)
-                .ToListAsync(ct);
-
-            var workers = await dbContext.Users
-                .Select(u => new { u.Id, u.UserName })
-                .Take(5)
-                .ToListAsync(ct);
-
-            return Ok(new {
-                TotalVisits = visits.Count,
-                TotalIndividualsInRelations = totalIndividuals,
-                TotalWorkersInRelations = totalWorkers,
-                Visits = visits,
-                SampleIndividuals = individuals,
-                SampleSubNeighborhoods = subNeighborhoods,
-                SampleWorkers = workers
-            });
+            var diagnosticData = await fieldVisitService.GetDiagnosticDbAsync(ct);
+            return Ok(diagnosticData);
         }
 
         [HttpGet("workers")]
