@@ -7,5 +7,6 @@ namespace ICMS.Application.DTOs.Schedules
         public DateOnly FromDate { get; set; }
         public DateOnly? ToDate { get; set; }
         public int? SubNeighborhoodId { get; set; }
+        public int? WorkerId { get; set; }
     }
 }

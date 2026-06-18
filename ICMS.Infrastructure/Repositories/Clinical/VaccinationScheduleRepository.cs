@@ -33,7 +33,7 @@ namespace ICMS.Infrastructure.Repositories.Clinical
                 .ToListAsync(ct);
         }
 
-        public async Task<List<MissedScheduleReadDto>> GetMissedSchedulesDetailedAsync(DateOnly fromDate, DateOnly toDate, int? subNeighborhoodId = null, CancellationToken ct = default)
+        public async Task<List<MissedScheduleReadDto>> GetMissedSchedulesDetailedAsync(DateOnly fromDate, DateOnly toDate, int? subNeighborhoodId = null, int? workerId = null, CancellationToken ct = default)
         {
             var query = _context.VaccinationSchedules
                 .AsNoTracking()
@@ -45,6 +45,14 @@ namespace ICMS.Infrastructure.Repositories.Clinical
             if (subNeighborhoodId.HasValue)
             {
                 query = query.Where(s => s.VaccinatedIndividual.SubNeighborhoodId == subNeighborhoodId.Value);
+            }
+
+            if (workerId.HasValue)
+            {
+                query = query.Where(s => _context.FieldVisitIndividuals
+                    .Any(fvi => fvi.VaccinatedIndividualId == s.VaccinatedIndividualId && 
+                                fvi.AssignedWorkerId == workerId.Value &&
+                                !fvi.FieldVisit.IsCompleted));
             }
 
             return await query.Select(s => new MissedScheduleReadDto(

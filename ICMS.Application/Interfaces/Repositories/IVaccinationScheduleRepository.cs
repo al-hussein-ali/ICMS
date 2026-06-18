@@ -12,6 +12,6 @@ namespace ICMS.Application.Interfaces.Repositories
     {
         Task BulkInsertAsync(IEnumerable<VaccinationSchedule> schedules, CancellationToken ct = default);
         Task<List<VaccinationSchedule>> GetOverduePendingSchedulesAsync(DateOnly cutoffDate, CancellationToken ct = default);
-        Task<List<MissedScheduleReadDto>> GetMissedSchedulesDetailedAsync(DateOnly fromDate, DateOnly toDate, int? subNeighborhoodId = null, CancellationToken ct = default);
+        Task<List<MissedScheduleReadDto>> GetMissedSchedulesDetailedAsync(DateOnly fromDate, DateOnly toDate, int? subNeighborhoodId = null, int? workerId = null, CancellationToken ct = default);
     }
 }

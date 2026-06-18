@@ -26,9 +26,10 @@ namespace ICMS.Api.Controllers
             [FromQuery(Name = "fromDate")] DateOnly fromDate, 
             [FromQuery(Name = "toDate")] DateOnly? toDate, 
             [FromQuery(Name = "subNeighborhoodId")] int? subNeighborhoodId,
+            [FromQuery(Name = "workerId")] int? workerId,
             CancellationToken ct)
         {
-            var query = new MissedScheduleQueryDto { FromDate = fromDate, ToDate = toDate, SubNeighborhoodId = subNeighborhoodId };
+            var query = new MissedScheduleQueryDto { FromDate = fromDate, ToDate = toDate, SubNeighborhoodId = subNeighborhoodId, WorkerId = workerId };
             
             logger.LogInformation("Querying missed schedules: from {FromDate} to {ToDate} for SubNeighborhood {SubNeighborhoodId}", 
                 query.FromDate, query.ToDate ?? DateOnly.FromDateTime(DateTime.UtcNow.AddHours(3)), query.SubNeighborhoodId);

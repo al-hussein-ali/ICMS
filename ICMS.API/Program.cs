@@ -336,7 +336,7 @@ public partial class Program
 {
 }
 
-public class IPv4HttpClientFactory : Google.Apis.Http.HttpClientFactory
+public class IPv4HttpClientFactory : HttpClientFactory
 {
     protected override HttpMessageHandler CreateHandler(CreateHttpClientArgs args)
     {
@@ -344,21 +344,21 @@ public class IPv4HttpClientFactory : Google.Apis.Http.HttpClientFactory
         {
             ConnectCallback = async (context, cancellationToken) =>
             {
-                var ips = await System.Net.Dns.GetHostAddressesAsync(context.DnsEndPoint.Host, cancellationToken);
-                var ipv4 = ips.FirstOrDefault(ip => ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork);
+                var ips = await Dns.GetHostAddressesAsync(context.DnsEndPoint.Host, cancellationToken);
+                var ipv4 = ips.FirstOrDefault(ip => ip.AddressFamily == AddressFamily.InterNetwork);
                 
-                var socket = new System.Net.Sockets.Socket(System.Net.Sockets.SocketType.Stream, System.Net.Sockets.ProtocolType.Tcp);
+                var socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
                 try
                 {
                     if (ipv4 != null)
                     {
-                        await socket.ConnectAsync(new System.Net.IPEndPoint(ipv4, context.DnsEndPoint.Port), cancellationToken);
+                        await socket.ConnectAsync(new IPEndPoint(ipv4, context.DnsEndPoint.Port), cancellationToken);
                     }
                     else
                     {
                         await socket.ConnectAsync(context.DnsEndPoint, cancellationToken);
                     }
-                    return new System.Net.Sockets.NetworkStream(socket, ownsSocket: true);
+                    return new NetworkStream(socket, ownsSocket: true);
                 }
                 catch
                 {
