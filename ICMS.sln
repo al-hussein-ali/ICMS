@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.14.36811.4
+# Visual Studio Version 18
+VisualStudioVersion = 18.6.11822.322 stable
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ICMS.API", "ICMS.API\ICMS.API.csproj", "{0B3ADBDE-CA20-46DF-8F15-43779E97C34D}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -16,8 +16,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ICMS.Infrastructure", "ICMS
 	ProjectSection(ProjectDependencies) = postProject
 		{92D6E802-685C-48D9-97A0-BA8A73B2DF61} = {92D6E802-685C-48D9-97A0-BA8A73B2DF61}
 	EndProjectSection
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ICMS.Tests", "ICMS.Tests\ICMS.Tests.csproj", "{D9704266-6049-4C2F-91E4-A4D79FC91E06}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -77,18 +75,6 @@ Global
 		{1DCD6879-9B8E-4D64-9E4C-9761987631FD}.Release|x64.Build.0 = Release|Any CPU
 		{1DCD6879-9B8E-4D64-9E4C-9761987631FD}.Release|x86.ActiveCfg = Release|Any CPU
 		{1DCD6879-9B8E-4D64-9E4C-9761987631FD}.Release|x86.Build.0 = Release|Any CPU
-		{D9704266-6049-4C2F-91E4-A4D79FC91E06}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{D9704266-6049-4C2F-91E4-A4D79FC91E06}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{D9704266-6049-4C2F-91E4-A4D79FC91E06}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{D9704266-6049-4C2F-91E4-A4D79FC91E06}.Debug|x64.Build.0 = Debug|Any CPU
-		{D9704266-6049-4C2F-91E4-A4D79FC91E06}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{D9704266-6049-4C2F-91E4-A4D79FC91E06}.Debug|x86.Build.0 = Debug|Any CPU
-		{D9704266-6049-4C2F-91E4-A4D79FC91E06}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{D9704266-6049-4C2F-91E4-A4D79FC91E06}.Release|Any CPU.Build.0 = Release|Any CPU
-		{D9704266-6049-4C2F-91E4-A4D79FC91E06}.Release|x64.ActiveCfg = Release|Any CPU
-		{D9704266-6049-4C2F-91E4-A4D79FC91E06}.Release|x64.Build.0 = Release|Any CPU
-		{D9704266-6049-4C2F-91E4-A4D79FC91E06}.Release|x86.ActiveCfg = Release|Any CPU
-		{D9704266-6049-4C2F-91E4-A4D79FC91E06}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
