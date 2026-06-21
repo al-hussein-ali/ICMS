@@ -8,6 +8,7 @@ using ICMS.Domain.Entites.Visits;
 using ICMS.Domain.Entites.Audit;
 using ICMS.Domain.Entites.Geography;
 using ICMS.Infrastructure.Persistence.Data;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -26,6 +27,18 @@ namespace ICMS.Infrastructure.Repositories.Clinical
         public async Task BulkInsertAsync(List<ImmunizationRecord> immunizationRecords, CancellationToken ct = default)
         {
             await base._context.BulkInsertAsync(immunizationRecords,cancellationToken: ct);
+        }
+
+        public async Task<IReadOnlyList<ImmunizationRecord>> GetRecordsWithDetailsForVisitAsync(int fieldVisitId, CancellationToken ct = default)
+        {
+            return await _dbSet
+                .Where(ir => ir.FieldVisitId == fieldVisitId)
+                .Include(ir => ir.VaccinatedIndividual)
+                    .ThenInclude(vi => vi.Person)
+                .Include(ir => ir.Dose)
+                .Include(ir => ir.User)
+                    .ThenInclude(u => u.Person)
+                .ToListAsync(ct);
         }
     }
 }

@@ -9,7 +9,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
 
 namespace ICMS.Application.Services
 {
@@ -79,10 +78,7 @@ namespace ICMS.Application.Services
 
             var tomorrow = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(1));
 
-            var upcomingVisits = await _unitOfWork.FieldVisitRepository.GetQueryable()
-                .Include(fv => fv.FieldVisitIndividuals)
-                .Where(fv => fv.VisitDate == tomorrow && !fv.ReminderSent && !fv.IsCompleted)
-                .ToListAsync(ct);
+            var upcomingVisits = await _unitOfWork.FieldVisitRepository.GetUpcomingVisitsForRemindersAsync(tomorrow, ct);
 
             if (!upcomingVisits.Any())
             {
@@ -127,34 +123,18 @@ namespace ICMS.Application.Services
             }
 
             // Fallback: Query individuals with missed schedules matching the criteria
-            var fallbackIds = await _unitOfWork.VaccinatedIndividualRepository.GetQueryable()
-                .Where(vi => vi.SubNeighborhoodId == fv.SubNeighborhoodId &&
-                             vi.Schedules.Any(s => s.Status == ScheduleStatus.Missed &&
-                                                   s.ScheduledDate >= fv.FromDate &&
-                                                   s.ScheduledDate <= fv.ToDate &&
-                                                   vi.Person.DateOfBirth.AddMonths(s.Dose.Vaccine.MaxEligibleAgeInMonths) >= fv.ToDate))
-                .Select(vi => vi.Id)
-                .Distinct()
-                .ToListAsync(ct);
+            var fallbackIds = await _unitOfWork.VaccinatedIndividualRepository.GetTargetedIndividualIdsForReminderAsync(fv.SubNeighborhoodId, fv.FromDate, fv.ToDate, ct);
 
             return fallbackIds;
         }
 
         private async Task<List<string>> GetDeviceTokensAsync(List<int> individualIds, CancellationToken ct)
         {
-            var userIds = await _unitOfWork.VaccinatedIndividualRepository.GetQueryable()
-                .Where(vi => individualIds.Contains(vi.Id) && vi.UserId != null)
-                .Select(vi => vi.UserId!.Value)
-                .Distinct()
-                .ToListAsync(ct);
+            var userIds = await _unitOfWork.VaccinatedIndividualRepository.GetUserIdsForIndividualsAsync(individualIds, ct);
 
             if (!userIds.Any()) return new List<string>();
 
-            return await _unitOfWork.UserDeviceRepository.GetQueryable()
-                .Where(ud => userIds.Contains(ud.UserId))
-                .Select(ud => ud.FcmToken)
-                .Distinct()
-                .ToListAsync(ct);
+            return await _unitOfWork.UserDeviceRepository.GetFcmTokensForUsersAsync(userIds, ct);
         }
 
         private async Task<bool> SendNotificationsAsync(IReadOnlyList<string> deviceTokens, string title, string body, int visitId, CancellationToken ct)
@@ -176,9 +156,7 @@ namespace ICMS.Application.Services
             if (result.UnregisteredTokens.Any())
             {
                 _logger.LogInformation("Cleaning up {Count} expired FCM tokens.", result.UnregisteredTokens.Count);
-                var expiredDevices = await _unitOfWork.UserDeviceRepository.GetQueryable()
-                    .Where(ud => result.UnregisteredTokens.Contains(ud.FcmToken))
-                    .ToListAsync(ct);
+                var expiredDevices = await _unitOfWork.UserDeviceRepository.GetDevicesByTokensAsync(result.UnregisteredTokens, ct);
 
                 foreach (var device in expiredDevices)
                 {

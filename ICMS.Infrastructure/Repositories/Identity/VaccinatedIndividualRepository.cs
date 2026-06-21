@@ -118,5 +118,27 @@ namespace ICMS.Infrastructure.Repositories.Identity
 
             return new PagedResult<VaccinatedIndividual>(items, totalCount, pageNumber, pageSize);
         }
+
+        public async Task<List<int>> GetTargetedIndividualIdsForReminderAsync(int subNeighborhoodId, DateOnly fromDate, DateOnly toDate, CancellationToken ct = default)
+        {
+            return await _dbSet
+                .Where(vi => vi.SubNeighborhoodId == subNeighborhoodId &&
+                             vi.Schedules.Any(s => s.Status == ICMS.Domain.Enums.ScheduleStatus.Missed &&
+                                                   s.ScheduledDate >= fromDate &&
+                                                   s.ScheduledDate <= toDate &&
+                                                   vi.Person.DateOfBirth.AddMonths(s.Dose.Vaccine.MaxEligibleAgeInMonths) >= toDate))
+                .Select(vi => vi.Id)
+                .Distinct()
+                .ToListAsync(ct);
+        }
+
+        public async Task<List<int>> GetUserIdsForIndividualsAsync(List<int> individualIds, CancellationToken ct = default)
+        {
+            return await _dbSet
+                .Where(vi => individualIds.Contains(vi.Id) && vi.UserId != null)
+                .Select(vi => vi.UserId!.Value)
+                .Distinct()
+                .ToListAsync(ct);
+        }
     }
 }

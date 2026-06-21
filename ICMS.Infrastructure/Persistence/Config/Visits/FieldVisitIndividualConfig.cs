@@ -26,6 +26,8 @@ namespace ICMS.Infrastructure.Persistence.Config.Visits
                 .WithMany()
                 .HasForeignKey(fvi => fvi.AssignedWorkerId)
                 .OnDelete(DeleteBehavior.SetNull);
+
+            builder.HasQueryFilter(fvi => !fvi.VaccinatedIndividual.IsDeleted);
         }
     }
 }

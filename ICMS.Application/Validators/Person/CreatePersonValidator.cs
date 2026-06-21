@@ -12,12 +12,16 @@ namespace ICMS.Application.Validators.Person
             RuleFor(x => x.FirstName)
                 .NotEmpty()
                 .WithMessage(x => localizer["RequiredField", "This field"])
+                .MinimumLength(3)
+                .WithMessage(x => localizer["InvalidField", "This field"])
                 .MaximumLength(20)
                 .WithMessage(x => localizer["InvalidField", "This field"]);
 
             RuleFor(x => x.SecondName)
                 .NotEmpty()
                 .WithMessage(x => localizer["RequiredField", "This field"])
+                .MinimumLength(3)
+                .WithMessage(x => localizer["InvalidField", "This field"])
                 .MaximumLength(20)
                 .WithMessage(x => localizer["InvalidField", "This field"]);
 
@@ -31,6 +35,8 @@ namespace ICMS.Application.Validators.Person
             RuleFor(x => x.LastName)
                 .NotEmpty()
                 .WithMessage(x => localizer["RequiredField", "This field"])
+                .MinimumLength(3)
+                .WithMessage(x => localizer["InvalidField", "This field"])
                 .MaximumLength(20)
                 .WithMessage(x => localizer["InvalidField", "This field"]);
 

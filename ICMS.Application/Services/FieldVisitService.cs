@@ -8,7 +8,6 @@ using ICMS.Domain.Exceptions;
 using ICMS.Domain.ValueObjects;
 
 using FluentValidation;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace ICMS.Application.Services
@@ -131,91 +130,9 @@ namespace ICMS.Application.Services
                 throw new NotFoundException("NotFound");
 
             // Query immunization records for this field visit with all required details
-            var records = await _unitOfWork.ImmunizationRecordRepository.GetQueryable(track: false, cancellationToken: ct)
-                .Where(ir => ir.FieldVisitId == id)
-                .Include(ir => ir.VaccinatedIndividual)
-                    .ThenInclude(vi => vi.Person)
-                .Include(ir => ir.Dose)
-                .Include(ir => ir.User)
-                    .ThenInclude(u => u.Person)
-                .ToListAsync(ct);
+            var records = await _unitOfWork.ImmunizationRecordRepository.GetRecordsWithDetailsForVisitAsync(id, ct);
 
-            // Group by vaccinated individual
-            var vaccinatedPersons = records
-                .GroupBy(ir => ir.IndividualId)
-                .Select(group =>
-                {
-                    var firstRecord = group.First();
-                    var ind = firstRecord.VaccinatedIndividual;
-                    if (ind == null) return null!;
-
-                    var doseNames = group
-                        .Select(ir => ir.Dose?.DoseName ?? string.Empty)
-                        .Where(name => !string.IsNullOrEmpty(name))
-                        .Distinct()
-                        .ToList();
-
-                    var individualAdministeredBy = group
-                        .Select(ir => ir.User)
-                        .Where(u => u != null)
-                        .GroupBy(u => u.Id)
-                        .Select(g => g.First())
-                        .Select(user =>
-                        {
-                            var firstName = user!.Person?.FirstName ?? string.Empty;
-                            var lastName  = user.Person?.LastName  ?? string.Empty;
-
-                            return new FieldVisitWorkerDto(
-                                user.Id,
-                                firstName,
-                                lastName,
-                                $"{firstName} {lastName}".Trim(),
-                                user.UserName
-                            );
-                        })
-                        .ToList();
-
-                    return new FieldVisitVaccinatedPersonDto(
-                        ind.Id,
-                        ind.Person?.FullName ?? string.Empty,
-                        ind.CardNumber,
-                        ind.Person?.PhoneNumber ?? string.Empty,
-                        doseNames,
-                        individualAdministeredBy
-                    );
-                })
-                .Where(x => x != null)
-                .ToList();
-
-            // Project field workers who administered vaccinations in this visit
-            var administeredBy = records
-                .Select(ir => ir.User)
-                .Where(u => u != null)
-                .GroupBy(u => u.Id)
-                .Select(g => g.First())
-                .Select(user =>
-                {
-                    var firstName = user!.Person?.FirstName ?? string.Empty;
-                    var lastName  = user.Person?.LastName  ?? string.Empty;
-
-                    return new FieldVisitWorkerDto(
-                        user.Id,
-                        firstName,
-                        lastName,
-                        $"{firstName} {lastName}".Trim(),
-                        user.UserName
-                    );
-                })
-                .ToList();
-
-            return new FieldVisitVaccinationsDto(
-                fieldVisit.Id,
-                fieldVisit.CampaignName,
-                fieldVisit.VisitDate,
-                vaccinatedPersons.Count,
-                vaccinatedPersons,
-                administeredBy
-            );
+            return fieldVisit.ToVaccinationsDto(records);
         }
 
         public async Task<FieldVisitReadDto> AddAsync(FieldVisitCreateDto dto, CancellationToken ct = default)
@@ -272,11 +189,7 @@ namespace ICMS.Application.Services
                 var workerUserIds = dto.SelectedWorkerIds ?? new List<int>();
                 if (workerUserIds.Any())
                 {
-                    var deviceTokens = await _unitOfWork.UserDeviceRepository.GetQueryable()
-                        .Where(ud => workerUserIds.Contains(ud.UserId))
-                        .Select(ud => ud.FcmToken)
-                        .Distinct()
-                        .ToListAsync(ct);
+                    var deviceTokens = await _unitOfWork.UserDeviceRepository.GetFcmTokensForUsersAsync(workerUserIds, ct);
 
                     if (deviceTokens.Any())
                     {
@@ -305,9 +218,7 @@ namespace ICMS.Application.Services
                         if (pushResult.UnregisteredTokens.Any())
                         {
                             _logger.LogInformation("Cleaning up {Count} expired worker FCM tokens.", pushResult.UnregisteredTokens.Count);
-                            var expiredDevices = await _unitOfWork.UserDeviceRepository.GetQueryable()
-                                .Where(ud => pushResult.UnregisteredTokens.Contains(ud.FcmToken))
-                                .ToListAsync(ct);
+                            var expiredDevices = await _unitOfWork.UserDeviceRepository.GetDevicesByTokensAsync(pushResult.UnregisteredTokens, ct);
 
                             foreach (var device in expiredDevices)
                             {
@@ -416,9 +327,7 @@ namespace ICMS.Application.Services
             _logger.LogInformation("Starting expired field visits auto-closure job at {Time} (UTC)", DateTime.UtcNow);
             
             var threeDaysAgo = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-3));
-            var expiredVisits = await _unitOfWork.FieldVisitRepository.GetQueryable(track: true, cancellationToken: ct)
-                .Where(fv => !fv.IsCompleted && fv.ToDate <= threeDaysAgo)
-                .ToListAsync(ct);
+            var expiredVisits = await _unitOfWork.FieldVisitRepository.GetExpiredUncompletedVisitsAsync(threeDaysAgo, ct);
 
             if (!expiredVisits.Any())
             {
@@ -453,11 +362,7 @@ namespace ICMS.Application.Services
                 return false;
             }
 
-            var deviceTokens = await _unitOfWork.UserDeviceRepository.GetQueryable()
-                .Where(ud => workerUserIds.Contains(ud.UserId))
-                .Select(ud => ud.FcmToken)
-                .Distinct()
-                .ToListAsync(ct);
+            var deviceTokens = await _unitOfWork.UserDeviceRepository.GetFcmTokensForUsersAsync(workerUserIds, ct);
 
             if (!deviceTokens.Any())
             {
@@ -490,9 +395,7 @@ namespace ICMS.Application.Services
             if (pushResult.UnregisteredTokens.Any())
             {
                 _logger.LogInformation("Cleaning up {Count} expired worker FCM tokens.", pushResult.UnregisteredTokens.Count);
-                var expiredDevices = await _unitOfWork.UserDeviceRepository.GetQueryable()
-                    .Where(ud => pushResult.UnregisteredTokens.Contains(ud.FcmToken))
-                    .ToListAsync(ct);
+                var expiredDevices = await _unitOfWork.UserDeviceRepository.GetDevicesByTokensAsync(pushResult.UnregisteredTokens, ct);
 
                 foreach (var device in expiredDevices)
                 {
@@ -598,46 +501,7 @@ namespace ICMS.Application.Services
 
         public async Task<object> GetDiagnosticDbAsync(CancellationToken ct = default)
         {
-            var visits = await _unitOfWork.FieldVisitRepository.GetQueryable(track: false, cancellationToken: ct)
-                .Select(fv => new {
-                    fv.Id,
-                    fv.CampaignName,
-                    fv.IsCompleted,
-                    IndividualsCount = fv.FieldVisitIndividuals.Count,
-                    WorkersCount = fv.FieldVisitWorkers.Count
-                })
-                .ToListAsync(ct);
-
-            var totalIndividuals = await _unitOfWork.FieldVisitRepository.GetQueryable(track: false, cancellationToken: ct)
-                .SelectMany(fv => fv.FieldVisitIndividuals).CountAsync(ct);
-                
-            var totalWorkers = await _unitOfWork.FieldVisitRepository.GetQueryable(track: false, cancellationToken: ct)
-                .SelectMany(fv => fv.FieldVisitWorkers).CountAsync(ct);
-
-            var individuals = await _unitOfWork.VaccinatedIndividualRepository.GetQueryable(track: false, cancellationToken: ct)
-                .Select(vi => new { vi.Id, vi.CardNumber })
-                .Take(5)
-                .ToListAsync(ct);
-
-            var subNeighborhoods = await _unitOfWork.SubNeighborhoodRepository.GetQueryable(track: false, cancellationToken: ct)
-                .Select(sn => new { sn.Id, sn.Name })
-                .Take(5)
-                .ToListAsync(ct);
-
-            var workers = await _unitOfWork.UserRepository.GetQueryable(track: false, cancellationToken: ct)
-                .Select(u => new { u.Id, u.UserName })
-                .Take(5)
-                .ToListAsync(ct);
-
-            return new {
-                TotalVisits = visits.Count,
-                TotalIndividualsInRelations = totalIndividuals,
-                TotalWorkersInRelations = totalWorkers,
-                Visits = visits,
-                SampleIndividuals = individuals,
-                SampleSubNeighborhoods = subNeighborhoods,
-                SampleWorkers = workers
-            };
+            return await _unitOfWork.FieldVisitRepository.GetDiagnosticDbAsync(ct);
         }
     }
 }

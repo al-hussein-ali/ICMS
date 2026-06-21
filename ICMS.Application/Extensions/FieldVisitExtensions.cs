@@ -1,5 +1,7 @@
 using ICMS.Application.DTOs.FieldVisit;
 using ICMS.Domain.Entites.Visits;
+using ICMS.Domain.Entites.Clinical;
+using System;
 using System.Linq;
 using System.Collections.Generic;
 using ICMS.Application.DTOs.User;
@@ -171,6 +173,86 @@ namespace ICMS.Application.Extensions
                 selectedWorkers,
                 selectedWorkerIds,
                 notGoingWorkerIds
+            );
+        }
+
+        public static FieldVisitVaccinationsDto ToVaccinationsDto(this FieldVisit fieldVisit, IEnumerable<ImmunizationRecord> records)
+        {
+            // Group by vaccinated individual
+            var vaccinatedPersons = records
+                .GroupBy(ir => ir.IndividualId)
+                .Select(group =>
+                {
+                    var firstRecord = group.First();
+                    var ind = firstRecord.VaccinatedIndividual;
+                    if (ind == null) return null!;
+
+                    var doseNames = group
+                        .Select(ir => ir.Dose?.DoseName ?? string.Empty)
+                        .Where(name => !string.IsNullOrEmpty(name))
+                        .Distinct()
+                        .ToList();
+
+                    var individualAdministeredBy = group
+                        .Select(ir => ir.User)
+                        .Where(u => u != null)
+                        .GroupBy(u => u.Id)
+                        .Select(g => g.First())
+                        .Select(user =>
+                        {
+                            var firstName = user!.Person?.FirstName ?? string.Empty;
+                            var lastName  = user.Person?.LastName  ?? string.Empty;
+
+                            return new FieldVisitWorkerDto(
+                                user.Id,
+                                firstName,
+                                lastName,
+                                $"{firstName} {lastName}".Trim(),
+                                user.UserName
+                            );
+                        })
+                        .ToList();
+
+                    return new FieldVisitVaccinatedPersonDto(
+                        ind.Id,
+                        ind.Person?.FullName ?? string.Empty,
+                        ind.CardNumber,
+                        ind.Person?.PhoneNumber ?? string.Empty,
+                        doseNames,
+                        individualAdministeredBy
+                    );
+                })
+                .Where(x => x != null)
+                .ToList();
+
+            // Project field workers who administered vaccinations in this visit
+            var administeredBy = records
+                .Select(ir => ir.User)
+                .Where(u => u != null)
+                .GroupBy(u => u.Id)
+                .Select(g => g.First())
+                .Select(user =>
+                {
+                    var firstName = user!.Person?.FirstName ?? string.Empty;
+                    var lastName  = user.Person?.LastName  ?? string.Empty;
+
+                    return new FieldVisitWorkerDto(
+                        user.Id,
+                        firstName,
+                        lastName,
+                        $"{firstName} {lastName}".Trim(),
+                        user.UserName
+                    );
+                })
+                .ToList();
+
+            return new FieldVisitVaccinationsDto(
+                fieldVisit.Id,
+                fieldVisit.CampaignName,
+                fieldVisit.VisitDate,
+                vaccinatedPersons.Count,
+                vaccinatedPersons,
+                administeredBy
             );
         }
     }

@@ -2,6 +2,11 @@ using ICMS.Application.Interfaces.Repositories;
 using ICMS.Domain.Entites.Visits;
 using ICMS.Infrastructure.Persistence.Data;
 using Microsoft.EntityFrameworkCore;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace ICMS.Infrastructure.Repositories.Visits
 {
@@ -80,6 +85,65 @@ namespace ICMS.Infrastructure.Repositories.Visits
             }).ToList();
 
             return new ICMS.Domain.ValueObjects.PagedResult<FieldVisit>(items, totalCount, pageNumber, pageSize);
+        }
+
+        public async Task<List<FieldVisit>> GetExpiredUncompletedVisitsAsync(DateOnly thresholdDate, CancellationToken ct = default)
+        {
+            return await _dbSet
+                .Where(fv => !fv.IsCompleted && fv.ToDate <= thresholdDate)
+                .ToListAsync(ct);
+        }
+
+        public async Task<List<FieldVisit>> GetUpcomingVisitsForRemindersAsync(DateOnly date, CancellationToken ct = default)
+        {
+            return await _dbSet
+                .Include(fv => fv.FieldVisitIndividuals)
+                .Where(fv => fv.VisitDate == date && !fv.ReminderSent && !fv.IsCompleted)
+                .ToListAsync(ct);
+        }
+
+        public async Task<object> GetDiagnosticDbAsync(CancellationToken ct = default)
+        {
+            var visits = await _dbSet.AsNoTracking()
+                .Select(fv => new {
+                    fv.Id,
+                    fv.CampaignName,
+                    fv.IsCompleted,
+                    IndividualsCount = fv.FieldVisitIndividuals.Count,
+                    WorkersCount = fv.FieldVisitWorkers.Count
+                })
+                .ToListAsync(ct);
+
+            var totalIndividuals = await _dbSet.AsNoTracking()
+                .SelectMany(fv => fv.FieldVisitIndividuals).CountAsync(ct);
+                
+            var totalWorkers = await _dbSet.AsNoTracking()
+                .SelectMany(fv => fv.FieldVisitWorkers).CountAsync(ct);
+
+            var individuals = await _context.VaccinatedIndividuals.AsNoTracking()
+                .Select(vi => new { vi.Id, vi.CardNumber })
+                .Take(5)
+                .ToListAsync(ct);
+
+            var subNeighborhoods = await _context.SubNeighborhoods.AsNoTracking()
+                .Select(sn => new { sn.Id, sn.Name })
+                .Take(5)
+                .ToListAsync(ct);
+
+            var workers = await _context.Users.AsNoTracking()
+                .Select(u => new { u.Id, u.UserName })
+                .Take(5)
+                .ToListAsync(ct);
+
+            return new {
+                TotalVisits = visits.Count,
+                TotalIndividualsInRelations = totalIndividuals,
+                TotalWorkersInRelations = totalWorkers,
+                Visits = visits,
+                SampleIndividuals = individuals,
+                SampleSubNeighborhoods = subNeighborhoods,
+                SampleWorkers = workers
+            };
         }
     }
 }
